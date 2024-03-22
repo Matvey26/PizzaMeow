@@ -112,7 +112,7 @@ class Session:
             return -1 # интернет
 
     def delete_order(self, id):
-        params = {status : 'delete_order', 'user_id' : self.user_id, 'id_order' : id }
+        params = {'status' : 'delete_order', 'user_id' : self.user_id, 'id_order' : id }
         try: 
             response = requests.get("matvey_server.com", params=params)
             return response # 1 если успешно 0 неудача
