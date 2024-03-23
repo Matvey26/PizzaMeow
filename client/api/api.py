@@ -120,4 +120,11 @@ class Session:
         except requests.ConnectionError:
             return -1
     
+    def make_order(self, order): # order состоит из ингридиентов цены и даты заказа \
+        params = {'status' : 'make_order', 'user_id' : self.id, 'order' : order}
+        try: 
+            response = requests.patch("matvey_server.com", params=params)
+            return response # id заказа если успешно 0 неудача
+        except requests.ConnectionError:
+            return -1
 
