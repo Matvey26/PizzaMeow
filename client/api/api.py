@@ -20,7 +20,7 @@ class Session:
                   'user_login' : login,
                   'user_email' : email}
         try:
-            response = requests.get("matvey_server.com", params=params) # здесь я считаю, что будет или 0 - то есть подключение успешно установлено, или 2 то есть неправильные данные человека
+            response = requests.patch("matvey_server.com", params=params) # здесь я считаю, что будет или 0 - то есть подключение успешно установлено, или 2 то есть неправильные данные человека
             if response == 0:
                 self.user_id = id
                 self.user_password = password
@@ -30,15 +30,16 @@ class Session:
             return 2
             # если данные не верны вова должен заставить человека авторизоваться вручную
         except requests.ConnectionError:
-                return -1 # означает что проблема с интернетом у пользователя
+            return -1 # означает что проблема с интернетом у пользователя
+
     def sign_up(self, email, login, password):
-        params = {'status' : 'regestration',
+        params = {'status' : 'registration',
                   'user_id' : None, # здесь он None я хочу чтобы мне вернули его id(я запишу его себе и вове отдам) в случае не удачи верну 0(то есть id человек начнется с 1)
                   'user_pass' : password,
                   'user_login' : login,
                   'user_email' : email}
         try:
-            response = requests.get("matvey_server.com", params=params)
+            response = requests.post("matvey_server.com", params=params)
             if response != 0:
                 self.user_id = id
                 self.user_password = password
@@ -57,7 +58,7 @@ class Session:
                   'user_login' : login,
                   'user_email' : email}
         try:
-            response = requests.get("matvey_server.com", params=params)
+            response = requests.patch("matvey_server.com", params=params)
             if response != 0:
                 self.user_id = response
                 self.user_password = password
@@ -76,7 +77,7 @@ class Session:
                   'user_adress' : adress,
                   'user_card' : card}
         try:
-            response = requests.get("matvey_server.com", params=params) # в случае удачи вернут True иначе False
+            response = requests.patch("matvey_server.com", params=params) # в случае удачи вернут True иначе False
             return response
         except requests.ConnectionError:
             return -1
@@ -98,7 +99,7 @@ class Session:
         else:
             param = {'status' : 'changepassword', newdata[0] : newdata[1]}
             try:
-                response = requests.get("matvey_server.com", params=params)
+                response = requests.patch("matvey_server.com", params=params)
                 return response # 1 если успешно 0 неудача
             except requests.ConnectionError:
                 return -1
@@ -114,11 +115,9 @@ class Session:
     def delete_order(self, id):
         params = {'status' : 'delete_order', 'user_id' : self.user_id, 'id_order' : id }
         try: 
-            response = requests.get("matvey_server.com", params=params)
+            response = requests.patch("matvey_server.com", params=params)
             return response # 1 если успешно 0 неудача
         except requests.ConnectionError:
             return -1
-
-
-
+    
 
