@@ -1,0 +1,160 @@
+openapi: 3.0.0
+
+info:
+  title: PizzaMeow API
+  version: 0.0.0
+  description: Предоставляет доступ к базовым ресурсам сервера
+
+servers:
+  - url: /api
+
+# Пути, которые поддерживает API
+paths:
+  # Список всех пицц
+  /pizzas:
+    get:
+      summary: Получить список всех пицц
+      operationId: server.app.views.pizzas.get_pizzas_page
+      parameters:
+        - name: offset
+          description: Число элементов, которые нужно пропустить от начала таблицы перед началом сборки итогового списка
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+        - name: limit
+          description: Максимальное число элементов, которое будет в списке. Сервер будет пытаться заполнить список ровно таким числом элементов.
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Pizza'
+
+  # Регистрация нового пользователя
+  /register:
+    post:
+      summary: Зарегистрировать нового пользователя
+      operationId: server.app.views.users.register
+      requestBody:
+        description: Регистрационные данные
+        required: true
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/UserRegistration'
+      responses:
+        '200':
+          description: Новый пользователь успешно зарегистрирован
+          content:
+            'text/plain':
+              schema:
+                $ref: '#/components/schemas/Token'
+        '400':
+          description: Неверный формат почты или домен вашей почты не поддерживается
+  
+  # Авторизация, то есть получение access токена
+  /auth:
+    get:
+      summary: Получить токен
+      operationId: server.app.views.auth.authenticate
+      parameters:
+        - name: email
+          description: Электронная почта пользователя
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: password
+          description: Пароль пользователя
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Успешная авторизация, JWT токен получен
+          content:
+            'text/plain':
+              schema:
+                $ref: '#/components/schemas/Token'
+
+  # Тестовая команда, чтобы проверить, что авторизация работает как по маслу
+  /whoami:
+    get:
+      summary: Возвращает айди, имя и фамилию пользователя
+      operationId: server.app.views.users.get_user_info
+      responses:
+        '200':
+          description: Информация о пользователе успешно получена
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  firstname:
+                    type: string
+                  lastname:
+                    type: string
+      security:
+      - jwt: []
+
+components:
+  # Схемы параметров запроса или ответа
+  schemas:
+    # Схема данных о пицце
+    Pizza:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Уникальный ID пиццы
+        name:
+          type: string
+          description: Название пиццы
+        description:
+          type: string
+          description: Описание пиццы
+      required:
+        - id
+        - name
+
+    # Схема регистрационных данных
+    UserRegistration:
+      type: object
+      properties:
+        email:
+          type: string
+          description: Электронная почта пользователя
+        password:
+          type: string
+          description: Пароль от аккаунта пользователя
+      required:
+        - email
+        - password
+
+    # Схема токена
+    Token:
+      type: string
+  
+  # Универсальные ответы от сервера
+  responses:
+    UnauthorizedError:
+      description: Попытка неавторизованного получения данных
+  
+  # Безопасность
+  securitySchemes:
+    jwt:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      x-bearerInfoFunc: server.app.views.auth.decode_token
