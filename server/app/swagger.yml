@@ -1,0 +1,55 @@
+openapi: 3.0.0
+
+info:
+  title: PizzaMeow API
+  version: 0.0.0
+  description: Предоставляет доступ к базовым ресурсам сервера
+
+servers:
+  - url: /api
+
+paths:
+  /pizzas:
+    get:
+      summary: Получить список всех пицц
+      operationId: views.users.get_pizzas_page
+      parameters:
+        - name: offset
+          description: Число элементов, которые нужно пропустить от начала таблицы перед началом сборки итогового списка
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+        - name: limit
+          description: Максимальное число элементов, которое будет в списке. Сервер будет пытаться заполнить список ровно таким числом элементов.
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Pizza'
+
+components:
+  schemas:
+    Pizza:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Уникальный ID пиццы
+        name:
+          type: string
+          description: Название пиццы
+        description:
+          type: string
+          description: Описание пиццы
+      required:
+        - id
+        - name
