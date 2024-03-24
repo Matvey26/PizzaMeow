@@ -1,75 +1,53 @@
 """Класс текущей сессии, который предоставляет возможность общения """
 
-import config
 import requests
 import os
+url = 'http://127.0.0.1:8000/api/'
 
 class Session:
     def __init__(self):
-        hostname = "matvey_server.com"
-        response = os.system("ping -c 1 " + hostname)
-        if (response == 0):
-            pass
-        else:
-            raise requests.ConnectionError("Connection Error") # сессия не создастся
-    # Вова передает мне аргументы формата логин пароль id пользователя из его кэша
-    def authothication(self, email, login, password, id):
-        params = {'status' : 'authorization',
-                  'user_id' : id,
-                  'user_pass' : password,
-                  'user_login' : login,
-                  'user_email' : email}
+        pass
+    # Вова передает мне аргументы формата пароль почту из его кэша
+    def sign_in(self, email : str, password : str):
+        params = {'email' : email, 'password' : password}
         try:
-            response = requests.patch("matvey_server.com", params=params) # здесь я считаю, что будет или 0 - то есть подключение успешно установлено, или 2 то есть неправильные данные человека
-            if response == 0:
-                self.user_id = id
-                self.user_password = password
-                self.user_email = email
-                self.user_login = login
-                return 0
-            return 2
+            response = requests.get(url + 'auth', params=params)
+            if response.status_code == 200:
+                self.password = password
+                self.email = email
+                self.token = response.text
+                return response.text
+            return response.status_code
             # если данные не верны вова должен заставить человека авторизоваться вручную
         except requests.ConnectionError:
             return -1 # означает что проблема с интернетом у пользователя
 
-    def sign_up(self, email, login, password):
-        params = {'status' : 'registration',
-                  'user_id' : None, # здесь он None я хочу чтобы мне вернули его id(я запишу его себе и вове отдам) в случае не удачи верну 0(то есть id человек начнется с 1)
-                  'user_pass' : password,
-                  'user_login' : login,
-                  'user_email' : email}
+    def sign_up(self, email: str, password : str):
+        params = {'email' : email, 'password' : password}
+        headers = {'Content-Type': 'application/json'}
         try:
-            response = requests.post("matvey_server.com", params=params)
-            if response != 0:
-                self.user_id = id
-                self.user_password = password
-                self.user_email = email
-                self.user_login = login
-                self.id = response
-            # неудача - если email уже например уже есть 
-                return response
+            response = requests.post(url + 'register', json=params, headers=headers)
+            if response.status_code == 200:
+                self.password = password
+                self.email = email
+                self.token = response
+                return response.text
+            return response.status_code
         except requests.ConnectionError:
-            return -1 # например означает что интернет того 
-
-    def sign_in(self, email, login, password):
-        params = {'status' : 'sign_in',
-                  'user_id' : None, # хочу получить айди человека в случае неудачи - 0  у человека не может быть адишника в кэше но может быть знание ост данных(допустим как в игру зашел с другого пк)
-                  'user_pass' : password,
-                  'user_login' : login,
-                  'user_email' : email}
+            return -1 # подключение прошло не успешно
+    def get_pizzas(self, limit : int, offset : int):
+        params = {'limit' : limit, 'offset' : offset}
         try:
-            response = requests.patch("matvey_server.com", params=params)
-            if response != 0:
-                self.user_id = response
-                self.user_password = password
-                self.user_email = email
-                self.user_login = login
-                self.id = response
-            return response
+            response.get(url + 'pizzas', params=params)
+            if response.status_code == 400:
+                return response.json()
+            return response.status_code
         except requests.ConnectionError:
-            return -1 # аналогично
+            return -1
+    def whoami(self):
+        
     # пользователь про себя данные вносит
-    def user_defenition(self, name, surname, adress, card):
+    def user_defenition(self, name : str, surname : str, adress : str, card : str):
         params = {'status' : 'defenition',
                   'user_id' : self.user_id,
                   'user_name' : name,
@@ -128,3 +106,5 @@ class Session:
         except requests.ConnectionError:
             return -1
 
+
+ses = Session()
