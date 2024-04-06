@@ -1,29 +1,30 @@
-from flask import Flask
 import connexion
+from connexion import FlaskApp
+import pathlib
 
-def create_app(test_config: dict = {}):
-	app = connexion.App(__name__, specification_dir='./')
-	app.add_api("swagger.yml")
+def create_app():
+	base_dir = pathlib.Path(__file__).parent.resolve()
+	connex_app = connexion.App(__name__, specification_dir=base_dir)
+	connex_app.add_api("swagger.yml")
 
-	load_config(app, test_config)
+	connex_app.app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///sometestdb.sqlite'
 
-	return app
+	init_database(connex_app)
 
-
-def load_config(app: Flask, test_config: dict) -> None:
-	pass
-
-
-def init_database(app: Flask) -> None:
-	from database import init
-	init(app)
+	return connex_app
 
 
-app = create_app()
+def init_database(connex_app: FlaskApp) -> None:
+	"""Отвечает за инициализацию и создание баз данных, которыми будет
+	пользоваться приложение
+	
+	Параметры
+	---------
+	connex_app : connexion.FlaskApp
+		Экземпляр приложения, которое будет запущено
+	"""
+	from .database import init
+	init(connex_app)
 
-@app.route('/')
-def helloworld():
-	return "Hello World"
 
-if __name__ == "__main__":
-	app.run(host='0.0.0.0', port='8000')
+connex_app = create_app()
