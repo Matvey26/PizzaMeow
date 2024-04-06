@@ -56,19 +56,55 @@ class Order(Base):
     payment = relationship('Payment', back_populates='order')
 
 
+class OrderItemTopping(Base):
+    __tablename__ = 'order_item_toppings'
+
+    order_item_id = sa.Column(sa.Integer, sa.ForeignKey(
+        'order_items.id'), primary_key=True)
+    topping_id = sa.Column(
+        sa.Integer,
+        sa.ForeignKey('toppings.id'),
+        primary_key=True
+    )
+
+
 class OrderItem(Base):
     __tablename__ = 'order_items'
 
     id = sa.Column(sa.Integer, primary_key=True)
-    order_id = sa.Column(sa.Integer, sa.ForeignKey(
-        'orders.id'), nullable=False)
-    # Not implemented --> class Pizza(Base)
+    order_id = sa.Column(
+        sa.Integer,
+        sa.ForeignKey('orders.id'),
+        nullable=False
+    )
     pizza_id = sa.Column(sa.Integer, sa.ForeignKey('Pizza'), nullable=False)
     total_price = sa.Column(sa.Float, nullable=False)
     size = sa.Column(sa.Enum(PizzaSizeEnum))
     quantity = sa.Column(sa.Integer)
 
     order = relationship('Order', back_populates='order_items')
+    pizza = relationship('Pizza', back_populates='_order_items')
+    toppings = relationship(
+        argument='Topping',
+        secondary='order_item_toppings',
+        back_populates='_order_items'
+    )
+
+
+class Topping(Base):
+    __tablename__ = 'toppings'
+
+    id = sa.Column(sa.Integer, primary_key=True)
+    name = sa.Column(sa.String(150), nullable=False)
+    description = sa.Column(sa.Text)
+    price = sa.Column(sa.Float, nullable=False)
+
+    # Не следует использовать этот атрибут вне класса
+    _order_items = relationship(
+        argument='OrderItem',
+        secondary='order_item_toppings',
+        back_populates='toppings'
+    )
 
 
 class Pizza(Base):
@@ -78,6 +114,9 @@ class Pizza(Base):
     name = sa.Column(sa.String(150), nullable=False)
     description = sa.Column(sa.Text)
     price = sa.Column(sa.Float, nullable=False)
+
+    # Не следует использовать этот атрибут вне класса
+    _order_items = relationship('OrderItem', back_populates='pizza')
 
 
 class Payment(Base):
@@ -90,5 +129,5 @@ class Payment(Base):
     amount = sa.Column(sa.Float, nullable=False)
     payment_date = sa.Column(sa.DateTime, nullable=False)
 
-    order = relationship('Order', back_populates='payment')
-    user = relationship('User', back_populates='payments')
+    order = relationship('Order', back_populates='payment', uselist=False)
+    user = relationship('User', back_populates='payments', uselist=False)
