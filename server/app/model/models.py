@@ -1,7 +1,44 @@
 import enum
 import sqlalchemy as sa
-from sqlalchemy.orm import relationship
 from app.database import Base
+from sqlalchemy import inspect
+from sqlalchemy.orm import relationship
+from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
+
+
+class Model:
+    """Класс Model объявляет метод serialize(),
+    который сериализует данные модели.
+    """
+
+    def create_schema(self) -> None:
+        """Создаёт marshmallow схему для (де)сериализации."""
+        class Meta(object):
+            model = self
+            include_relationships = True
+            load_instance = True
+        
+        ModelSchema = type(
+            'ModelSchema',
+            (SQLAlchemyAutoSchema,),
+            { 'Meta': Meta }
+        )
+
+        self.model_schema = ModelSchema()
+
+    def serialize(self) -> dict:
+        """Сериализует аттрибуты объекта в словарь."""
+        if not self.model_schema:
+            self.create_schema()
+
+        return self.model_schema.dump(self)
+
+    def remove_session(self):
+        """Удаляет объект из текущей сессии."""
+
+        session = inspect(self).session
+        if session:
+            session.expunge(self)
 
 
 class StatusEnum(enum.Enum):
@@ -25,7 +62,7 @@ class PaymentMethodEnum(enum.Enum):
     CARD_UPON_RECEIPT = 2
 
 
-class User(Base):
+class User(Base, Model):
     __tablename__ = 'users'
 
     id = sa.Column(sa.Integer, primary_key=True)
@@ -50,7 +87,7 @@ class OrderCartMixin:
     total_price = sa.Column(sa.Float, nullable=False)
 
 
-class Order(OrderCartMixin, Base):
+class Order(OrderCartMixin, Base, Model):
     __tablename__ = 'orders'
 
     status = sa.Column(sa.Enum(StatusEnum), nullable=False)
@@ -60,14 +97,14 @@ class Order(OrderCartMixin, Base):
     payment = relationship('Payment', back_populates='order')
 
 
-class Cart(OrderCartMixin, Base):
+class Cart(OrderCartMixin, Base, Model):
     __tablename__ = 'carts'
 
     user = relationship('User', back_populates='cart')
     order_items = relationship('OrderItem', back_populates='cart')
 
 
-class OrderItemTopping(Base):
+class OrderItemTopping(Base, Model):
     __tablename__ = 'order_item_toppings'
 
     order_item_id = sa.Column(
@@ -82,7 +119,7 @@ class OrderItemTopping(Base):
     )
 
 
-class CartItemTopping(Base):
+class CartItemTopping(Base, Model):
     __tablename__ = 'cart_item_toppings'
 
     order_item_id = sa.Column(
@@ -105,7 +142,7 @@ class OrderCartItemMixin:
     quantity = sa.Column(sa.Integer)
 
 
-class OrderItem(Base):
+class OrderItem(Base, Model):
     __tablename__ = 'order_items'
 
     order_id = sa.Column(
@@ -123,7 +160,7 @@ class OrderItem(Base):
     )
 
 
-class CartItem(OrderCartItemMixin, Base):
+class CartItem(OrderCartItemMixin, Base, Model):
     __tablename__ = 'cart_items'
 
     order_id = sa.Column(
@@ -141,7 +178,7 @@ class CartItem(OrderCartItemMixin, Base):
     )
 
 
-class Topping(Base):
+class Topping(Base, Model):
     __tablename__ = 'toppings'
 
     id = sa.Column(sa.Integer, primary_key=True)
@@ -164,7 +201,7 @@ class Topping(Base):
     )
 
 
-class Pizza(Base):
+class Pizza(Base, Model):
     __tablename__ = 'pizzas'
 
     id = sa.Column(sa.Integer, primary_key=True)
@@ -177,7 +214,7 @@ class Pizza(Base):
     _cart_items = relationship('CartItem', back_populates='pizza')
 
 
-class Payment(Base):
+class Payment(Base, Model):
     __tablename__ = 'payments'
 
     id = sa.Column(sa.Integer, primary_key=True)
