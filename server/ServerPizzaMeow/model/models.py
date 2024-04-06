@@ -35,7 +35,6 @@ class User(Base):
     def __repr__(self):
         return f'<User {self.firstname} {self.lastname}>'
 
-# git commit -m "Создал database.py который инициализирует БД. Написал модели User, Order, OrderItem"
 
 class Order(Base):
     __tablename__ = 'orders'
