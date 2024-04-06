@@ -1,7 +1,7 @@
 import enum
 import sqlalchemy as sa
 from sqlalchemy.orm import relationship
-from ServerPizzaMeow.database import Base
+from app.database import Base
 
 
 class StatusEnum(enum.Enum):
