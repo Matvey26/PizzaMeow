@@ -19,6 +19,12 @@ class PizzaSizeEnum(enum.Enum):
     LARGE = 2
 
 
+class PaymentMethodEnum(enum.Enum):
+    CASH = 0
+    CARD_ONLINE = 1
+    CARD_UPON_RECEIPT = 2
+
+
 class User(Base):
     __tablename__ = 'users'
 
@@ -31,6 +37,7 @@ class User(Base):
     address = sa.Column(sa.String(400), nullable=True)
 
     orders = relationship('Order', back_populates='user')
+    payments = relationship('Payment', back_populates='user')
 
     def __repr__(self):
         return f'<User {self.firstname} {self.lastname}>'
@@ -46,16 +53,42 @@ class Order(Base):
 
     user = relationship('User', back_populates='orders')
     order_items = relationship('OrderItem', back_populates='order')
+    payment = relationship('Payment', back_populates='order')
 
 
 class OrderItem(Base):
     __tablename__ = 'order_items'
 
     id = sa.Column(sa.Integer, primary_key=True)
-    order_id = sa.Column(sa.Integer, sa.ForeignKey('orders.id'), nullable=False)
-    pizza_id = sa.Column(sa.Integer, sa.ForeignKey('Pizza'), nullable=False)  # Not implemented --> class Pizza(Base)
+    order_id = sa.Column(sa.Integer, sa.ForeignKey(
+        'orders.id'), nullable=False)
+    # Not implemented --> class Pizza(Base)
+    pizza_id = sa.Column(sa.Integer, sa.ForeignKey('Pizza'), nullable=False)
     total_price = sa.Column(sa.Float, nullable=False)
     size = sa.Column(sa.Enum(PizzaSizeEnum))
     quantity = sa.Column(sa.Integer)
 
     order = relationship('Order', back_populates='order_items')
+
+
+class Pizza(Base):
+    __tablename__ = 'pizzas'
+
+    id = sa.Column(sa.Integer, primary_key=True)
+    name = sa.Column(sa.String(150), nullable=False)
+    description = sa.Column(sa.Text)
+    price = sa.Column(sa.Float, nullable=False)
+
+
+class Payment(Base):
+    __tablename__ = 'payments'
+
+    id = sa.Column(sa.Integer, primary_key=True)
+    user_id = sa.Column(sa.Integer, sa.ForeignKey('users.id'), nullable=False)
+    order_id = sa.Column(sa.Integer, sa.ForeignKey('orders'), nullable=False)
+    payment_method = sa.Column(sa.Enum(PaymentMethodEnum), nullable=False)
+    amount = sa.Column(sa.Float, nullable=False)
+    payment_date = sa.Column(sa.DateTime, nullable=False)
+
+    order = relationship('Order', back_populates='payment')
+    user = relationship('User', back_populates='payments')
