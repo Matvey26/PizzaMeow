@@ -6,13 +6,7 @@ from .commands import Base, Registration, Entrance, Config
 
 def main():
     """Точка входа в CLI"""
-    vers = 1.0      # Потом придумаем откуда ее брать
-    parser = argparse.ArgumentParser(add_help=False)  # Главный парсер
-    
-    custom_help = """
-    Custom help message:
-    - Расписать помощь
-    """
+    parser = argparse.ArgumentParser()  # Главный парсер
 
     # Вывод собственного сообщения справки
     if "-h" in sys.argv or "--help" in sys.argv:
@@ -31,15 +25,19 @@ def main():
     
     # Ввести данные о пользователе
     pers_data = sub_parsers.add_parser('config', help=Config.__doc__)
-    pers_data.add_argument('--data', choices=('firstname', 'lastname', 'address' 'phone'), type=str, help="")
+    pers_data.add_argument("--firstname", help="the first name of the customer", type=str)
+    pers_data.add_argument("--lastname", help="the last name of the customer", type=str)
+    pers_data.add_argument("--address", help="the address of the customer", type=str)
+    pers_data.add_argument("--phone", help="the phone number of the customer", type=str)
 
     args = parser.parse_args()
 
     command_class = {
         'sign_up' : Registration,
         'sign_in' : Entrance,
+        'config' : Config,
     }
-    print(args.command)
-    print(args.email)
+
+
     command = command_class.get(args.command, Base)(args)  # Создаём экземпляр команды
     command.run()

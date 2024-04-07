@@ -9,7 +9,8 @@ class Entrance(Base):
         self.args = args
         self.kwargs = kwargs
 
-    def __sign_in(email):
+    def __sign_in(self):
+        email = self.options.email
         check_password = 'написать получение верного пароля'
         password = getpass.getpass("Enter your password: ")
         while password != check_password:
