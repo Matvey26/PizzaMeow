@@ -13,7 +13,10 @@ class PaymentRepository(Repository):
        self.session.add(new_payment)
        self.session.commit(new_payment, order.payment, user.payments)
 
-    def get_payment(self, id : int):
+    def get_payment(self, payment : Payment):
+        return self.session.query(Payment).filter_by(id=payment.id).first()
+
+    def get_payment_id(self, id : int):
         return self.session.query(Payment).filter_by(id=id).first()
 
     def get_user_payments(self, user : User):
@@ -27,5 +30,6 @@ class PaymentRepository(Repository):
 
     def delete_payment(self, payment : Payment):
         deleted = self.session.delete(payment)
+        payment
         self.session.commit()
         return deleted
