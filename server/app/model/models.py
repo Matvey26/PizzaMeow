@@ -14,12 +14,12 @@ class Model:
     def create_schema(self) -> None:
         """Создаёт marshmallow схему для (де)сериализации."""
         class Meta(object):
-            model = self
+            model = self.__class__
             include_relationships = True
             load_instance = True
         
         ModelSchema = type(
-            'ModelSchema',
+            f'{self.__class__.__name__}Schema',
             (SQLAlchemyAutoSchema,),
             { 'Meta': Meta }
         )
@@ -28,7 +28,7 @@ class Model:
 
     def serialize(self) -> dict:
         """Сериализует аттрибуты объекта в словарь."""
-        if not self.model_schema:
+        if not hasattr(self, 'model_schema'):
             self.create_schema()
 
         return self.model_schema.dump(self)
@@ -66,7 +66,7 @@ class User(Base, Model):
     __tablename__ = 'users'
 
     id = sa.Column(sa.Integer, primary_key=True)
-    email = sa.Column(sa.String(150), nullable=False)
+    email = sa.Column(sa.String(150), nullable=False, unique=True)
     password = sa.Column(sa.String(100), nullable=False)
     firstname = sa.Column(sa.String(100), nullable=True)
     lastname = sa.Column(sa.String(100), nullable=True)
@@ -102,7 +102,7 @@ class Cart(Base, Model):
     total_price = sa.Column(sa.Float, nullable=False)
 
     user = relationship('User', back_populates='cart')
-    order_items = relationship('OrderItem', back_populates='cart')
+    cart_items = relationship('OrderItem', back_populates='cart')
 
 
 # Промежуточная таблица, чтобы сделать отношение "многие ко многим". Не обращайте внимание
@@ -125,7 +125,7 @@ class OrderItemTopping(Base, Model):
 class CartItemTopping(Base, Model):
     __tablename__ = 'cart_item_toppings'
 
-    order_item_id = sa.Column(
+    cart_item_id = sa.Column(
         sa.Integer,
         sa.ForeignKey('cart_items.id'),
         primary_key=True
@@ -140,8 +140,9 @@ class CartItemTopping(Base, Model):
 class OrderItem(Base, Model):
     __tablename__ = 'order_items'
 
+
     id = sa.Column(sa.Integer, primary_key=True)
-    pizza_id = sa.Column(sa.Integer, sa.ForeignKey('Pizza'), nullable=False)
+    pizza_id = sa.Column(sa.Integer, sa.ForeignKey('pizzas.id'), nullable=False)
     total_price = sa.Column(sa.Float, nullable=False)
     size = sa.Column(sa.Enum(PizzaSizeEnum))
     quantity = sa.Column(sa.Integer)
@@ -168,7 +169,7 @@ class CartItem(Base, Model):
     total_price = sa.Column(sa.Float, nullable=False)
     size = sa.Column(sa.Enum(PizzaSizeEnum))
     quantity = sa.Column(sa.Integer)
-    order_id = sa.Column(
+    cart_id = sa.Column(
         sa.Integer,
         sa.ForeignKey('carts.id'),
         nullable=False
@@ -224,7 +225,7 @@ class Payment(Base, Model):
 
     id = sa.Column(sa.Integer, primary_key=True)
     user_id = sa.Column(sa.Integer, sa.ForeignKey('users.id'), nullable=False)
-    order_id = sa.Column(sa.Integer, sa.ForeignKey('orders'), nullable=False)
+    order_id = sa.Column(sa.Integer, sa.ForeignKey('orders.id'), nullable=False)
     payment_method = sa.Column(sa.Enum(PaymentMethodEnum), nullable=False)
     amount = sa.Column(sa.Float, nullable=False)
     payment_date = sa.Column(sa.DateTime, nullable=False)

@@ -1,5 +1,5 @@
 from .repository import Repository
-from .models import Cart, CartItem
+from .models import User, Cart, CartItem
 
 
 class CartRepository(Repository):
