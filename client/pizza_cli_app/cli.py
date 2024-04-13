@@ -2,9 +2,7 @@
 
 import argparse
 import sys
-from .commands import Base, Registration, Entrance, Config, Log_out
-from .api import Session
-
+from .commands import Base, Registration, Entrance, Config, Log_out, PizzaMenu
 
 def main():
     """Точка входа в CLI"""
@@ -16,15 +14,15 @@ def main():
         parser.print_help()
 
     sub_parsers = parser.add_subparsers(dest='command')  # Парсер подкоманд
-    
-    # Подкоманда registrationы
+
+    # Подкоманда registration
     registration_parser = sub_parsers.add_parser('sign_up', help=Registration.__doc__)
     registration_parser.add_argument('--email', type=str, help="Введите почту")
 
     # Подкоманда sign_in
     sign_in = sub_parsers.add_parser('sign_in', help=Entrance.__doc__)
     sign_in.add_argument('--email', type=str, help="Введите почту")
-    
+
     # Ввести данные о пользователе
     pers_data = sub_parsers.add_parser('config', help=Config.__doc__)
     pers_data.add_argument("--firstname", help="the first name of the customer", type=str)
@@ -42,6 +40,7 @@ def main():
         'sign_in' : Entrance,
         'config' : Config,
         'log_out' : Log_out,
+        'pizza_menu': PizzaMenu
     }
 
     session = Session()
