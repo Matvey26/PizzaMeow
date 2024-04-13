@@ -81,15 +81,12 @@ class User(Base, Model):
         return f'<User {self.firstname} {self.lastname}>'
 
 
-class OrderCartMixin:
+class Order(Base, Model):
+    __tablename__ = 'orders'
+
     id = sa.Column(sa.Integer, primary_key=True)
     user_id = sa.Column(sa.Integer, sa.ForeignKey('users.id'), nullable=False)
     total_price = sa.Column(sa.Float, nullable=False)
-
-
-class Order(OrderCartMixin, Base, Model):
-    __tablename__ = 'orders'
-
     status = sa.Column(sa.Enum(StatusEnum), nullable=False)
 
     user = relationship('User', back_populates='orders')
@@ -97,13 +94,18 @@ class Order(OrderCartMixin, Base, Model):
     payment = relationship('Payment', back_populates='order')
 
 
-class Cart(OrderCartMixin, Base, Model):
+class Cart(Base, Model):
     __tablename__ = 'carts'
+
+    id = sa.Column(sa.Integer, primary_key=True)
+    user_id = sa.Column(sa.Integer, sa.ForeignKey('users.id'), nullable=False)
+    total_price = sa.Column(sa.Float, nullable=False)
 
     user = relationship('User', back_populates='cart')
     order_items = relationship('OrderItem', back_populates='cart')
 
 
+# Промежуточная таблица, чтобы сделать отношение "многие ко многим". Не обращайте внимание
 class OrderItemTopping(Base, Model):
     __tablename__ = 'order_item_toppings'
 
@@ -119,6 +121,7 @@ class OrderItemTopping(Base, Model):
     )
 
 
+# Промежуточная таблица, чтобы сделать отношение "многие ко многим". Не обращайте внимание
 class CartItemTopping(Base, Model):
     __tablename__ = 'cart_item_toppings'
 
@@ -134,17 +137,14 @@ class CartItemTopping(Base, Model):
     )
 
 
-class OrderCartItemMixin:
+class OrderItem(Base, Model):
+    __tablename__ = 'order_items'
+
     id = sa.Column(sa.Integer, primary_key=True)
     pizza_id = sa.Column(sa.Integer, sa.ForeignKey('Pizza'), nullable=False)
     total_price = sa.Column(sa.Float, nullable=False)
     size = sa.Column(sa.Enum(PizzaSizeEnum))
     quantity = sa.Column(sa.Integer)
-
-
-class OrderItem(Base, Model):
-    __tablename__ = 'order_items'
-
     order_id = sa.Column(
         sa.Integer,
         sa.ForeignKey('orders.id'),
@@ -160,9 +160,14 @@ class OrderItem(Base, Model):
     )
 
 
-class CartItem(OrderCartItemMixin, Base, Model):
+class CartItem(Base, Model):
     __tablename__ = 'cart_items'
 
+    id = sa.Column(sa.Integer, primary_key=True)
+    pizza_id = sa.Column(sa.Integer, sa.ForeignKey('Pizza'), nullable=False)
+    total_price = sa.Column(sa.Float, nullable=False)
+    size = sa.Column(sa.Enum(PizzaSizeEnum))
+    quantity = sa.Column(sa.Integer)
     order_id = sa.Column(
         sa.Integer,
         sa.ForeignKey('carts.id'),
