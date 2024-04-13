@@ -24,3 +24,8 @@ class PaymentRepository(Repository):
 
     def get_all_payments(self):
         return self.session.query(Payment).filter_by(order_id=order.id).first()
+
+    def delete_payment(self, payment : Payment):
+        deleted = self.session.delete(payment)
+        self.session.commit()
+        return deleted
