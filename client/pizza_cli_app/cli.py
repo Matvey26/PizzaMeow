@@ -9,11 +9,6 @@ def main():
     """Точка входа в CLI"""
     parser = argparse.ArgumentParser()  # Главный парсер
 
-    # Вывод собственного сообщения справки
-    if "-h" in sys.argv or "--help" in sys.argv:
-        # print(custom_help)
-        parser.print_help()
-
     sub_parsers = parser.add_subparsers(dest='command')  # Парсер подкоманд
 
     # Подкоманда registration
