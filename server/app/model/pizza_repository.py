@@ -19,6 +19,12 @@ class PizzaRepository(Repository):
             pizza.price = new_price
         self.session.commit(pizza)
 
+    def get_pizza(self, pizza : Pizza):
+        return self.session.query(Pizza).filter_by(name=pizza.name, id=pizza.id).first()
+
+    def get_pizzas(self):
+        return self.session.query(Pizza).all()
+
     def delete_pizza(self, pizza : Pizza):
         deleted = self.session.delete(pizza)
         self.session.commit()
