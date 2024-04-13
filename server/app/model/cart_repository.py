@@ -22,6 +22,8 @@ class CartRepository(Repository):
     def add_item(self, cart : Cart, *items : CartItem):
         for item in items:
             cart.order_items.append(item)
+            item.order_id = cart.id
+            self.session.commit(item)
         self.session.commit(cart)
 
     def delete_item(self, cart : Cart, *items : CartItem):
