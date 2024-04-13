@@ -21,7 +21,7 @@ class CartRepository(Repository):
 
     def add_item(self, cart : Cart, *items : CartItem):
         for item in items:
-            item.order_id = cart.id
+            item.cart_id = cart.id
             cart.order_items.append(item)
             self.session.commit(item)
         self.session.commit(cart)
