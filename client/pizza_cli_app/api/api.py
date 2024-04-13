@@ -31,7 +31,7 @@ class Session:
                 self.email = email
                 self.token = response
                 return response.text
-            return response.status_code
+            return ('Неверный пароль', response.status_code)
         except requests.ConnectionError:
             return -1 # подключение прошло не успешно
 
@@ -51,7 +51,7 @@ class Session:
         except requests.ConnectionError:
             return -1
 
-    def create_order(self):
+    def create_order(self, data):
         headers = {'Content-Type': 'application/json', 'Authorization': f'Bearer {self.token}'}
         try:
             response = response.post(url + '/orders', json=data, headers=headers)
@@ -64,7 +64,7 @@ class Session:
     def get_pizzas(self, limit : int, offset : int):
         params = {'limit' : limit, 'offset' : offset}
         try:
-            response.get(url + 'pizzas', params=params)
+            response = response.get(url + 'pizzas', params=params)
             if response.status_code == 200:
                 return response.json()
             return response.status_code
