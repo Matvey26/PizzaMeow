@@ -22,18 +22,22 @@ class CartRepository(Repository):
     def add_item(self, cart : Cart, *items : CartItem):
         for item in items:
             item.cart_id = cart.id
-            cart.order_items.append(item)
             self.session.commit(item)
         self.session.commit(cart)
 
     def delete_item(self, cart : Cart, *items : CartItem):
         for item in items:
             cart.order_items.remove(item)
+            self.session.delete(item)
         self.session.commit(cart)
 
     def clear_cart(self, cart : Cart):
         cart.order_items.clear()
-        self.session.commit(cart)
+        for item in cart.cart_items:
+            self.session.delete(item)
+        deleted = self.session.delete(cart)
+        self.session.commit()
+        return deleted
 
     def get_items(self, cart : Cart):
         return cart.order_items

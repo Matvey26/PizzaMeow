@@ -8,7 +8,6 @@ class PaymentRepository(Repository):
 
     def create_payment(self, user : User, order : Order, payment_method, amount):
        new_payment = Payment(user_id=user.id, order_id=order.id, payment_method=payment_method, amount=amount, payment_date=datetime.datetime.now())
-       order.payment = new_payment
        user.payments.append(new_payment)
        self.session.add(new_payment)
        self.session.commit(new_payment, order.payment, user.payments)
