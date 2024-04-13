@@ -3,6 +3,7 @@
 import argparse
 import sys
 from .commands import Base, Registration, Entrance, Config, Log_out, PizzaMenu
+from .api import Session
 
 def main():
     """Точка входа в CLI"""
