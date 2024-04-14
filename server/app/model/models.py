@@ -1,6 +1,6 @@
 import enum
 import sqlalchemy as sa
-from app.database import Base
+from ..database import Base, engine
 from sqlalchemy import inspect
 from sqlalchemy.orm import relationship
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
@@ -62,6 +62,11 @@ class PaymentMethodEnum(enum.Enum):
     CARD_UPON_RECEIPT = 2
 
 
+class UserConfirmEnum(enum.Enum):
+    CONFIRMED = 0
+    NOTCONFIRMED = 1
+
+
 class User(Base, Model):
     __tablename__ = 'users'
 
@@ -72,6 +77,10 @@ class User(Base, Model):
     lastname = sa.Column(sa.String(100), nullable=True)
     phone_number = sa.Column(sa.String(20), nullable=True)
     address = sa.Column(sa.String(400), nullable=True)
+    _confirmed = sa.Column(
+        sa.Enum(UserConfirmEnum),
+        default=UserConfirmEnum.NOTCONFIRMED
+    )
 
     orders = relationship('Order', back_populates='user', cascade='all, delete-orphan, save-update')
     cart = relationship('Cart', back_populates='user', uselist=False, cascade='all, delete-orphan, save-update')
@@ -102,7 +111,7 @@ class Cart(Base, Model):
     total_price = sa.Column(sa.Float, nullable=False)
 
     user = relationship('User', back_populates='cart')
-    cart_items = relationship('OrderItem', back_populates='cart', cascade='all, delete-orphan, save-update')
+    cart_items = relationship('CartItem', back_populates='cart', cascade='all, delete-orphan, save-update')
 
 
 # Промежуточная таблица, чтобы сделать отношение "многие ко многим". Не обращайте внимание
@@ -165,7 +174,7 @@ class CartItem(Base, Model):
     __tablename__ = 'cart_items'
 
     id = sa.Column(sa.Integer, primary_key=True)
-    pizza_id = sa.Column(sa.Integer, sa.ForeignKey('Pizza'), nullable=False)
+    pizza_id = sa.Column(sa.Integer, sa.ForeignKey('pizzas.id'), nullable=False)
     total_price = sa.Column(sa.Float, nullable=False)
     size = sa.Column(sa.Enum(PizzaSizeEnum))
     quantity = sa.Column(sa.Integer)
@@ -232,3 +241,7 @@ class Payment(Base, Model):
 
     order = relationship('Order', back_populates='payment', uselist=False)
     user = relationship('User', back_populates='payments', uselist=False)
+
+
+# Создаём таблицы
+    Base.metadata.create_all(engine)

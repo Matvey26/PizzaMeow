@@ -17,7 +17,7 @@ class OrderRepository(Repository):
         new_order = Order(user=user, total_price=cart.total_price)
 
         from .order_item_repository import OrderItemRepository
-        order_item_repository = OrderItemRepository(self.session)
+        order_item_repository = OrderItemRepository()
 
         for cart_item in cart.cart_items:
             order_item_repository.create_from_cart_item(order=new_order, cart_item=cart_item)
