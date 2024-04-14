@@ -1,6 +1,6 @@
 from argon2 import PasswordHasher
 from .repository import Repository
-from .models import User
+from .models import User, Payment
 
 ph = PasswordHasher()
 
@@ -8,6 +8,24 @@ ph = PasswordHasher()
 class UserRepository(Repository):
     def __init__(self):
         Repository.__init__(self, User)
+
+    def create(
+            self,
+            email: str,
+            password: str,
+            firstname: str,
+            lastname: str,
+            phone_number: str,
+            address: str
+    ):
+        return User(
+            email=email,
+            password=password,
+            firstname=firstname,
+            lastname=lastname,
+            phone_number=phone_number,
+            address=address
+        )
     
     def get_by_email(self, email: str) -> User:
         return self.session.query(User).filter_by(email=email).first()

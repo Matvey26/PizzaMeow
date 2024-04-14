@@ -73,9 +73,9 @@ class User(Base, Model):
     phone_number = sa.Column(sa.String(20), nullable=True)
     address = sa.Column(sa.String(400), nullable=True)
 
-    orders = relationship('Order', back_populates='user')
-    cart = relationship('Cart', back_populates='user', uselist=False)
-    payments = relationship('Payment', back_populates='user')
+    orders = relationship('Order', back_populates='user', cascade='all, delete-orphan, save-update')
+    cart = relationship('Cart', back_populates='user', uselist=False, cascade='all, delete-orphan, save-update')
+    payments = relationship('Payment', back_populates='user', cascade='all, delete-orphan, save-update')
 
     def __repr__(self):
         return f'<User {self.firstname} {self.lastname}>'
@@ -90,8 +90,8 @@ class Order(Base, Model):
     status = sa.Column(sa.Enum(StatusEnum), nullable=False)
 
     user = relationship('User', back_populates='orders')
-    order_items = relationship('OrderItem', back_populates='order')
-    payment = relationship('Payment', back_populates='order')
+    order_items = relationship('OrderItem', back_populates='order', cascade='all, delete-orphan, save-update')
+    payment = relationship('Payment', back_populates='order', cascade='all, delete-orphan, save-update')
 
 
 class Cart(Base, Model):
@@ -102,7 +102,7 @@ class Cart(Base, Model):
     total_price = sa.Column(sa.Float, nullable=False)
 
     user = relationship('User', back_populates='cart')
-    cart_items = relationship('OrderItem', back_populates='cart')
+    cart_items = relationship('OrderItem', back_populates='cart', cascade='all, delete-orphan, save-update')
 
 
 # Промежуточная таблица, чтобы сделать отношение "многие ко многим". Не обращайте внимание
