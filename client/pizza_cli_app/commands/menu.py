@@ -1,4 +1,4 @@
-class PizzaMenu:
+class Menu:
     """Команда для вывода меню пиццы"""
 
     def __init__(self, args):

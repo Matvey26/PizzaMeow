@@ -33,13 +33,13 @@ def sign_in(email: str, password: str) -> str:
     """
     user = user_repository.get_by_email(email)
     if user is None:
-        abort(404, 'Неверно указана почта или пароль')
+        abort(404, 'Аккаунта с такой почтой не существует. Проверьте правильность ввода или зарегистрируйтесь.')
     
     if user_repository.authenticate(email, password):
         from ..utils.auth import generate_token
         return generate_token(user.id, 24 * 60 * 60)
     
-    abort(401, f'Неверный пароль от почты {email}')
+    abort(401, f'Введён неверный пароль. Пожалуйста, проверьте правильность ввода или восстановите пароль.')
 
 
 def sign_up(body):
@@ -54,10 +54,10 @@ def sign_up(body):
     
     validate = (validate_email(email), validate_password(password))
     if validate[0] != 'OK':
-        abort(404, validate[0])
+        abort(400, validate[0])
     
     if validate[1] != 'OK':
-        abort(404, validate[1])
+        abort(400, validate[1])
 
     # Создаём нового, неподтверждённого пользователя
     user = user_repository.create(email=email, password=password)

@@ -1,7 +1,7 @@
 from .base import Base
 import os
 
-class Log_out(Base):
+class Logout(Base):
     """Ввод данных"""
 
     def __init__(self, options, *args, **kwargs):
@@ -9,8 +9,5 @@ class Log_out(Base):
         self.args = args
         self.kwargs = kwargs
     
-    def run(self, session, token):
-        del(token)
-        if os.path.exists('token.bin'):
-            os.remove('token.bin')
-            print(f"Токен удален")
+    def run(self, session):
+        session.logout()
