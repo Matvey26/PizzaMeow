@@ -44,6 +44,8 @@ class Session:
         with save_path.open('w') as file:
             json.dump({'token': self.token}, file)
 
+    # ---------------- РАБОТА С УЧЁТНОЙ ЗАПИСЬЮ ПОЛЬЗОВАТЕЛЯ ---------------------
+
     @connection_error_handler
     def sign_in(self, email: str, password: str):
         """По данным регистрационным данным запрашивает у сервера токен доступа.
@@ -112,18 +114,91 @@ class Session:
         if response.status_code != 204:
             data = json.loads(response.text)
             return (response.status_code, data['detail'])
+        
+    @connection_error_handler
+    def change_password(self, new_password: str):
+        """Принимает новый пароль.
+        Предполагает, что пользователь авторизован
+        (только авторизованный пользователь может менять свой пароль).
+        """
+        pass
 
     @connection_error_handler
-    def add_card(self, data):  # под датой словарь  
+    def reset_password(self, email: str):
+        """Принимает почту, на котрую нужно отправить письмо с новым паролем."""
+        pass
+
+    @connection_error_handler
+    def change_email(self, new_email: str):
+        """Принимает новую почту.
+        Предполагает, что пользователь авторизован
+        (только авторизованный пользователь может менять свой пароль)"""
+        pass
+
+    @connection_error_handler
+    def add_card(self, data: dict): 
+        """Привязывает карту к учётной записи.
+        В словаре хранятся ключи:
+        'cardholder_name': Большими латинскими буквами через знак нижнего подчёркивания _
+        'card_number': Номер карты: 12 цифр
+        'expiry_date': Дата истечения срока: два числа через знак слэша /
+        'cvv': Код на обратной стороне, трехзначное число.
+        """
         headers = {'Content-Type': 'application/json', 'Authorization': f'Bearer {self.__token}'}
         response = response.post(url + 'users/config/addcard', json=data, headers=headers)
         return response.status_code
+    
+    # -------------------- РАБОТА С МЕНЮ --------------------
 
     @connection_error_handler
-    def add_pizza(self, data): # под датой словарь
+    def get_all_pizzas(self, limit : int, offset : int):
+        params = {'limit' : limit, 'offset' : offset}
+        response = response.get(url + 'pizzas', params=params)
+        if response.status_code == 200:
+            return response.json()
+        return response.status_code
+    
+    @connection_error_handler
+    def get_pizza_by_id(self, id : int):
+        response = response.get(url + f'pizzas/{id}')
+        if response.status_code == 200:
+            return response.json()
+        return response.status_code
+
+    # ------------------ РАБОТА С КОРЗИНОЙ ПОЛЬЗОВАТЕЛЯ -----------------
+
+    @connection_error_handler
+    def get_cart_items(self):
+        """Получить содержимое своей корзины (без пагинации, так как размер корзины заведомо небольшой)"""
+        headers = {'Authorization': f'Bearer {self.__token}'}
+        response = response.get(url + 'carts', headers=headers)
+        if response.status_code == 200:
+            return response.json()
+        return response.status_code
+    
+    @connection_error_handler
+    def add_item_to_cart(self, data: dict):
+        """Принимает словарь в следующем формате:
+        'pizza_id': Айди пиццы, которую нужно добавить в корзину
+        'dough': Желаемое тесто, а именно 'classic' или 'thin'. По умолчанию должно быть 1
+        'quantity': Количество штук пицц. По умолчанию должно быть 1
+
+        Добавляет пиццу в корзину
+        """
         headers = {'Content-Type': 'application/json', 'Authorization': f'Bearer {self.__token}'}
         response = response.post(url + '/carts', json=data, headers=headers)
         return response.status_code
+    
+    def update_item_in_cart(self, data: dict):
+        """Принимает словарь в следующем формате:
+        'item_id': Айди объекта корзины, который нужно изменить
+        'dough': Желаемое тесто, а именно 'classic' или 'thin'. По умолчанию должно быть 1
+        'quantity': Количество штук пицц. По умолчанию должно быть 1
+
+        Изменяет объект корзины.
+        """
+    
+    # ------------------ РАБОТА С ЗАКАЗАМИ ------------------
 
     @connection_error_handler
     def create_order(self, data):
@@ -131,21 +206,6 @@ class Session:
         response = response.post(url + '/orders', json=data, headers=headers)
         if response.status_code == 200:
             return response.text # ссылка на оплату
-        return response.status_code
-
-    @connection_error_handler
-    def get_pizzas(self, limit : int, offset : int):
-        params = {'limit' : limit, 'offset' : offset}
-        response = response.get(url + 'pizzas', params=params)
-        if response.status_code == 200:
-            return response.json()
-        return response.status_code
-
-    @connection_error_handler
-    def id_pizza(self, id : int):
-        response = response.get(url + f'pizzas/{id}')
-        if response.status_code == 200:
-            return response.json()
         return response.status_code
 
     @connection_error_handler
@@ -165,13 +225,6 @@ class Session:
             return response.json()
         return response.status_code
     
-    @connection_error_handler
-    def get_cart(self):
-        headers = {'Authorization': f'Bearer {self.__token}'}
-        response = response.get(url + 'carts', headers=headers)
-        if response.status_code == 200:
-            return response.json()
-        return response.status_code
 
     @connection_error_handler
     def get_time(self, address : str):
