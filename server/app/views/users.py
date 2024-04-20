@@ -122,13 +122,40 @@ def update_config(user: str, token_info: dict, body: dict):
     user_repository.update(user)
 
 
-def change_password(user: int, token_info: dict, body: str):
-    new_password = body
+def change_password(user: str, token_info: dict, body: str):
+    """Изменяет пароль пользователя.
+    Параметры
+    ---------
+    user : str
+        Айди пользователя
+    token_info : dict
+        Этот параметр нужен для connexion, фактически бесполезен
+    body : str
+        Электронная почта пользователя
+    """
+    new_password = body.decode() if isinstance(body, bytes) else body
     user_id = int(user)
     user = user_repository.get(user_id)
     user_repository.change_password(user, new_password)
     user_repository.update(user)
 
 
-def reset_password():
-    pass
+def reset_password(body):
+    email = body.decode() if isinstance(body, bytes) else body
+
+    from ..utils.auth import generate_password
+    from ..utils.send_email import send_email
+
+    user = user_repository.get_by_email(email)
+    new_password = generate_password()
+    change_password(user.id, {}, new_password)
+    send_email(email, 'Изменение пароля', f'Вы запросили изменение пароля. Вот ваш новый пароль: {new_password}')
+
+
+def change_email(user: str, token_info: dict, body):
+    user_id = int(user)
+    new_email = body.decode() if isinstance(body, bytes) else body
+
+    user = user_repository.get(user_id)
+    user_repository.change_email(user, new_email)
+    user_repository.update(user)

@@ -109,31 +109,69 @@ class Session:
     @connection_error_handler
     def config(self, data: dict):
         """Принимает словарь с данными, которые нужно обновить."""
-        headers = {'Content-Type': 'application/json', 'Authorization': f'Bearer {self.__token}'}
-        response = requests.patch(url + 'users/config/update', json=data, headers=headers)
+        headers = {'Content-Type': 'application/json', 'Authorization': f'Bearer {self.token}'}
+        response = requests.patch(url + 'users/config', json=data, headers=headers)
         if response.status_code != 204:
             data = json.loads(response.text)
             return (response.status_code, data['detail'])
         
     @connection_error_handler
-    def change_password(self, new_password: str):
+    def change_password(self, email: str, old_password: str, new_password: str):
         """Принимает новый пароль.
         Предполагает, что пользователь авторизован
         (только авторизованный пользователь может менять свой пароль).
+        Изменяет пароль от учётной записи на указанный.
+
+        Параметры
+        ---------
+        email : str
+            Почта, которая привязана к той учётной записи, от которой надо поменять пароль
+        old_password : str
+            Старый пароль от учётной записи
+        new_password : str
+            Новый пароль от учётной записи
         """
-        pass
+        answer = self.sign_in(email, old_password)
+        if answer is not None:
+            return answer
+        
+        headers = {'Content-Type': 'application/json', 'Authorization': f'Bearer {self.token}'}
+        response = requests.put(url + 'users/change_password', data=new_password, headers=headers)
+        if response.status_code != 204:
+            data = json.loads(response.text)
+            return (response.status_code, data['detail'])
 
     @connection_error_handler
     def reset_password(self, email: str):
         """Принимает почту, на котрую нужно отправить письмо с новым паролем."""
-        pass
+        response = requests.put(url + 'users/reset_password', data=email)
+        if response.status_code != 204:
+            data = json.loads(response.text)
+            return (response.status_code, data['detail'])
 
     @connection_error_handler
-    def change_email(self, new_email: str):
-        """Принимает новую почту.
-        Предполагает, что пользователь авторизован
-        (только авторизованный пользователь может менять свой пароль)"""
-        pass
+    def change_email(self, email: str, password: str, new_email: str):
+        """Изменяет почту от учтёной записи на указанную.
+        
+        Параметры
+        ---------
+        email : str
+            Старая почта
+        password : str
+            Пароль от учётной записи
+        new_email : str
+            Новая почта
+        """
+
+        answer = self.sign_in(email, password)
+        if answer is not None:
+            return answer
+        
+        headers = {'Content-Type': 'application/json', 'Authorization': f'Bearer {self.token}'}
+        response = requests.put(url + 'users/change_email', data=new_email, headers=headers)
+        if response.status_code != 204:
+            data = json.loads(response.text)
+            return (response.status_code, data['detail'])
 
     @connection_error_handler
     def add_card(self, data: dict): 

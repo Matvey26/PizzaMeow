@@ -44,3 +44,16 @@ def generate_confirmation_url(email_confirmation_token, end_point: str):
     confirmation_url = f'{end_point}?{encoded_token}'
 
     return confirmation_url
+
+
+def generate_password(length: int = 20):
+    """Очень небезопансая функция, которая
+    генерирует пароль указанной длины (по умолчанию 20)
+    """
+    import string
+    import random
+
+    all_chars = string.ascii_letters + string.digits + string.punctuation
+    password = ''.join(random.choice(all_chars) for i in range(length))
+
+    return password

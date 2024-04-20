@@ -76,7 +76,7 @@ paths:
     
   /users/change_password:
     put:
-      summary: Изменяет пароль пользователя
+      summary: Изменяет пароль от учётной записи
       operationId: server.app.views.users.change_password
       requestBody:
         description: Новый пароль
@@ -105,6 +105,21 @@ paths:
       responses:
         '204':
           description: Новый пароль был отправлен на вашу почту.
+
+  /users/change_email:
+    put:
+      summary: Изменяет почту учётной записи
+      operationId: server.app.views.users.change_email
+      requestBody:
+        description: Новая почта
+        required: true
+        content:
+          'text/plain':
+            schema:
+              type: string
+      responses:
+        '204':
+          description: Почта успешно обновлена
       security:
       - jwt: []
 

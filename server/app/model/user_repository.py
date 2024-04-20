@@ -37,6 +37,9 @@ class UserRepository(Repository):
 
     def change_password(self, user: User, new_password: str):
         user.password = ph.hash(new_password)
+
+    def change_email(self, user: User, new_email: str):
+        user.email = new_email
     
     def authenticate(self, email: str, password: str) -> bool:
         user = self.get_by_email(email)
