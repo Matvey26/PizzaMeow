@@ -33,13 +33,13 @@ def sign_in(email: str, password: str) -> str:
     """
     user = user_repository.get_by_email(email)
     if user is None:
-        abort(404, 'Неверно указана почта или пароль')
+        abort(404, 'Аккаунта с такой почтой не существует. Проверьте правильность ввода или зарегистрируйтесь.')
     
     if user_repository.authenticate(email, password):
         from ..utils.auth import generate_token
         return generate_token(user.id, 24 * 60 * 60)
     
-    abort(401, f'Неверный пароль от почты {email}')
+    abort(401, f'Введён неверный пароль. Пожалуйста, проверьте правильность ввода или восстановите пароль.')
 
 
 def sign_up(body):
@@ -50,10 +50,10 @@ def sign_up(body):
 
     validate = (validate_email(email), validate_password(password))
     if validate[0] != 'OK':
-        abort(404, validate[0])
+        abort(400, validate[0])
     
     if validate[1] != 'OK':
-        abort(404, validate[1])
+        abort(400, validate[1])
 
     user = user_repository.get_by_email(email)
     if user:
@@ -64,20 +64,12 @@ def sign_up(body):
     user = user_repository.create(email=email, password=password)
     user_repository.save(user)
 
-    send_confirm_email(user.id, {}, email)
+    send_confirm_email(email)
 
     return sign_in(email, password)
 
 
-def send_confirm_email(user: str, token_info: dict, email: str):
-    user_id = int(user)
-    user = user_repository.get_by_email(email)
-    if user.id != user_id:
-        abort(401, 'Вы не можете запросить письмо с подтверждением почты для другого аккаунта')
-
-    if user_repository.is_confirmed(user):
-        abort(404, 'Аккаунт уже подтверждён')
-    
+def send_confirm_email(email: str):
     # Генерируем токен для подтверждения аккаунта
     from ..utils.auth import generate_token, generate_confirmation_url
     email_confirmation_token = generate_token(email, 15 * 60)
@@ -87,6 +79,19 @@ def send_confirm_email(user: str, token_info: dict, email: str):
     # Отправляем письмо с просьбой подтвердить аккаунт
     from ..utils.send_email import send_email
     send_email(email, 'Подтверждение аккаунта', f'Перейдите по ссылке, чтобы подтвердить аккаунт. Ссылка истечёт через 15 минут {confirm_email_url}')
+
+
+def get_confirm_email(user: str, token_info: dict, email: str):
+    email = email.decode() if isinstance(email, bytes) else email
+    user_id = int(user)
+    user = user_repository.get_by_email(email)
+    if user.id != user_id:
+        abort(401, 'Вы не можете запросить письмо с подтверждением почты для другого аккаунта')
+
+    if user_repository.is_confirmed(user):
+        abort(400, 'Аккаунт уже подтверждён')
+    
+    send_confirm_email(email)
 
 
 def confirm_email(email_confirmation_token):
@@ -103,7 +108,6 @@ def confirm_email(email_confirmation_token):
 
 
 def update_config(user: str, token_info: dict, body: dict):
-    print('UPDATE_CONFIG', type(user))
     user_id = int(user)
     user = user_repository.get(user_id)
     firstname = body.get('firstname', '')
@@ -123,13 +127,54 @@ def update_config(user: str, token_info: dict, body: dict):
     user_repository.update(user)
 
 
-def change_password(user: int, token_info: dict, body: str):
-    new_password = body
+def change_password(user: str, token_info: dict, body: str):
+    """Изменяет пароль пользователя.
+    Параметры
+    ---------
+    user : str
+        Айди пользователя
+    token_info : dict
+        Этот параметр нужен для connexion, фактически бесполезен
+    body : str
+        Электронная почта пользователя
+    """
+    new_password = body.decode() if isinstance(body, bytes) else body
     user_id = int(user)
     user = user_repository.get(user_id)
     user_repository.change_password(user, new_password)
     user_repository.update(user)
 
 
-def reset_password():
-    pass
+def reset_password(body):
+    email = body.decode() if isinstance(body, bytes) else body
+
+    from ..utils.auth import generate_password
+    from ..utils.send_email import send_email
+
+    user = user_repository.get_by_email(email)
+    
+    if user is None:
+        abort(400, 'Учётной записи с такой почтой нет. Проверьте правильность ввода.')
+
+    new_password = generate_password()
+    change_password(user.id, {}, new_password)
+    send_email(email, 'Изменение пароля', f'Вы запросили изменение пароля. Вот ваш новый пароль: {new_password}')
+
+
+def change_email(user: str, token_info: dict, body):
+    user_id = int(user)
+    new_email = body.decode() if isinstance(body, bytes) else body
+
+    if user_repository.get_by_email(new_email) is not None:
+        abort(400, 'Эта почта уже используется.')
+
+    validate = validate_email(new_email)
+    if validate != 'OK':
+        abort(400, 'Неверный формат почты.')
+
+    user = user_repository.get(user_id)
+
+    user_repository.change_email(user, new_email)
+    user_repository.update(user)
+
+    send_confirm_email(new_email)

@@ -1,4 +1,4 @@
-from argon2 import PasswordHasher
+from argon2 import PasswordHasher, exceptions
 from .repository import Repository
 from .models import User, UserConfirmEnum
 
@@ -37,12 +37,21 @@ class UserRepository(Repository):
 
     def change_password(self, user: User, new_password: str):
         user.password = ph.hash(new_password)
+
+    def change_email(self, user: User, new_email: str):
+        user.email = new_email
+        user._confirmed = UserConfirmEnum.NOTCONFIRMED
     
     def authenticate(self, email: str, password: str) -> bool:
         user = self.get_by_email(email)
-        if user and ph.verify(user.password, password):
+        if user is None:
+            return False
+        try:
+            ph.verify(user.password, password)
             return True
-        return False
+        except exceptions.VerifyMismatchError:
+            return False
+    
     
     def is_invalid(self, user: User) -> list:
         invalid_fields = []
