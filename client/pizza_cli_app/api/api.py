@@ -135,7 +135,7 @@ class Session:
         if answer is not None:
             return answer
         
-        headers = {'Content-Type': 'application/json', 'Authorization': f'Bearer {self.token}'}
+        headers = {'Authorization': f'Bearer {self.token}'}
         response = requests.put(url + 'users/change_password', data=new_password, headers=headers)
         if response.status_code != 204:
             data = json.loads(response.text)

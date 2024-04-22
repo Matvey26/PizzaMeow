@@ -150,10 +150,11 @@ def reset_password(body):
     from ..utils.auth import generate_password
     from ..utils.send_email import send_email
 
-    if user in None:
+    user = user_repository.get_by_email(email)
+    
+    if user is None:
         abort(400, 'Учётной записи с такой почтой нет. Проверьте правильность ввода.')
 
-    user = user_repository.get_by_email(email)
     new_password = generate_password()
     change_password(user.id, {}, new_password)
     send_email(email, 'Изменение пароля', f'Вы запросили изменение пароля. Вот ваш новый пароль: {new_password}')

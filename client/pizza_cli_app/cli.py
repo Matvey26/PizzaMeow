@@ -24,8 +24,8 @@ def main():
     reset_password.add_argument('email', type=str, help="Почта, к которой привязана учётная запись.")
 
     # Смена пароля
-    change_password = sub_parsers.add_parser('changepassword', help=ChangePasssword.__doc__)
-    change_password.add_argument('--email', type=str, help="Почта, которая привязана к аккаунту.")
+    change_password = sub_parsers.add_parser('change_password', help=ChangePasssword.__doc__)
+    change_password.add_argument('email', type=str, help="Почта, которая привязана к аккаунту.")
 
     # Ввести данные о пользователе
     config = sub_parsers.add_parser('config', help=Config.__doc__)
