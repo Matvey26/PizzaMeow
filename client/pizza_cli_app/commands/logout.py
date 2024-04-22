@@ -2,7 +2,7 @@ from .base import Base
 import os
 
 class Logout(Base):
-    """Ввод данных"""
+    """Завершение сессии"""
 
     def __init__(self, options, *args, **kwargs):
         self.options = options

@@ -2,7 +2,7 @@
 
 import argparse
 import sys
-from .commands import Base, SignUp, SignIn, Config, Logout, Menu
+from .commands import Base, Config, SignUp, SignIn, Logout, Menu, ResetPasssword
 from .api import Session
 
 def main():
@@ -18,6 +18,10 @@ def main():
     # Подкоманда sign_in
     sign_in = sub_parsers.add_parser('signin', help=SignIn.__doc__)
     sign_in.add_argument('--email', type=str, help="Почта, которая будет привязана к аккаунту.")
+
+    # Подкоманда reset_password
+    reset_password = sub_parsers.add_parser('resetpassword', help=SignIn.__doc__)
+    reset_password.add_argument('--email', type=str, help="Почта, которая будет привязана к аккаунту.")
 
     # Ввести данные о пользователе
     config = sub_parsers.add_parser('config', help=Config.__doc__)
