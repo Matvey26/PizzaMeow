@@ -20,8 +20,8 @@ def main():
     sign_in.add_argument('email', type=str, help="Почта, привязаная к учётной записи.")
 
     # Подкоманда reset_password
-    reset_password = sub_parsers.add_parser('resetpassword', help=SignIn.__doc__)
-    reset_password.add_argument('--email', type=str, help="Почта, которая будет привязана к аккаунту.")
+    reset_password = sub_parsers.add_parser('reset_password', help=ResetPasssword.__doc__)
+    reset_password.add_argument('email', type=str, help="Почта, к которой привязана учётная запись.")
 
     # Ввести данные о пользователе
     config = sub_parsers.add_parser('config', help=Config.__doc__)
@@ -52,7 +52,8 @@ def main():
         'config' : Config,
         'logout' : Logout,
         'menu': Menu,
-        'change_email': ChangeEmail
+        'change_email': ChangeEmail,
+        'reset_password': ResetPasssword
     }
 
     session = Session()
