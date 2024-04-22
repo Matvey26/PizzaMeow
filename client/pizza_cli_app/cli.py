@@ -2,7 +2,7 @@
 
 import argparse
 import sys
-from .commands import Base, Config, ChangeEmail, SignUp, SignIn, Logout, Menu, ResetPasssword
+from .commands import Base, ChangeEmail, ChangePasssword, Config, Logout, Menu, ResetPasssword, SignIn, SignUp
 from .api import Session
 
 def main():
@@ -11,17 +11,21 @@ def main():
 
     sub_parsers = parser.add_subparsers(dest='command')  # Парсер подкоманд
 
-    # Подкоманда sing_up, зарегистрироваться
+    # Регистрация
     sign_up = sub_parsers.add_parser('signup', help=SignUp.__doc__)
     sign_up.add_argument('email', type=str, help="Почта, которая будет привязана к учётной записи.")
 
-    # Подкоманда sign_in
+    # Вход
     sign_in = sub_parsers.add_parser('signin', help=SignIn.__doc__)
-    sign_in.add_argument('email', type=str, help="Почта, привязаная к учётной записи.")
+    sign_in.add_argument('email', type=str, help="Почта, привязанная к учётной записи.")
 
-    # Подкоманда reset_password
+    # Востановить пароль
     reset_password = sub_parsers.add_parser('resetpassword', help=SignIn.__doc__)
     reset_password.add_argument('--email', type=str, help="Почта, которая будет привязана к аккаунту.")
+
+    # Смена пароля
+    reset_password = sub_parsers.add_parser('changepassword', help=ChangePasssword.__doc__)
+    reset_password.add_argument('--email', type=str, help="Почта, которая привязана к аккаунту.")
 
     # Ввести данные о пользователе
     config = sub_parsers.add_parser('config', help=Config.__doc__)
@@ -52,7 +56,9 @@ def main():
         'config' : Config,
         'logout' : Logout,
         'menu': Menu,
-        'change_email': ChangeEmail
+        'reset_password': ResetPasssword,
+        'change_email': ChangeEmail,
+        'change_password': ChangePasssword
     }
 
     session = Session()
