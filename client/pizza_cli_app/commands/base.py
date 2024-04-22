@@ -6,5 +6,5 @@ class Base:
         self.args = args
         self.kwargs = kwargs
 
-    def run(self, session, token):
+    def run(self, session):
         raise NotImplementedError('You must implement the run() method!')

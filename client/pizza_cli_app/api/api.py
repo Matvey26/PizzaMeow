@@ -1,189 +1,290 @@
-"""Класс текущей сессии, который предоставляет возможность общения """
+"""Класс текущей сессии, предоставляющий удобный интерфейс взаимодействия клиента с сервером."""
 
 import requests
 import os
+import pathlib
+import json
 url = 'http://127.0.0.1:8000/api/'
+
+
+def connection_error_handler(func):
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except requests.ConnectionError:
+            return (-1, 'Ошибка соединения')
+        
+    return wrapper
+
 
 class Session:
     def __init__(self):
-        pass
-    # Вова передает мне аргументы формата пароль почту из его кэша
-    def sign_in(self, email : str, password : str):
-        params = {'email' : email, 'password' : password}
-        try:
-            response = requests.get(url + 'users/signin', params=params)
-            if response.status_code == 200:
-                self.password = password
-                self.email = email
-                self.token = response.text
-                return response.text
-            return response.status_code
-            # если данные не верны вова должен заставить человека авторизоваться вручную
-        except requests.ConnectionError:
-            return -1 # означает что проблема с интернетом у пользователя
+        save_dir = pathlib.Path(__file__).parent.parent  # Папка pizza_cli_app
+        save_path = save_dir / '.saved_token.json'
+        save_path.touch()
+        if save_path.stat().st_size == 0:
+            with save_path.open('w') as file:
+                json.dump({'token': ''}, file)
+        with save_path.open('r') as file:
+            self.__token = json.load(file).get('token', '')
 
+    @property
+    def token(self):
+        return self.__token
+
+    @token.setter
+    def token(self, value):
+        self.__token = value
+        save_dir = pathlib.Path(__file__).parent.parent  # Папка pizza_cli_app
+        save_path = save_dir / '.saved_token.json'
+        save_path.touch()
+        if save_path.stat().st_size == 0:
+            with save_path.open('w') as file:
+                json.dump({'token': ''}, file)
+        with save_path.open('w') as file:
+            json.dump({'token': self.token}, file)
+
+    # ---------------- РАБОТА С УЧЁТНОЙ ЗАПИСЬЮ ПОЛЬЗОВАТЕЛЯ ---------------------
+
+    @connection_error_handler
+    def sign_in(self, email: str, password: str):
+        """По данным регистрационным данным запрашивает у сервера токен доступа.
+        
+        Параметры
+        ---------
+        email: str
+            Почта, привязанная к аккаунту
+        password: str
+            Пароль от аккаунта
+
+        Возвращает
+        ----------
+        error_message: tuple
+            Кортеж из кода состояния ответа и сообщение об ошибке
+        ничего
+            Если запрос был обработан успешно, функция ничего не возвращает
+        """
+
+        params = {'email' : email, 'password' : password}
+        response = requests.get(url + 'users/signin', params=params)
+        if response.status_code == 200:
+            self.password = password
+            self.email = email
+            self.token = response.text
+            return
+        data = json.loads(response.text)
+        return (response.status_code, data['detail'])
+
+    @connection_error_handler
     def sign_up(self, email: str, password : str):
+        """Регистрирует новый аккаунт.
+        
+        Параметры
+        ---------
+        email: str
+            Почта, которая будет привязана к аккаунту (которая будет использоваться при входе)
+        password: str
+            Пароль от аккаунта
+
+        Возвращает
+        ----------
+        error_message: tuple
+            Кортеж из кода состояния ответа и сообщение об ошибке
+        ничего
+            Если запрос был обработан успешно, функция ничего не возвращает
+        """
         params = {'email' : email, 'password' : password}
-        try:
-            response = requests.post(url + 'users/signup', json=params)
-            if response.status_code == 200:
-                self.password = password
-                self.email = email
-                self.token = response
-                return response.text
-            return ('Неверный пароль', response.status_code)
-        except requests.ConnectionError:
-            return -1 # подключение прошло не успешно
+        response = requests.post(url + 'users/signup', json=params)
+        if response.status_code == 200:
+            self.password = password
+            self.email = email
+            self.token = response.text
+            return
+        data = json.loads(response.text)
+        return (response.status_code, data['detail'])
 
-    def add_card(self, data):  # под датой словарь  
+    def logout(self):
+        self.token = ''
+
+    @connection_error_handler
+    def config(self, data: dict):
+        """Принимает словарь с данными, которые нужно обновить."""
         headers = {'Content-Type': 'application/json', 'Authorization': f'Bearer {self.token}'}
-        try:
-            response = response.post(url + 'users/config/addcart', json=data, headers=headers)
-            return response.status_code
-        except requests.ConnectionError:
-            return -1
+        response = requests.patch(url + 'users/config', json=data, headers=headers)
+        if response.status_code != 204:
+            data = json.loads(response.text)
+            return (response.status_code, data['detail'])
+        
+    @connection_error_handler
+    def change_password(self, email: str, old_password: str, new_password: str):
+        """Принимает новый пароль.
+        Предполагает, что пользователь авторизован
+        (только авторизованный пользователь может менять свой пароль).
+        Изменяет пароль от учётной записи на указанный.
 
-    def add_pizza(self, data): # под датой словарь
-        headers = {'Content-Type': 'application/json', 'Authorization': f'Bearer {self.token}'}
-        try:
-            response = response.post(url + '/carts', json=data, headers=headers)
-            return response.status_code
-        except requests.ConnectionError:
-            return -1
-
-    def create_order(self, data):
-        headers = {'Content-Type': 'application/json', 'Authorization': f'Bearer {self.token}'}
-        try:
-            response = response.post(url + '/orders', json=data, headers=headers)
-            if response.status_code == 200:
-                return response.text # ссылка на оплату
-            return response.status_code
-        except requests.ConnectionError:
-            return -1
-
-    def get_pizzas(self, limit : int, offset : int):
-        params = {'limit' : limit, 'offset' : offset}
-        try:
-            response = response.get(url + 'pizzas', params=params)
-            if response.status_code == 200:
-                return response.json()
-            return response.status_code
-        except requests.ConnectionError:
-            return -1
-
-    def id_pizza(self, id : int):
-        try:
-            response = response.get(url + f'pizzas/{id}')
-            if response.status_code == 200:
-                return response.json()
-            return response.status_code
-        except requests.ConnectionError:
-            return -1
-
-    def whoami(self):
+        Параметры
+        ---------
+        email : str
+            Почта, которая привязана к той учётной записи, от которой надо поменять пароль
+        old_password : str
+            Старый пароль от учётной записи
+        new_password : str
+            Новый пароль от учётной записи
+        """
+        answer = self.sign_in(email, old_password)
+        if answer is not None:
+            return answer
+        
         headers = {'Authorization': f'Bearer {self.token}'}
-        try:
-            response = requests.get(url + 'whoami', headers=headers)
-            if response.status_code == 200:
-                return response.json()
-            return response.status_code
-        except requests.ConnectionError:
-            return -1
+        response = requests.put(url + 'users/change_password', data=new_password, headers=headers)
+        if response.status_code != 204:
+            data = json.loads(response.text)
+            return (response.status_code, data['detail'])
 
+    @connection_error_handler
+    def reset_password(self, email: str):
+        """Принимает почту, на котрую нужно отправить письмо с новым паролем."""
+        response = requests.put(url + 'users/reset_password', data=email)
+        if response.status_code != 204:
+            data = json.loads(response.text)
+            return (response.status_code, data['detail'])
+
+    @connection_error_handler
+    def change_email(self, old_email: str, password: str, new_email: str):
+        """Изменяет почту от учтёной записи на указанную.
+        
+        Параметры
+        ---------
+        old_email : str
+            Старая почта
+        password : str
+            Пароль от учётной записи
+        new_email : str
+            Новая почта
+        """
+
+        answer = self.sign_in(old_email, password)
+        if answer is not None:
+            return answer
+        
+        headers = {'Authorization': f'Bearer {self.token}'}
+        response = requests.put(url + 'users/change_email', data=new_email, headers=headers)
+        if response.status_code != 204:
+            data = json.loads(response.text)
+            return (response.status_code, data['detail'])
+
+    @connection_error_handler
+    def add_card(self, data: dict): 
+        """Привязывает карту к учётной записи.
+        В словаре хранятся ключи:
+        'cardholder_name': Большими латинскими буквами через знак нижнего подчёркивания _
+        'card_number': Номер карты: 12 цифр
+        'expiry_date': Дата истечения срока: два числа через знак слэша /
+        'cvv': Код на обратной стороне, трехзначное число.
+        """
+        headers = {'Content-Type': 'application/json', 'Authorization': f'Bearer {self.__token}'}
+        response = response.post(url + 'users/config/addcard', json=data, headers=headers)
+        return response.status_code
+    
+    # -------------------- РАБОТА С МЕНЮ --------------------
+
+    @connection_error_handler
+    def get_all_pizzas(self, limit : int, offset : int):
+        params = {'limit' : limit, 'offset' : offset}
+        response = response.get(url + 'pizzas', params=params)
+        if response.status_code == 200:
+            return response.json()
+        return response.status_code
+    
+    @connection_error_handler
+    def get_pizza_by_id(self, id : int):
+        response = response.get(url + f'pizzas/{id}')
+        if response.status_code == 200:
+            return response.json()
+        return response.status_code
+
+    # ------------------ РАБОТА С КОРЗИНОЙ ПОЛЬЗОВАТЕЛЯ -----------------
+
+    @connection_error_handler
+    def get_cart_items(self):
+        """Получить содержимое своей корзины (без пагинации, так как размер корзины заведомо небольшой)"""
+        headers = {'Authorization': f'Bearer {self.__token}'}
+        response = response.get(url + 'carts', headers=headers)
+        if response.status_code == 200:
+            return response.json()
+        return response.status_code
+    
+    @connection_error_handler
+    def add_item_to_cart(self, data: dict):
+        """Принимает словарь в следующем формате:
+        'pizza_id': Айди пиццы, которую нужно добавить в корзину
+        'dough': Желаемое тесто, а именно 'classic' или 'thin'. По умолчанию должно быть 1
+        'quantity': Количество штук пицц. По умолчанию должно быть 1
+
+        Добавляет пиццу в корзину
+        """
+        headers = {'Content-Type': 'application/json', 'Authorization': f'Bearer {self.__token}'}
+        response = response.post(url + '/carts', json=data, headers=headers)
+        return response.status_code
+    
+    def update_item_in_cart(self, data: dict):
+        """Принимает словарь в следующем формате:
+        'item_id': Айди объекта корзины, который нужно изменить
+        'dough': Желаемое тесто, а именно 'classic' или 'thin'. По умолчанию должно быть 1
+        'quantity': Количество штук пицц. По умолчанию должно быть 1
+
+        Изменяет объект корзины.
+        """
+    
+    # ------------------ РАБОТА С ЗАКАЗАМИ ------------------
+
+    @connection_error_handler
+    def create_order(self, data):
+        headers = {'Content-Type': 'application/json', 'Authorization': f'Bearer {self.__token}'}
+        response = response.post(url + '/orders', json=data, headers=headers)
+        if response.status_code == 200:
+            return response.text # ссылка на оплату
+        return response.status_code
+
+    @connection_error_handler
     def get_orders(self, limit : int, offset : int):
         params = {'limit' : limit, 'offset' : offset}
-        headers = {'Authorization': f'Bearer {self.token}'}
-        try:
-            response = response.get(url + 'orders', headers=headers, params=params)
-            if response.status_code == 200:
-                return response.json()
-            return response.status_code
-        except requests.ConnectionError:
-            return -1
+        headers = {'Authorization': f'Bearer {self.__token}'}
+        response = response.get(url + 'orders', headers=headers, params=params)
+        if response.status_code == 200:
+            return response.json()
+        return response.status_code
 
+    @connection_error_handler
     def id_order(self, id : int):
-        headers = {'Authorization': f'Bearer {self.token}'}
-        try:
-            response = response.get(url + f'orders/{id}', headers=headers)
-            if response.status_code == 200:
-                return response.json()
-            return response.status_code
-        except requests.ConnectionError:
-            return -1
-        
-    def get_cart(self):
-        headers = {'Authorization': f'Bearer {self.token}'}
-        try:
-            response = response.get(url + 'carts', headers=headers)
-            if response.status_code == 200:
-                return response.json()
-            return response.status_code
-        except requests.ConnectionError:
-            return -1
-
+        headers = {'Authorization': f'Bearer {self.__token}'}
+        response = response.get(url + f'orders/{id}', headers=headers)
+        if response.status_code == 200:
+            return response.json()
+        return response.status_code
+    
+    @connection_error_handler
     def get_time(self, address : str):
         params = {'address' : address}
-        try: 
-            response = response.get(url + 'delivery/time', params=params)
-            if response.status_code == 200:
-                return response.text
-            return response.status_code
-        except requests.ConnectionError:
-            return -1
-    
-    def update(self, data):
-        headers = {'Content-Type': 'application/json', 'Authorization': f'Bearer {self.token}'}
-        try:
-            response = response.patch(url + 'users/config/update', json=data, headers=headers)
-            return response.status_code
-        except requests.ConnectionError:
-            return -1
+        response = response.get(url + 'delivery/time', params=params)
+        if response.status_code == 200:
+            return response.text
+        return response.status_code
 
+    @connection_error_handler
     def new_item(self, id : int, data):
-        headers = {'Content-Type': 'application/json', 'Authorization': f'Bearer {self.token}'}
-        try:
-            response = response.patch(url + f'carts/{id}',  json=data, headers=headers)
-            return response.status_code
-        except requests.ConnectionError:
-            return -1
-        
-    def change_password(self, params : str):
-        headers = {'Authorization': f'Bearer {self.token}'}
-        try:
-            response = response.put(url + 'users/change_password', headers=headers, params=params)
-            return response.status_code
-        except requests.ConnectionError:
-            return -1
+        headers = {'Content-Type': 'application/json', 'Authorization': f'Bearer {self.__token}'}
+        response = response.patch(url + f'carts/{id}',  json=data, headers=headers)
+        return response.status_code
 
-    def reset_password(self, params : str):
-        try:
-            response = response.put(url + 'users/reset_password', params=params)
-            return response.status_code
-        except requests.ConnectionError:
-            return -1
-
-    def change_email(self, params : str):
-        headers = {'Authorization': f'Bearer {self.token}'}
-        try:
-            response = response.put(url + 'users/change_email', headers=headers, params=params)
-            return response.status_code
-        except requests.ConnectionError:
-            return -1
-
+    @connection_error_handler
     def change_item(self, id : int, data):
-        headers = {'Content-Type': 'application/json', 'Authorization': f'Bearer {self.token}'}
-        try:
-            response = response.put(url + f'carts/{id}', json=data, headers=headers)
-            return response.status_code
-        except requests.ConnectionError:
-            return -1
+        headers = {'Content-Type': 'application/json', 'Authorization': f'Bearer {self.__token}'}
+        response = response.put(url + f'carts/{id}', json=data, headers=headers)
+        return response.status_code
+    
+    @connection_error_handler
     def delete_item(self, id : int):
-        headers = {'Content-Type': 'application/json', 'Authorization': f'Bearer {self.token}'}
-        try:
-            response = response.delete(url + f'carts/{id}', headers=headers)
-            return response.status_code
-        except requests.ConnectionError:
-            return -1
-
-
-ses = Session()
+        headers = {'Content-Type': 'application/json', 'Authorization': f'Bearer {self.__token}'}
+        response = response.delete(url + f'carts/{id}', headers=headers)
+        return response.status_code

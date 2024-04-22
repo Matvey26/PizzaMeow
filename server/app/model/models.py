@@ -1,7 +1,44 @@
 import enum
 import sqlalchemy as sa
+from ..database import Base, engine
+from sqlalchemy import inspect
 from sqlalchemy.orm import relationship
-from app.database import Base
+from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
+
+
+class Model:
+    """Класс Model объявляет метод serialize(),
+    который сериализует данные модели.
+    """
+
+    def create_schema(self) -> None:
+        """Создаёт marshmallow схему для (де)сериализации."""
+        class Meta(object):
+            model = self.__class__
+            include_relationships = True
+            load_instance = True
+        
+        ModelSchema = type(
+            f'{self.__class__.__name__}Schema',
+            (SQLAlchemyAutoSchema,),
+            { 'Meta': Meta }
+        )
+
+        self.model_schema = ModelSchema()
+
+    def serialize(self) -> dict:
+        """Сериализует аттрибуты объекта в словарь."""
+        if not hasattr(self, 'model_schema'):
+            self.create_schema()
+
+        return self.model_schema.dump(self)
+
+    def remove_session(self):
+        """Удаляет объект из текущей сессии."""
+
+        session = inspect(self).session
+        if session:
+            session.expunge(self)
 
 
 class StatusEnum(enum.Enum):
@@ -25,49 +62,60 @@ class PaymentMethodEnum(enum.Enum):
     CARD_UPON_RECEIPT = 2
 
 
-class User(Base):
+class UserConfirmEnum(enum.Enum):
+    CONFIRMED = 0
+    NOTCONFIRMED = 1
+
+
+class User(Base, Model):
     __tablename__ = 'users'
 
     id = sa.Column(sa.Integer, primary_key=True)
-    email = sa.Column(sa.String(150), nullable=False)
+    email = sa.Column(sa.String(150), nullable=False, unique=True)
     password = sa.Column(sa.String(100), nullable=False)
     firstname = sa.Column(sa.String(100), nullable=True)
     lastname = sa.Column(sa.String(100), nullable=True)
     phone_number = sa.Column(sa.String(20), nullable=True)
     address = sa.Column(sa.String(400), nullable=True)
+    _confirmed = sa.Column(
+        sa.Enum(UserConfirmEnum),
+        default=UserConfirmEnum.NOTCONFIRMED
+    )
 
-    orders = relationship('Order', back_populates='user')
-    cart = relationship('Cart', back_populates='user', uselist=False)
-    payments = relationship('Payment', back_populates='user')
+    orders = relationship('Order', back_populates='user', cascade='all, delete-orphan, save-update')
+    cart = relationship('Cart', back_populates='user', uselist=False, cascade='all, delete-orphan, save-update')
+    payments = relationship('Payment', back_populates='user', cascade='all, delete-orphan, save-update')
 
     def __repr__(self):
         return f'<User {self.firstname} {self.lastname}>'
 
 
-class OrderCartMixin:
+class Order(Base, Model):
+    __tablename__ = 'orders'
+
+    id = sa.Column(sa.Integer, primary_key=True)
+    user_id = sa.Column(sa.Integer, sa.ForeignKey('users.id'), nullable=False)
+    total_price = sa.Column(sa.Float, nullable=False)
+    status = sa.Column(sa.Enum(StatusEnum), nullable=False)
+
+    user = relationship('User', back_populates='orders')
+    order_items = relationship('OrderItem', back_populates='order', cascade='all, delete-orphan, save-update')
+    payment = relationship('Payment', back_populates='order', cascade='all, delete-orphan, save-update')
+
+
+class Cart(Base, Model):
+    __tablename__ = 'carts'
+
     id = sa.Column(sa.Integer, primary_key=True)
     user_id = sa.Column(sa.Integer, sa.ForeignKey('users.id'), nullable=False)
     total_price = sa.Column(sa.Float, nullable=False)
 
-
-class Order(OrderCartMixin, Base):
-    __tablename__ = 'orders'
-
-    status = sa.Column(sa.Enum(StatusEnum), nullable=False)
-
-    user = relationship('User', back_populates='orders')
-    order_items = relationship('OrderItem', back_populates='order')
-    payment = relationship('Payment', back_populates='order')
-
-
-class Cart(OrderCartMixin, Base):
-    __tablename__ = 'carts'
-
     user = relationship('User', back_populates='cart')
-    order_items = relationship('OrderItem', back_populates='cart')
+    cart_items = relationship('CartItem', back_populates='cart', cascade='all, delete-orphan, save-update')
 
 
-class OrderItemTopping(Base):
+# Промежуточная таблица, чтобы сделать отношение "многие ко многим". Не обращайте внимание
+class OrderItemTopping(Base, Model):
     __tablename__ = 'order_item_toppings'
 
     order_item_id = sa.Column(
@@ -82,10 +130,11 @@ class OrderItemTopping(Base):
     )
 
 
-class CartItemTopping(Base):
+# Промежуточная таблица, чтобы сделать отношение "многие ко многим". Не обращайте внимание
+class CartItemTopping(Base, Model):
     __tablename__ = 'cart_item_toppings'
 
-    order_item_id = sa.Column(
+    cart_item_id = sa.Column(
         sa.Integer,
         sa.ForeignKey('cart_items.id'),
         primary_key=True
@@ -97,17 +146,15 @@ class CartItemTopping(Base):
     )
 
 
-class OrderCartItemMixin:
+class OrderItem(Base, Model):
+    __tablename__ = 'order_items'
+
+
     id = sa.Column(sa.Integer, primary_key=True)
-    pizza_id = sa.Column(sa.Integer, sa.ForeignKey('Pizza'), nullable=False)
+    pizza_id = sa.Column(sa.Integer, sa.ForeignKey('pizzas.id'), nullable=False)
     total_price = sa.Column(sa.Float, nullable=False)
     size = sa.Column(sa.Enum(PizzaSizeEnum))
     quantity = sa.Column(sa.Integer)
-
-
-class OrderItem(Base):
-    __tablename__ = 'order_items'
-
     order_id = sa.Column(
         sa.Integer,
         sa.ForeignKey('orders.id'),
@@ -123,10 +170,15 @@ class OrderItem(Base):
     )
 
 
-class CartItem(OrderCartItemMixin, Base):
+class CartItem(Base, Model):
     __tablename__ = 'cart_items'
 
-    order_id = sa.Column(
+    id = sa.Column(sa.Integer, primary_key=True)
+    pizza_id = sa.Column(sa.Integer, sa.ForeignKey('pizzas.id'), nullable=False)
+    total_price = sa.Column(sa.Float, nullable=False)
+    size = sa.Column(sa.Enum(PizzaSizeEnum))
+    quantity = sa.Column(sa.Integer)
+    cart_id = sa.Column(
         sa.Integer,
         sa.ForeignKey('carts.id'),
         nullable=False
@@ -141,7 +193,7 @@ class CartItem(OrderCartItemMixin, Base):
     )
 
 
-class Topping(Base):
+class Topping(Base, Model):
     __tablename__ = 'toppings'
 
     id = sa.Column(sa.Integer, primary_key=True)
@@ -164,7 +216,7 @@ class Topping(Base):
     )
 
 
-class Pizza(Base):
+class Pizza(Base, Model):
     __tablename__ = 'pizzas'
 
     id = sa.Column(sa.Integer, primary_key=True)
@@ -177,15 +229,19 @@ class Pizza(Base):
     _cart_items = relationship('CartItem', back_populates='pizza')
 
 
-class Payment(Base):
+class Payment(Base, Model):
     __tablename__ = 'payments'
 
     id = sa.Column(sa.Integer, primary_key=True)
     user_id = sa.Column(sa.Integer, sa.ForeignKey('users.id'), nullable=False)
-    order_id = sa.Column(sa.Integer, sa.ForeignKey('orders'), nullable=False)
+    order_id = sa.Column(sa.Integer, sa.ForeignKey('orders.id'), nullable=False)
     payment_method = sa.Column(sa.Enum(PaymentMethodEnum), nullable=False)
     amount = sa.Column(sa.Float, nullable=False)
     payment_date = sa.Column(sa.DateTime, nullable=False)
 
     order = relationship('Order', back_populates='payment', uselist=False)
     user = relationship('User', back_populates='payments', uselist=False)
+
+
+# Создаём таблицы
+    Base.metadata.create_all(engine)
