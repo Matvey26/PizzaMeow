@@ -10,8 +10,8 @@
 Для удобства создайте виртуальное окружение (если у вас его нет) `python -m venv venv`
 Активируйте виртуальное окружение `./venv/bin/activate`
 Установите зависимости `pip install -r requirements.txt`
-Запустите сервер:
-    `PizzaMeow/server/runserver.sh` - если вы на Unix
-    `PizzaMeow/server/runserver.bat` - если вы на Windows
+Находясь в папке PizzaMeow, запустите сервер:
+    `server/runserver.sh` - если вы на Unix
+    `server/runserver.bat` - если вы на Windows
 
 Откройте в браузере ваш локальный сервер, документация будет находиться в относительном пути `/api/ui`

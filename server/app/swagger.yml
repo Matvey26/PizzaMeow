@@ -4,13 +4,157 @@ info:
   title: PizzaMeow API
   version: 0.0.0
   description: Предоставляет доступ к базовым ресурсам сервера
-
+  
 servers:
   - url: /api
 
+
 # Пути, которые поддерживает API
 paths:
-  # Список всех пицц
+  # ВСЕ ПУТИ СВЯЗАННЫЕ
+  # С ТАБЛИЦЕЙ USER
+  /users/signup:
+    post:
+      summary: Зарегистрировать нового пользователя по регистрационным данным (email, password) и вернуть токен доступа для зарегистрированного аккаунта
+      operationId: server.app.views.users.sign_up
+      requestBody:
+        description: Регистрационные данные
+        required: true
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/UserSignUp'
+      responses:
+        '200':
+          description: Новый пользователь успешно зарегистрирован
+          content:
+            'text/plain':
+              schema:
+                $ref: '#/components/schemas/Token'
+        
+  /users/signin:
+    get:
+      summary: Получить токен по регистрационным данным (email, password)
+      operationId: server.app.views.users.sign_in
+      parameters:
+        - name: email
+          description: Почта, указанная при регистрации аккаунта
+          required: true
+          in: query
+          schema:
+            type: string
+        - name: password
+          description: Пароль от аккаунта
+          required: true
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            'text/plain':
+              schema:
+                type: string
+                
+  /users/config:
+    patch:
+      summary: Частично обновляет данные о пользователе
+      operationId: server.app.views.users.update_config
+      requestBody:
+        description: Данные о пользователе
+        required: true
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/UserConfig'
+      responses:
+        '204':
+          description: Данные успешно обновлены
+      security:
+      - jwt: []
+    
+  /users/change_password:
+    put:
+      summary: Изменяет пароль от учётной записи
+      operationId: server.app.views.users.change_password
+      requestBody:
+        description: Новый пароль
+        required: true
+        content:
+          'text/plain':
+            schema:
+              type: string
+      responses:
+        '204':
+          description: Пароль успешно обновлён
+      security:
+      - jwt: []
+
+  /users/reset_password:
+    put:
+      summary: Сбрасывает пароль, отправляет новый пароль на почту
+      operationId: server.app.views.users.reset_password
+      requestBody:
+        description: Почта пользователя
+        required: true
+        content:
+          'text/plain':
+            schema:
+              type: string
+      responses:
+        '204':
+          description: Новый пароль был отправлен на вашу почту.
+
+  /users/change_email:
+    put:
+      summary: Изменяет почту учётной записи
+      operationId: server.app.views.users.change_email
+      requestBody:
+        description: Новая почта
+        required: true
+        content:
+          'text/plain':
+            schema:
+              type: string
+      responses:
+        '204':
+          description: Почта успешно обновлена
+      security:
+      - jwt: []
+
+  /users/confirm_email:
+    get:
+      summary: Получить письмо, с ссылкой на подтверждение аккаунта
+      operationId: server.app.views.users.get_confirm_email
+      parameters:
+        - name: email
+          description: Адрес почты, на который нужно отправить письмо 
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+      security:
+      - jwt: []
+  /users/confirm:
+    get:
+      summary: Подтверждает акканут пользователя
+      operationId: server.app.views.users.confirm_email
+      parameters:
+        - name: email_confirmation_token
+          description: Токен подтверждения аккаунта
+          in: query
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Данные успешно обновлены
+
+
+  # ВСЕ ПУТИ, СВЯЗАННЫЕ
+  # С ТАБЛИЦЕЙ PIZZA
   /pizzas:
     get:
       summary: Получить список всех пицц
@@ -38,76 +182,10 @@ paths:
                 items:
                   $ref: '#/components/schemas/Pizza'
 
-  # Регистрация нового пользователя
-  /register:
-    post:
-      summary: Зарегистрировать нового пользователя
-      operationId: server.app.views.users.register
-      requestBody:
-        description: Регистрационные данные
-        required: true
-        content:
-          'application/json':
-            schema:
-              $ref: '#/components/schemas/UserRegistration'
-      responses:
-        '200':
-          description: Новый пользователь успешно зарегистрирован
-          content:
-            'text/plain':
-              schema:
-                $ref: '#/components/schemas/Token'
-        '400':
-          description: Неверный формат почты или домен вашей почты не поддерживается
-  
-  # Авторизация, то есть получение access токена
-  /auth:
-    get:
-      summary: Получить токен
-      operationId: server.app.views.auth.authenticate
-      parameters:
-        - name: email
-          description: Электронная почта пользователя
-          in: query
-          required: true
-          schema:
-            type: string
-        - name: password
-          description: Пароль пользователя
-          in: query
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Успешная авторизация, JWT токен получен
-          content:
-            'text/plain':
-              schema:
-                $ref: '#/components/schemas/Token'
 
-  # Тестовая команда, чтобы проверить, что авторизация работает как по маслу
-  /whoami:
-    get:
-      summary: Возвращает айди, имя и фамилию пользователя
-      operationId: server.app.views.users.get_user_info
-      responses:
-        '200':
-          description: Информация о пользователе успешно получена
-          content:
-            'application/json':
-              schema:
-                type: object
-                properties:
-                  id:
-                    type: integer
-                  firstname:
-                    type: string
-                  lastname:
-                    type: string
-      security:
-      - jwt: []
 
+
+# КОМПОНЕНТЫ ЗАПРОСОВ
 components:
   # Схемы параметров запроса или ответа
   schemas:
@@ -129,7 +207,7 @@ components:
         - name
 
     # Схема регистрационных данных
-    UserRegistration:
+    UserSignUp:
       type: object
       properties:
         email:
@@ -141,6 +219,23 @@ components:
       required:
         - email
         - password
+      
+    # Схема данных о пользователе
+    UserConfig:
+      type: object
+      properties:
+        firstname:
+          type: string
+          description: Имя пользователя
+        lastname:
+          type: string
+          description: Фамилия пользователя
+        address:
+          type: string
+          description: Адрес пользователя
+        phone:
+          type: string
+          description: Номер телефона пользователя
 
     # Схема токена
     Token:
@@ -157,4 +252,4 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
-      x-bearerInfoFunc: server.app.views.auth.decode_token
+      x-bearerInfoFunc: server.app.utils.auth.decode_token
