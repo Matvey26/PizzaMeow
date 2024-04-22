@@ -19,13 +19,13 @@ def main():
     sign_in = sub_parsers.add_parser('signin', help=SignIn.__doc__)
     sign_in.add_argument('email', type=str, help="Почта, привязанная к учётной записи.")
 
-    # Востановить пароль
-    reset_password = sub_parsers.add_parser('resetpassword', help=SignIn.__doc__)
-    reset_password.add_argument('--email', type=str, help="Почта, которая будет привязана к аккаунту.")
+    # Подкоманда reset_password
+    reset_password = sub_parsers.add_parser('reset_password', help=ResetPasssword.__doc__)
+    reset_password.add_argument('email', type=str, help="Почта, к которой привязана учётная запись.")
 
     # Смена пароля
-    reset_password = sub_parsers.add_parser('changepassword', help=ChangePasssword.__doc__)
-    reset_password.add_argument('--email', type=str, help="Почта, которая привязана к аккаунту.")
+    change_password = sub_parsers.add_parser('changepassword', help=ChangePasssword.__doc__)
+    change_password.add_argument('--email', type=str, help="Почта, которая привязана к аккаунту.")
 
     # Ввести данные о пользователе
     config = sub_parsers.add_parser('config', help=Config.__doc__)
