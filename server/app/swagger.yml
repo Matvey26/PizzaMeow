@@ -57,7 +57,7 @@ paths:
               schema:
                 type: string
                 
-  /users/config/update:
+  /users/config:
     patch:
       summary: Частично обновляет данные о пользователе
       operationId: server.app.views.users.update_config
@@ -123,10 +123,10 @@ paths:
       security:
       - jwt: []
 
-  /users/confirm/send:
+  /users/confirm_email:
     get:
       summary: Получить письмо, с ссылкой на подтверждение аккаунта
-      operationId: server.app.views.users.send_confirm_email
+      operationId: server.app.views.users.get_confirm_email
       parameters:
         - name: email
           description: Адрес почты, на который нужно отправить письмо 

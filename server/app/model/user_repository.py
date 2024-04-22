@@ -40,6 +40,7 @@ class UserRepository(Repository):
 
     def change_email(self, user: User, new_email: str):
         user.email = new_email
+        user._confirmed = UserConfirmEnum.NOTCONFIRMED
     
     def authenticate(self, email: str, password: str) -> bool:
         user = self.get_by_email(email)

@@ -63,20 +63,12 @@ def sign_up(body):
     user = user_repository.create(email=email, password=password)
     user_repository.save(user)
 
-    send_confirm_email(user.id, {}, email)
+    send_confirm_email(email)
 
     return sign_in(email, password)
 
 
-def send_confirm_email(user: str, token_info: dict, email: str):
-    user_id = int(user)
-    user = user_repository.get_by_email(email)
-    if user.id != user_id:
-        abort(401, 'Вы не можете запросить письмо с подтверждением почты для другого аккаунта')
-
-    if user_repository.is_confirmed(user):
-        abort(404, 'Аккаунт уже подтверждён')
-    
+def send_confirm_email(email: str):
     # Генерируем токен для подтверждения аккаунта
     from ..utils.auth import generate_token, generate_confirmation_url
     email_confirmation_token = generate_token(email, 15 * 60)
@@ -86,6 +78,19 @@ def send_confirm_email(user: str, token_info: dict, email: str):
     # Отправляем письмо с просьбой подтвердить аккаунт
     from ..utils.send_email import send_email
     send_email(email, 'Подтверждение аккаунта', f'Перейдите по ссылке, чтобы подтвердить аккаунт. Ссылка истечёт через 15 минут {confirm_email_url}')
+
+
+def get_confirm_email(user: str, token_info: dict, email: str):
+    email = email.decode() if isinstance(email, bytes) else email
+    user_id = int(user)
+    user = user_repository.get_by_email(email)
+    if user.id != user_id:
+        abort(401, 'Вы не можете запросить письмо с подтверждением почты для другого аккаунта')
+
+    if user_repository.is_confirmed(user):
+        abort(400, 'Аккаунт уже подтверждён')
+    
+    send_confirm_email(email)
 
 
 def confirm_email(email_confirmation_token):
@@ -102,7 +107,6 @@ def confirm_email(email_confirmation_token):
 
 
 def update_config(user: str, token_info: dict, body: dict):
-    print('UPDATE_CONFIG', type(user))
     user_id = int(user)
     user = user_repository.get(user_id)
     firstname = body.get('firstname', '')
@@ -156,6 +160,16 @@ def change_email(user: str, token_info: dict, body):
     user_id = int(user)
     new_email = body.decode() if isinstance(body, bytes) else body
 
+    if user_repository.get_by_email(new_email) is not None:
+        abort(400, 'Эта почта уже используется.')
+
+    validate = validate_email(new_email)
+    if validate != 'OK':
+        abort(400, 'Неверный формат почты.')
+
     user = user_repository.get(user_id)
+
     user_repository.change_email(user, new_email)
     user_repository.update(user)
+
+    send_confirm_email(new_email)

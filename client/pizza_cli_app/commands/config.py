@@ -1,14 +1,10 @@
 from .base import Base
 from ..api.api import Session
 
+
 class Config(Base):
     """Ввод/обновление данных."""
-
-    def __init__(self, options, *args, **kwargs):
-        self.options = options
-        self.args = args
-        self.kwargs = kwargs
-    
+        
     def run(self, session: Session):
         firstname = self.options.firstname
         lastname = self.options.lastname
