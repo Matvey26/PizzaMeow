@@ -150,12 +150,12 @@ class Session:
             return (response.status_code, data['detail'])
 
     @connection_error_handler
-    def change_email(self, email: str, password: str, new_email: str):
+    def change_email(self, old_email: str, password: str, new_email: str):
         """Изменяет почту от учтёной записи на указанную.
         
         Параметры
         ---------
-        email : str
+        old_email : str
             Старая почта
         password : str
             Пароль от учётной записи
@@ -163,11 +163,11 @@ class Session:
             Новая почта
         """
 
-        answer = self.sign_in(email, password)
+        answer = self.sign_in(old_email, password)
         if answer is not None:
             return answer
         
-        headers = {'Content-Type': 'application/json', 'Authorization': f'Bearer {self.token}'}
+        headers = {'Authorization': f'Bearer {self.token}'}
         response = requests.put(url + 'users/change_email', data=new_email, headers=headers)
         if response.status_code != 204:
             data = json.loads(response.text)
@@ -263,7 +263,6 @@ class Session:
             return response.json()
         return response.status_code
     
-
     @connection_error_handler
     def get_time(self, address : str):
         params = {'address' : address}
@@ -276,23 +275,6 @@ class Session:
     def new_item(self, id : int, data):
         headers = {'Content-Type': 'application/json', 'Authorization': f'Bearer {self.__token}'}
         response = response.patch(url + f'carts/{id}',  json=data, headers=headers)
-        return response.status_code
-    
-    @connection_error_handler
-    def change_password(self, params : str):
-        headers = {'Authorization': f'Bearer {self.__token}'}
-        response = response.put(url + 'users/change_password', headers=headers, params=params)
-        return response.status_code
-
-    @connection_error_handler
-    def reset_password(self, params : str):
-        response = response.put(url + 'users/reset_password', params=params)
-        return response.status_code
-
-    @connection_error_handler
-    def change_email(self, params : str):
-        headers = {'Authorization': f'Bearer {self.__token}'}
-        response = response.put(url + 'users/change_email', headers=headers, params=params)
         return response.status_code
 
     @connection_error_handler

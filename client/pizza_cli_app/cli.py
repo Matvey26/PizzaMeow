@@ -2,7 +2,7 @@
 
 import argparse
 import sys
-from .commands import Base, Config, SignUp, SignIn, Logout, Menu, ResetPasssword
+from .commands import Base, Config, ChangeEmail, SignUp, SignIn, Logout, Menu, ResetPasssword
 from .api import Session
 
 def main():
@@ -13,11 +13,11 @@ def main():
 
     # Подкоманда sing_up, зарегистрироваться
     sign_up = sub_parsers.add_parser('signup', help=SignUp.__doc__)
-    sign_up.add_argument('--email', type=str, help="Почта, которая будет привязана к аккаунту.")
+    sign_up.add_argument('email', type=str, help="Почта, которая будет привязана к учётной записи.")
 
     # Подкоманда sign_in
     sign_in = sub_parsers.add_parser('signin', help=SignIn.__doc__)
-    sign_in.add_argument('--email', type=str, help="Почта, которая будет привязана к аккаунту.")
+    sign_in.add_argument('email', type=str, help="Почта, привязаная к учётной записи.")
 
     # Подкоманда reset_password
     reset_password = sub_parsers.add_parser('resetpassword', help=SignIn.__doc__)
@@ -29,9 +29,11 @@ def main():
     config.add_argument('--lastname', default=None, help='Фамилия пользователя.', type=str)
     config.add_argument('--address', default=None, help='Адрес пользователя.', type=str)
     config.add_argument('--phone', default=None, help='Номер телефона пользователя.', type=str)
-    config.add_argument('--change-password', action='store_true')
-    # config.add_argument('--reset-password', default='', help='На указанную почту отправляет новый пароль.')
-    # config.add_argument('--change-email', nargs=2, metavar=("old_email", "new_email"), help='Меняет')
+    
+    # Привязка новой почты к аккаунту
+    change_email = sub_parsers.add_parser('change_email', help=ChangeEmail.__doc__)
+    change_email.add_argument('old_email', type=str, help='Старая почта, к которой привязана учётная запись.')
+    change_email.add_argument('new_email', type=str, help='Новая почта, которую требуется привязать к учётной записи.')
 
     # Парсер выхода из приложения
     logout = sub_parsers.add_parser('logout', help=Logout.__doc__)
@@ -49,7 +51,8 @@ def main():
         'signin' : SignIn,
         'config' : Config,
         'logout' : Logout,
-        'menu': Menu
+        'menu': Menu,
+        'change_email': ChangeEmail
     }
 
     session = Session()

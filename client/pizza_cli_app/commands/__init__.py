@@ -5,3 +5,4 @@ from .sign_in import SignIn
 from .logout import Logout
 from .menu import Menu
 from .reset_password import ResetPasssword
+from .change_email import ChangeEmail
