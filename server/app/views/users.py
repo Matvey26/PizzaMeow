@@ -5,7 +5,7 @@ from flask import abort
 def validate_email(email: str) -> bool:
     """Validate email"""
     if '@' not in email:
-        return 'Неверный формат почты: отсутствует символ "@"'
+        return 'Неверный формат почты: отсутствует символ @'
     return 'OK'
 
 
@@ -48,16 +48,17 @@ def sign_up(body):
     email = body.get('email', '')
     password = body.get('password', '')
 
-    user = user_repository.get_by_email(email)
-    if user:
-        abort(400, 'Это почта уже используется')
-    
     validate = (validate_email(email), validate_password(password))
     if validate[0] != 'OK':
         abort(404, validate[0])
     
     if validate[1] != 'OK':
         abort(404, validate[1])
+
+    user = user_repository.get_by_email(email)
+    if user:
+        abort(400, 'Это почта уже используется')
+    
 
     # Создаём нового, неподтверждённого пользователя
     user = user_repository.create(email=email, password=password)

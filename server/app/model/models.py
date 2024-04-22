@@ -15,7 +15,7 @@ class Model:
         """Создаёт marshmallow схему для (де)сериализации."""
         class Meta(object):
             model = self.__class__
-            include_relationships = True
+            # include_relationships = True
             load_instance = True
         
         ModelSchema = type(

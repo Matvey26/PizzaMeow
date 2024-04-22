@@ -142,17 +142,17 @@ paths:
   # С ТАБЛИЦЕЙ PIZZA
   /pizzas:
     get:
-      summary: Получить список всех пицц
+      summary: Получить страницу пицц по указанным параметрам
       operationId: server.app.views.pizzas.get_pizzas_page
       parameters:
         - name: offset
-          description: Число элементов, которые нужно пропустить от начала таблицы перед началом сборки итогового списка
+          description: Число, которое нужно отступить от начала таблицы
           in: query
           schema:
             type: integer
             minimum: 0
         - name: limit
-          description: Максимальное число элементов, которое будет в списке. Сервер будет пытаться заполнить список ровно таким числом элементов.
+          description: Максимальное число пицц в возвращаемой странице
           in: query
           schema:
             type: integer
@@ -165,31 +165,94 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Pizza'
+                  $ref: '#/components/schemas/PizzaGet'
+    post:
+      summary: Добавить в БД новую пиццу (только с админским доступом)
+      operationId: server.app.views.pizzas.create_pizza
+      requestBody:
+        description: JSON объект пиццы
+        required: true
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/PizzaPost'
+      responses:
+        '201':
+          description: Пицца успешно добавлена в БД
+      security:
+      - jwt: []
 
-
-
+  /pizzas/{id}:
+    get:
+      summary: Получить пиццу по id
+      operationId: server.app.views.pizzas.get_pizza_by_id
+      responses:
+        '200':
+          description: OK
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/PizzaGet'
+    put:
+      summary: Обновить данные о существующей пицце (только с админским доступом)
+      operationId: server.app.views.pizzas.update_pizza
+      requestBody:
+        description: JSON объект пиццы
+        required: true
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/PizzaPut'
+      responses:
+        '204':
+          description: Пицца успешно добавлена в БД
+      security:
+      - jwt: []
 
 # КОМПОНЕНТЫ ЗАПРОСОВ
 components:
   # Схемы параметров запроса или ответа
   schemas:
     # Схема данных о пицце
-    Pizza:
+    PizzaPost:
       type: object
       properties:
-        id:
-          type: integer
-          description: Уникальный ID пиццы
         name:
           type: string
           description: Название пиццы
         description:
           type: string
           description: Описание пиццы
+        price:
+          type: number
+          format: float
+          description: Цена пиццы
       required:
-        - id
         - name
+        - price
+      
+    PizzaPut:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Название пиццы
+        description:
+          type: string
+          description: Описание пиццы
+        price:
+          type: number
+          format: float
+          description: Цена пиццы
+    
+    PizzaGet:
+      allOf:
+        - $ref: '#/components/schemas/PizzaGet'
+        - type: object
+          properties:
+            id:
+              type: integer
+              description: Уникальный ID пиццы
 
     # Схема регистрационных данных
     UserSignUp:

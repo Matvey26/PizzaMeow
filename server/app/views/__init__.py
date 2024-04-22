@@ -1,3 +1,4 @@
-from ..model import UserRepository
+from ..model import UserRepository, PizzaRepository
 
 user_repository = UserRepository()
+pizza_repository = PizzaRepository()
