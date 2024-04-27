@@ -24,7 +24,7 @@ class OrderRepository(Repository):
         
         return new_order
     
-    def change_status(self, order: Order, new_status: StatusEnum):
-        order.status = new_status
-        self.session.commit(order)
+    def change_status(self, order: Order, new_status: int):
+        order.status = StatusEnum(new_status)
+        self.session.commit()
 

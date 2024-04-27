@@ -3,7 +3,15 @@ import sqlalchemy as sa
 from ..database import Base, engine
 from sqlalchemy import inspect
 from sqlalchemy.orm import relationship
-from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
+from marshmallow_sqlalchemy import SQLAlchemyAutoSchema, SQLAlchemySchema, auto_field
+from marshmallow import fields
+
+
+class CustomSQLAlchemyAutoSchema(SQLAlchemyAutoSchema):
+    def _get_field(self, column, *args, **kwargs):
+        if isinstance(column.type, sa.Enum):
+            return fields.Method('serialize', deserialize=fields.Str())
+        return super()._get_field(column, *args, **kwargs)
 
 
 class Model:
@@ -17,10 +25,11 @@ class Model:
             model = self.__class__
             # include_relationships = True
             load_instance = True
-        
+            include_fk = True
+
         ModelSchema = type(
             f'{self.__class__.__name__}Schema',
-            (SQLAlchemyAutoSchema,),
+            (CustomSQLAlchemyAutoSchema,),
             { 'Meta': Meta }
         )
 
@@ -31,7 +40,14 @@ class Model:
         if not hasattr(self, 'model_schema'):
             self.create_schema()
 
-        return self.model_schema.dump(self)
+        data = self.model_schema.dump(self)
+
+        # Сериализуем Enum поля
+        for key, value in data.items():
+            if isinstance(value, enum.Enum):
+                data[key] = value.serialize()
+
+        return data
 
     def remove_session(self):
         """Удаляет объект из текущей сессии."""
@@ -42,12 +58,15 @@ class Model:
 
 
 class StatusEnum(enum.Enum):
-    RECEIVED = 0
-    BEING_PREPARED = 1
-    COOKED = 2
-    EN_ROUTE = 3
-    READY_FOR_PICKUP = 4
-    DONE = 5
+    RECEIVED = 'RECEIVED'
+    BEING_PREPARED = 'BEING_PREPARED'
+    COOKED = 'COOKED'
+    EN_ROUTE = 'EN_ROUTE'
+    READY_FOR_PICKUP = 'READY_FOR_PICKUP'
+    DONE = 'DONE'
+
+    def serialize(self):
+        return self.value
 
 
 class PizzaSizeEnum(enum.Enum):
@@ -55,16 +74,33 @@ class PizzaSizeEnum(enum.Enum):
     MEDIUM = 1
     LARGE = 2
 
+    def serialize(self):
+        return self.value
+
+
+class PizzaDoughEnum(enum.Enum):
+    THIN = 0
+    CLASSIC = 1
+
+    def serialize(self):
+        return self.value
+
 
 class PaymentMethodEnum(enum.Enum):
-    CASH = 0
-    CARD_ONLINE = 1
-    CARD_UPON_RECEIPT = 2
+    CASH = 'CASH'
+    CARD_ONLINE = 'CARD_ONLINE'
+    CARD_UPON_RECEIPT = 'CARD_UPON_RECEIPT'
+
+    def serialize(self):
+        return self.value
 
 
 class UserConfirmEnum(enum.Enum):
-    CONFIRMED = 0
-    NOTCONFIRMED = 1
+    CONFIRMED = 'CONFIRMED'
+    NOTCONFIRMED = 'NOTCONFIRMED'
+
+    def serialize(self):
+        return self.value
 
 
 class User(Base, Model):
@@ -178,6 +214,7 @@ class CartItem(Base, Model):
     total_price = sa.Column(sa.Float, nullable=False)
     size = sa.Column(sa.Enum(PizzaSizeEnum))
     quantity = sa.Column(sa.Integer)
+    dough = sa.Column(sa.Enum(PizzaDoughEnum))
     cart_id = sa.Column(
         sa.Integer,
         sa.ForeignKey('carts.id'),
@@ -244,4 +281,4 @@ class Payment(Base, Model):
 
 
 # Создаём таблицы
-    Base.metadata.create_all(engine)
+Base.metadata.create_all(engine)

@@ -151,6 +151,15 @@ paths:
       responses:
         '204':
           description: Данные успешно обновлены
+  /users/delete:
+    delete:
+      summary: Удаляет учётную запись
+      operationId: server.app.views.users.delete_user
+      responses:
+        '204':
+          description: Учётная запись пользователя успешно удалена
+      security:
+      - jwt: []
 
 
   # ВСЕ ПУТИ, СВЯЗАННЫЕ
@@ -223,11 +232,149 @@ paths:
           description: Пицца успешно добавлена в БД
       security:
       - jwt: []
+  
+  # ВСЕ ПУТИ, СВЯЗАННЫЕ
+  # С ТАБЛИЦЕЙ CART
+  /carts:
+    get:
+      summary: Получить корзину пользователя
+      operationId: server.app.views.carts.get_cart
+      responses:
+        '200':
+          description: Корзина успешно получена
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CartItemGet'
+      security:
+      - jwt: []
+    post:
+      summary: Добавить объект в корзину
+      operationId: server.app.views.carts.add_item_to_cart
+      requestBody:
+        description: JSON объект объекта корзины
+        required: true
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/CartItemPost'
+      responses:
+        '204':
+          description: Объект успешно добавлен в корзину
+      security:
+        - jwt: []
+    patch:
+      summary: Добавить объект в корзину
+      operationId: server.app.views.carts.update_item_in_cart
+      requestBody:
+        description: JSON объект объекта корзины
+        required: true
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/CartItemPatch'
+      responses:
+        '204':
+          description: Объект корзины успешно обновлён
+      security:
+        - jwt: []
+  /carts/{id}:
+    delete:
+      summary: Удалить объект из корзины
+      operationId: server.app.views.carts.remove_item_from_cart
+      responses:
+        '200':
+          description: Объект успешно удалён из корзины
+      security:
+        - jwt: []
+    
+                
 
 # КОМПОНЕНТЫ ЗАПРОСОВ
 components:
   # Схемы параметров запроса или ответа
   schemas:
+    # Схема объекта корзины
+    CartItemPost:
+      type: object
+      properties:
+        pizza_id:
+          type: integer
+          description: id пиццы, которой соответствует этот объект
+        quantity:
+          type: integer
+          description: Количество заказанных пицц
+          minimum: 1
+        size:
+          type: integer
+          description: Размер пиццы (0 == small, 1 == medium, 2 == large)
+          minimum: 0
+        dough:
+          type: integer
+          description: Тип теста пиццы (0 == thin, 1 == classic)
+          minimum: 0
+      required:
+        - pizza_id
+    
+    CartItemPatch:
+      type: object
+      properties:
+        item_id:
+          type: integer
+          description: id объекта корзины, который нужно обновить
+        pizza_id:
+          type: integer
+          description: id пиццы, которой соответствует этот объект
+        quantity:
+          type: integer
+          description: Количество заказанных пицц
+          minimum: 1
+        size:
+          type: integer
+          description: Размер пиццы (0 == small, 1 == medium, 2 == large)
+          minimum: 0
+        dough:
+          type: integer
+          description: Тип теста пиццы (0 == thin, 1 == classic)
+          minimum: 0
+      required:
+        - item_id
+
+    CartItemGet:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: уникальный id объекта корзины
+        pizza_id:
+          type: integer
+          description: id пиццы, которой соответствует этот объект
+        total_price:
+          type: number
+          format: float
+          description: Итоговая цена объекта (количество уже учтено)
+        quantity:
+          type: integer
+          description: Количество заказанных пицц
+          minimum: 1
+        size:
+          type: integer
+          description: Размер пиццы (0 == small, 1 == medium, 2 == large)
+          minimum: 0
+        dough:
+          type: integer
+          description: Тип теста пиццы (0 == thin, 1 == classic)
+          minimum: 0
+      required:
+        - id
+        - pizza_id
+        - total_price
+        - quantity
+        - size
+        - dough
+
     # Схема данных о пицце
     PizzaPost:
       type: object
@@ -262,7 +409,7 @@ components:
     
     PizzaGet:
       allOf:
-        - $ref: '#/components/schemas/PizzaGet'
+        - $ref: '#/components/schemas/PizzaPost'
         - type: object
           properties:
             id:
