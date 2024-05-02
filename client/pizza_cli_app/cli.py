@@ -2,7 +2,7 @@
 
 import argparse
 import sys
-from .commands import Base, ChangeEmail, ChangePasssword, Config, Logout, Menu, ResetPasssword, SignIn, SignUp
+from .commands import Base, ChangeEmail, ChangePasssword, Config, Logout, Menu, ResetPasssword, SignIn, SignUp, ShowCart, AddCart, ChangeCart, RemoveItem
 from .api import Session
 
 def main():
@@ -48,6 +48,30 @@ def main():
     menu.add_argument('--no-show-id', action='store_false', help='Не показывать айди пицц.')
     menu.add_argument('--limit', default=20, help='Максимум пицц в странице.')
 
+    # Парсер для показа содержимого корзины
+    show_cart = sub_parsers.add_parser('cart', help=ShowCart.__doc__)
+    show_cart.add_argument('--show-id', action='store_true', help='Показывать айди элементов корзины.')
+    show_cart.add_argument('--no-show-id', action='store_false', help='Не показывать айди элементов корзины.')
+
+    # Парсер для добавления элемента в корзину
+    add = sub_parsers.add_parser('add', help=AddCart.__doc__)
+    add.add_argument('pizza_id', type=int, help='Id пиццы, которая будет добавлена в корзину.')
+    add.add_argument('--size', default=1, help='Размер пиццы.', type=int)
+    add.add_argument('--dough', default=1, help='Размер пиццы.', type=int)
+    add.add_argument('--quantity', default=1, help='Размер пиццы.', type=int)
+
+    # Парсер для изменения элемента корзины
+    change = sub_parsers.add_parser('change', help=ChangeCart.__doc__)
+    change.add_argument('item_id', type=int, help='Id пиццы, которая будет добавлена в корзину.')
+    change.add_argument('pizza_id', default=None, type=int, help='Id пиццы, которая будет добавлена в корзину.')
+    change.add_argument('--size', default=None, help='Размер пиццы.', type=int)
+    change.add_argument('--dough', default=None, help='Размер пиццы.', type=int)
+    change.add_argument('--quantity', default=None, help='Размер пиццы.', type=int)
+
+    # Парсер для удаления элемента корзины
+    remove = sub_parsers.add_parser('remove', help=RemoveItem.__doc__)
+    remove.add_argument('item_id', type=int, help='Id пиццы, которые надо удалить из корзины')
+
     args = parser.parse_args()
 
     command_class = {
@@ -58,7 +82,11 @@ def main():
         'menu': Menu,
         'reset_password': ResetPasssword,
         'change_email': ChangeEmail,
-        'change_password': ChangePasssword
+        'change_password': ChangePasssword,
+        'cart' : ShowCart,
+        'add' : AddCart,
+        'change' : ChangeCart,
+        'remove' : RemoveItem
     }
 
     session = Session()
