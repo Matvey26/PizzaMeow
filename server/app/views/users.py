@@ -3,7 +3,6 @@ from flask import abort
 
 
 def validate_email(email: str) -> bool:
-    return 'OK'
     """Validate email"""
     if '@' not in email:
         return 'Неверный формат почты: отсутствует символ @'
@@ -65,7 +64,7 @@ def sign_up(body):
     user = user_repository.create(email=email, password=password)
     user_repository.save(user)
 
-    # send_confirm_email(email)
+    send_confirm_email(email)
 
     return sign_in(email, password)
 

@@ -351,6 +351,9 @@ components:
         pizza_id:
           type: integer
           description: id пиццы, которой соответствует этот объект
+        pizza_name:
+          type: string
+          description: Название пиццы
         total_price:
           type: number
           format: float
