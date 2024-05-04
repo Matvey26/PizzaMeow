@@ -189,23 +189,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/PizzaGet'
-    post:
-      summary: Добавить в БД новую пиццу (только с админским доступом)
-      operationId: server.app.views.pizzas.create_pizza
-      requestBody:
-        description: JSON объект пиццы
-        required: true
-        content:
-          'application/json':
-            schema:
-              $ref: '#/components/schemas/PizzaPost'
-      responses:
-        '201':
-          description: Пицца успешно добавлена в БД
-      security:
-      - jwt: []
-
+                  $ref: '#/components/schemas/Pizza'
   /pizzas/{id}:
     get:
       summary: Получить пиццу по id
@@ -216,22 +200,7 @@ paths:
           content:
             'application/json':
               schema:
-                $ref: '#/components/schemas/PizzaGet'
-    put:
-      summary: Обновить данные о существующей пицце (только с админским доступом)
-      operationId: server.app.views.pizzas.update_pizza
-      requestBody:
-        description: JSON объект пиццы
-        required: true
-        content:
-          'application/json':
-            schema:
-              $ref: '#/components/schemas/PizzaPut'
-      responses:
-        '204':
-          description: Пицца успешно добавлена в БД
-      security:
-      - jwt: []
+                $ref: '#/components/schemas/Pizza'
   
   # ВСЕ ПУТИ, СВЯЗАННЫЕ
   # С ТАБЛИЦЕЙ CART
@@ -380,9 +349,12 @@ components:
         - dough
 
     # Схема данных о пицце
-    PizzaPost:
+    Pizza:
       type: object
       properties:
+        id:
+          type: integer
+          description: Уникальный ID пиццы
         name:
           type: string
           description: Название пиццы
@@ -396,29 +368,6 @@ components:
       required:
         - name
         - price
-      
-    PizzaPut:
-      type: object
-      properties:
-        name:
-          type: string
-          description: Название пиццы
-        description:
-          type: string
-          description: Описание пиццы
-        price:
-          type: number
-          format: float
-          description: Цена пиццы
-    
-    PizzaGet:
-      allOf:
-        - $ref: '#/components/schemas/PizzaPost'
-        - type: object
-          properties:
-            id:
-              type: integer
-              description: Уникальный ID пиццы
 
     # Схема регистрационных данных
     UserSignUp:
