@@ -54,13 +54,12 @@ def add_item_to_cart(user, token_info, body):
     cart_repository.add_item(cart, cart_item)
 
 
-def update_item_in_cart(user, token_info, body):
+def update_item_in_cart(user, token_info, item_id, body):
     user_id = int(user)
     user = user_repository.get(user_id)
     cart = cart_repository.get_by_user(user)
 
-    cart_item_id = body['item_id']
-    cart_item = cart_item_repository.get(cart_item_id)
+    cart_item = cart_item_repository.get(item_id)
     if cart_item.cart_id != cart.id:
         abort(400, 'В вашей корзине нет такого объекта.')
 
@@ -80,12 +79,12 @@ def update_item_in_cart(user, token_info, body):
     cart_item_repository.update(cart_item)
 
 
-def remove_item_from_cart(user, token_info, id):
+def remove_item_from_cart(user, token_info, item_id):
     user_id = int(user)
     user = user_repository.get(user_id)
     cart = cart_repository.get_by_user(user)
-    cart_item = cart_item_repository.get(id)
-    if cart_item.cart_id != cart.id:
+    cart_item = cart_item_repository.get(item_id)
+    if cart_item is None or cart_item.cart_id != cart.id:
         abort(400, 'В вашей корзине нет такого объекта.')
     
     cart_item_repository.delete(cart_item)

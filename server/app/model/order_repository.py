@@ -25,6 +25,9 @@ class OrderRepository(Repository):
         
         return new_order
     
+    def get_page_by_user(self, user: User, limit: int, offset: int):
+        return tuple(self.session.query(Order).filter_by(user_id=user.id).offset(offset).limit(limit).all())
+    
     def change_status(self, order: Order, new_status: int):
         order.status = StatusEnum(new_status)
         self.session.commit()
