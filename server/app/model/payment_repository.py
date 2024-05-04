@@ -6,13 +6,12 @@ class PaymentRepository(Repository):
     def __init__(self):
         Repository.__init__(self, Payment)
 
-    def create(self, user : User, order : Order, payment_method: int, amount: float):
+    def create(self, order : Order, payment_method: str):
         return Payment(
-            user=user,
+            user=order.user,
             order=order,
             payment_method=PaymentMethodEnum(payment_method),
-            amount=amount,
-            payment_date=datetime.datetime.now()
+            amount=order.total_price,
         )
 
     def is_invalid(self, payment: Payment) -> list:

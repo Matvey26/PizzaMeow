@@ -1,9 +1,10 @@
 import enum
 import sqlalchemy as sa
 from ..database import Base, engine
+from sqlalchemy import func
 from sqlalchemy import inspect
 from sqlalchemy.orm import relationship
-from marshmallow_sqlalchemy import SQLAlchemyAutoSchema, SQLAlchemySchema, auto_field
+from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 from marshmallow import fields
 
 
@@ -58,12 +59,11 @@ class Model:
 
 
 class StatusEnum(enum.Enum):
-    RECEIVED = 'RECEIVED'
-    BEING_PREPARED = 'BEING_PREPARED'
-    COOKED = 'COOKED'
-    EN_ROUTE = 'EN_ROUTE'
-    READY_FOR_PICKUP = 'READY_FOR_PICKUP'
-    DONE = 'DONE'
+    PROCESS = 'process'  # обрабатывается, ещё начал готовиться
+    COOKING = 'cooking'  # готовится
+    EN_ROUTE = 'en_route'  # в пути (если доставка)
+    READY_TO_PICKUP = 'ready_to_pickup'  # готов к выдаче (если самовывоз)
+    DONE = 'done'  # заказ завершён
 
     def serialize(self):
         return self.value
@@ -87,9 +87,16 @@ class PizzaDoughEnum(enum.Enum):
 
 
 class PaymentMethodEnum(enum.Enum):
-    CASH = 'CASH'
-    CARD_ONLINE = 'CARD_ONLINE'
-    CARD_UPON_RECEIPT = 'CARD_UPON_RECEIPT'
+    ONLINE = 'online'
+    OFFLINE = 'offline'
+
+    def serialize(self):
+        return self.value
+    
+
+class PaymentStatusEnum(enum.Enum):
+    AWAITING = 0
+    PAID = 1
 
     def serialize(self):
         return self.value
@@ -132,7 +139,10 @@ class Order(Base, Model):
     id = sa.Column(sa.Integer, primary_key=True)
     user_id = sa.Column(sa.Integer, sa.ForeignKey('users.id'), nullable=False)
     total_price = sa.Column(sa.Float, nullable=False)
-    status = sa.Column(sa.Enum(StatusEnum), nullable=False)
+    status = sa.Column(sa.Enum(StatusEnum), default=StatusEnum.PROCESS, nullable=False)
+    address = sa.Column(sa.Text, nullable=False)
+    pickup_time = sa.Column(sa.DateTime, nullable=False)
+    created_at = sa.Column(sa.DateTime, server_default=func.now())
 
     user = relationship('User', back_populates='orders')
     order_items = relationship('OrderItem', back_populates='order', cascade='all, delete-orphan, save-update')
@@ -274,10 +284,19 @@ class Payment(Base, Model):
     order_id = sa.Column(sa.Integer, sa.ForeignKey('orders.id'), nullable=False)
     payment_method = sa.Column(sa.Enum(PaymentMethodEnum), nullable=False)
     amount = sa.Column(sa.Float, nullable=False)
-    payment_date = sa.Column(sa.DateTime, nullable=False)
+    created_at = sa.Column(sa.DateTime, server_default=func.now())
+    payment_date = sa.Column(sa.DateTime)
+    payment_status = sa.Column(sa.Enum(PaymentStatusEnum), default=PaymentStatusEnum.AWAITING)
 
     order = relationship('Order', back_populates='payment', uselist=False)
     user = relationship('User', back_populates='payments', uselist=False)
+
+
+class Pizzeria(Base, Model):
+    __tablename__ = 'pizzerias'
+
+    id = sa.Column(sa.Integer, primary_key=True)
+    address = sa.Column(sa.Text, nullable=False, unique=True)
 
 
 # Создаём таблицы

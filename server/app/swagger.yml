@@ -309,6 +309,28 @@ paths:
 
       security:
       - jwt: []
+
+    post:
+      summary: Создать заказ
+      operationId: server.app.views.orders.create_order
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/CreateOrder'
+      responses:
+        '201':
+          description: Заказ создан
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  payment_url:
+                    type: string
+      security:
+        - jwt: []
+
   /orders/{id}:
     get:
       summary: Получить заказ по id
@@ -329,7 +351,76 @@ paths:
                 $ref: '#/components/schemas/Order'
       security:
       - jwt: []
-                
+  
+  /pizzeria/address:
+    get:
+      summary: Получить адреса пиццерий. Если указан параметр address, то возвращает count[=10] ближайших пиццерий.
+      operationId: server.app.views.pizzerias.get_addresses
+      parameters:
+      - name: address
+        in: query
+        description: адрес пользователя
+        schema:
+          type: string
+      - name: count
+        in: query
+        description: количество ближайших пиццерий, которое нужно вернуть
+        schema:
+          type: integer
+          default: 10
+      responses:
+        '200':
+          description: Адреса пиццерий успешно получены
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Pizzeria'
+  
+  /time/delivery:
+    get:
+      summary: Возвращает время в минутах, которое потребуется курьеру, чтобы доставить заказ
+      operationId: server.app.views.time.get_delivery_time
+      parameters:
+      - name: address
+        in: query
+        description: Адрес, до которого нужно доставить заказ
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Время доставки в минутах
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  time:
+                    type: integer
+                required:
+                - time
+      security:
+      - jwt: []
+  /time/cooking:
+    get:
+      summary: Возвращает время в минутах, сколько будет готовиться заказ
+      operationId: server.app.views.time.get_cooking_time
+      responses:
+        '200':
+          description: Время готовки в минутах
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  time:
+                    type: integer
+                required:
+                - time
+      security:
+      - jwt: []
+
 
 # КОМПОНЕНТЫ ЗАПРОСОВ
 components:
@@ -509,6 +600,32 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/OrderItem'
+    
+    CreateOrder:
+      type: object
+      properties:
+        address:
+          type: string
+        pickup_time:
+          type: string
+          format: date-time
+        payment_method:
+          type: string
+          enum: [online, offline]
+      required:
+        - address
+        - pickup_time
+        - payment_method
+    
+    Pizzeria:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Уникальный ID пиццерии
+        address:
+          type: string
+          description: Адрес пиццерии
   
   # Универсальные ответы от сервера
   responses:
