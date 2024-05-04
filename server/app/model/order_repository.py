@@ -1,5 +1,5 @@
 from .repository import Repository
-from .models import User, Order, StatusEnum, PaymentMethodEnum
+from .models import User, Order, OrderStatusEnum, PaymentMethodEnum
 from .payment_repository import PaymentRepository
 from datetime import datetime
 
@@ -10,7 +10,7 @@ class OrderRepository(Repository):
     def __init__(self):
         Repository.__init__(self, Order)
 
-    def create(self, user: User, delivery_cost: float, address: str, pickuptime: datetime, payment_method: str):
+    def create(self, user: User, delivery_cost: float, address: str, pickuptime: datetime):
         """Создаёт заказ из корзины по указанному пользователю, а также связанный с ним платёж."""
         new_order = Order(user=user, total_price=user.cart.total_price + delivery_cost, address=address, pickup_time=pickuptime)
 
@@ -19,16 +19,14 @@ class OrderRepository(Repository):
 
         for cart_item in user.cart.cart_items:
             order_item_repository.create(order=new_order, cart_item=cart_item)
-
-        payment = payment_repository.create(order=new_order, payment_method=PaymentMethodEnum(payment_method))
         
-        return new_order, payment
+        return new_order
     
     def get_page_by_user(self, user: User, limit: int, offset: int):
         return tuple(self.session.query(Order).filter_by(user_id=user.id).offset(offset).limit(limit).all())
     
     def change_status(self, order: Order, new_status: int):
-        order.status = StatusEnum(new_status)
+        order.status = OrderStatusEnum(new_status)
         self.session.commit()
 
     def is_invalid(self, order: Order) -> list:

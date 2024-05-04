@@ -1,5 +1,6 @@
 from . import user_repository
 from flask import abort
+import os
 
 
 def validate_email(email: str) -> bool:
@@ -72,9 +73,8 @@ def sign_up(body):
 def send_confirm_email(email: str):
     # Генерируем токен для подтверждения аккаунта
     from ..utils.auth import generate_token, generate_confirmation_url
-    email_confirmation_token = generate_token(email, 15 * 60)
-    confirm_email_end_point = 'http://127.0.0.1:8000/api/users/confirm'
-    confirm_email_url = generate_confirmation_url(email_confirmation_token, confirm_email_end_point)
+    confirm_email_end_point = os.environ['SERVER_URL'] + 'api/users/confirm'
+    confirm_email_url = generate_confirmation_url(email, confirm_email_end_point, 'email_confirmation_token')
 
     # Отправляем письмо с просьбой подтвердить аккаунт
     from ..utils.send_email import send_email

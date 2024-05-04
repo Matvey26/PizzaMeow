@@ -39,10 +39,9 @@ def create_order(user, token_info, body):
 
     # время желаемого получения заказа
     from datetime import datetime
-    date_format = "%d-%m-%Y %H:%M"
     pickup_time = body.get('pickup_time', '')  # TODO: добавить проверку валидности времени получения заказа
     try:
-        pickup_time = datetime.strptime(pickup_time, date_format)
+        pickup_time = datetime.fromisoformat(pickup_time)
     except Exception:
         abort(400, 'Неверный формат даты')
 
@@ -71,8 +70,8 @@ def create_order(user, token_info, body):
     cart_repository.clear(user.cart)
 
     # отправляем ссылку для оплаты
-    from ..utils.make_order import generate_payments_url
+    from ..utils.make_order import generate_payment_url
     if payment_method == 'online':
         return {
-            'payment_url': generate_payments_url(payment.amount)
+            'payment_url': generate_payment_url(payment.id, payment.amount)
         }

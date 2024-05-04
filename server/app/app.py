@@ -1,6 +1,8 @@
 import connexion
 from connexion import FlaskApp
 import pathlib
+import os
+
 
 def create_app():
 	base_dir = pathlib.Path(__file__).parent.resolve()
@@ -25,6 +27,7 @@ def init_database(connex_app: FlaskApp) -> None:
 	"""
 	from .database import init
 	init(connex_app)
-	
 
+
+os.environ['SERVER_URL'] = 'http://127.0.0.1:8000/'
 connex_app = create_app()

@@ -58,12 +58,13 @@ class Model:
             session.expunge(self)
 
 
-class StatusEnum(enum.Enum):
+class OrderStatusEnum(enum.Enum):
     PROCESS = 'process'  # обрабатывается, ещё начал готовиться
     COOKING = 'cooking'  # готовится
     EN_ROUTE = 'en_route'  # в пути (если доставка)
     READY_TO_PICKUP = 'ready_to_pickup'  # готов к выдаче (если самовывоз)
     DONE = 'done'  # заказ завершён
+    CANCELLED = 'cancelled' # заказ был отменён
 
     def serialize(self):
         return self.value
@@ -139,7 +140,7 @@ class Order(Base, Model):
     id = sa.Column(sa.Integer, primary_key=True)
     user_id = sa.Column(sa.Integer, sa.ForeignKey('users.id'), nullable=False)
     total_price = sa.Column(sa.Float, nullable=False)
-    status = sa.Column(sa.Enum(StatusEnum), default=StatusEnum.PROCESS, nullable=False)
+    status = sa.Column(sa.Enum(OrderStatusEnum), default=OrderStatusEnum.PROCESS, nullable=False)
     address = sa.Column(sa.Text, nullable=False)
     pickup_time = sa.Column(sa.DateTime, nullable=False)
     created_at = sa.Column(sa.DateTime, server_default=func.now())

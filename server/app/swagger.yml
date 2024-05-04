@@ -420,6 +420,20 @@ paths:
                 - time
       security:
       - jwt: []
+  
+  /payments/confirm:
+    get:
+      summary: Подтвердить платёж
+      operationId: server.app.views.payments.confirm_payment
+      parameters:
+      - name: payment_confirmation_token
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        '204':
+          description: Платёж подтверждён
 
 
 # КОМПОНЕНТЫ ЗАПРОСОВ

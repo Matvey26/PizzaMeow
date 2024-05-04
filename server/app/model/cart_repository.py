@@ -27,6 +27,7 @@ class CartRepository(Repository):
     def clear(self, cart : Cart):
         for item in cart.cart_items:
             self.session.delete(item)
+        cart.total_price = 0
         self.session.commit()
 
     def get_items(self, cart: Cart):

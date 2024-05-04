@@ -1,5 +1,5 @@
 from .repository import Repository
-from .models import Payment, User, Order, PaymentMethodEnum
+from .models import Payment, User, Order, PaymentMethodEnum, PaymentStatusEnum
 import datetime
 
 class PaymentRepository(Repository):
@@ -17,3 +17,6 @@ class PaymentRepository(Repository):
     def is_invalid(self, payment: Payment) -> list:
         invalid_fields = []
         return invalid_fields
+
+    def mark_as_paid(self, payment: Payment):
+        payment.payment_status = PaymentStatusEnum.PAID
