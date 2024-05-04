@@ -363,16 +363,17 @@ components:
           description: Количество заказанных пицц
           minimum: 1
         size:
-          type: integer
-          description: Размер пиццы (0 == small, 1 == medium, 2 == large)
+          type: string
+          description: Размер пиццы (small, medium, large)
           minimum: 0
         dough:
-          type: integer
-          description: Тип теста пиццы (0 == thin, 1 == classic)
+          type: string
+          description: Тип теста пиццы (thin, classic)
           minimum: 0
       required:
         - id
         - pizza_id
+        - pizza_name
         - total_price
         - quantity
         - size

@@ -13,7 +13,8 @@ class OrderRepository(Repository):
     #     self.session.add(new_order)
     #     self.session.commit(new_order)
 
-    def create_from_cart(self, user: User, cart: Cart):
+    def create(self, user: User, cart: Cart):
+        """Создаёт заказ из корзины."""
         new_order = Order(user=user, total_price=cart.total_price)
 
         from .order_item_repository import OrderItemRepository
@@ -28,3 +29,6 @@ class OrderRepository(Repository):
         order.status = StatusEnum(new_status)
         self.session.commit()
 
+    def is_invalid(self, order: Order) -> list:
+        invalid_fields = []
+        return invalid_fields

@@ -6,7 +6,7 @@ class PaymentRepository(Repository):
     def __init__(self):
         Repository.__init__(self, Payment)
 
-    def create_payment(self, user : User, order : Order, payment_method: int, amount: float):
+    def create(self, user : User, order : Order, payment_method: int, amount: float):
         return Payment(
             user=user,
             order=order,
@@ -14,3 +14,7 @@ class PaymentRepository(Repository):
             amount=amount,
             payment_date=datetime.datetime.now()
         )
+
+    def is_invalid(self, payment: Payment) -> list:
+        invalid_fields = []
+        return invalid_fields
