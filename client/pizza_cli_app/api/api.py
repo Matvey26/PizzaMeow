@@ -178,7 +178,7 @@ class Session:
         'expiry_date': Дата истечения срока: два числа через знак слэша /
         'cvv': Код на обратной стороне, трехзначное число.
         """
-        headers = {'Content-Type': 'application/json', 'Authorization': f'Bearer {self.__token}'}
+        headers = {'Content-Type': 'application/json', 'Authorization': f'Bearer {self.token}'}
         response = response.post(url + 'users/config/addcard', json=data, headers=headers)
         if response.status_code != 204:
             return (response.status_code, response.json()['detail'])
@@ -208,7 +208,7 @@ class Session:
                 'price': float
             }
         """
-        return pizzas[offset:offset+limit]
+        # return pizzas[offset:offset+limit]
         params = {'limit' : limit, 'offset' : offset}
         response = requests.get(url + 'pizzas', params=params)
         if response.status_code == 200:
@@ -247,8 +247,8 @@ class Session:
             'dough': str  # а точнее enum: [thin, classic]
         }
         """
-        return cart
-        headers = {'Authorization': f'Bearer {self.__token}'}
+        # return cart
+        headers = {'Authorization': f'Bearer {self.token}'}
         response = requests.get(url + 'carts', headers=headers)
         if response.status_code == 200:
             return response.json()
@@ -258,32 +258,50 @@ class Session:
     def add_item_to_cart(self, data: dict):
         """Принимает словарь в следующем формате:
         'pizza_id': Айди пиццы, которую нужно добавить в корзину
-        'dough': Желаемое тесто, а именно 'classic' или 'thin'. По умолчанию должно быть 1
         'quantity': Количество штук пицц. По умолчанию должно быть 1
         'size': Размер пиццы, а именно 'small', 'medium', 'large' или 1, 2, 3. По умолчанию 1
+        'dough': Желаемое тесто, а именно 'classic' или 'thin'. По умолчанию должно быть 1
 
         Добавляет пиццу в корзину
         """
-        headers = {'Content-Type': 'application/json', 'Authorization': f'Bearer {self.__token}'}
+        headers = {'Content-Type': 'application/json', 'Authorization': f'Bearer {self.token}'}
         response = requests.post(url + '/carts', json=data, headers=headers)
-        return response.status_code
+        if response.status_code != 204:
+            return (response.status_code, response.json()['detail'])
     
-    def update_item_in_cart(self, data: dict):
-        """Принимает словарь в следующем формате:
-        'pizza_id': Айди пиццы, которая изменяется
-        'item_id': Айди объекта корзины, который нужно изменить
-        'dough': Желаемое тесто, а именно 'classic' или 'thin'. По умолчанию должно быть 1
-        'quantity': Количество штук пицц. По умолчанию должно быть 1
-        'size': Размер пиццы, а именно 'small', 'medium', 'large' или 1, 2, 3. По умолчанию 1
+    def update_item_in_cart(self, item_id: int, data: dict):
+        """Изменяет объект корзины.
 
-        Изменяет объект корзины.
+        Параметры
+        ---------
+        item_id: int
+            Айди объекта корзины, который нужно изменить
+        data: dict
+            Данные для обновления. Словарь вида
+            {
+                'pizza_id': ID пиццы (на который нужно поменять)
+                'dough': Другое тесто, а именно 'classic' или 'thin'. По умолчанию должно быть 1
+                'quantity': Другое количество штук пицц. По умолчанию должно быть 1
+                'size': Новый размер пиццы, а именно 'small', 'medium', 'large' или 1, 2, 3. По умолчанию 1
+            }
         """
+        headers = {'Content-Type': 'application/json', 'Authorization': f'Bearer {self.token}'}
+        response = requests.patch(url + '/carts', json=data, headers=headers)
+        if response.status_code != 204:
+            return (response.status_code, response.json()['detail'])
+    
+    @connection_error_handler
+    def delete_item(self, item_id: int):
+        headers = {'Authorization': f'Bearer {self.token}'}
+        response = requests.delete(url + f'carts/{item_id}', headers=headers)
+        if response.status_code != 204:
+            return (response.status_code, response.json()['detail'])
     
     # ------------------ РАБОТА С ЗАКАЗАМИ ------------------
 
     @connection_error_handler
     def create_order(self, data):
-        headers = {'Content-Type': 'application/json', 'Authorization': f'Bearer {self.__token}'}
+        headers = {'Content-Type': 'application/json', 'Authorization': f'Bearer {self.token}'}
         response = requests.post(url + '/orders', json=data, headers=headers)
         if response.status_code == 200:
             return response.text # ссылка на оплату
@@ -292,7 +310,7 @@ class Session:
     @connection_error_handler
     def get_orders(self, limit : int, offset : int):
         params = {'limit' : limit, 'offset' : offset}
-        headers = {'Authorization': f'Bearer {self.__token}'}
+        headers = {'Authorization': f'Bearer {self.token}'}
         response = requests.get(url + 'orders', headers=headers, params=params)
         if response.status_code == 200:
             return response.json()
@@ -300,7 +318,7 @@ class Session:
 
     @connection_error_handler
     def id_order(self, id : int):
-        headers = {'Authorization': f'Bearer {self.__token}'}
+        headers = {'Authorization': f'Bearer {self.token}'}
         response = requests.get(url + f'orders/{id}', headers=headers)
         if response.status_code == 200:
             return response.json()
@@ -313,21 +331,4 @@ class Session:
         if response.status_code == 200:
             return response.text
         return response.status_code
-
-    @connection_error_handler
-    def new_item(self, id : int, data):
-        headers = {'Content-Type': 'application/json', 'Authorization': f'Bearer {self.__token}'}
-        response = requests.patch(url + f'carts/{id}',  json=data, headers=headers)
-        return response.status_code
-
-    @connection_error_handler
-    def change_item(self, id : int, data):
-        headers = {'Content-Type': 'application/json', 'Authorization': f'Bearer {self.__token}'}
-        response = requests.put(url + f'carts/{id}', json=data, headers=headers)
-        return response.status_code
     
-    @connection_error_handler
-    def delete_item(self, id : int):
-        headers = {'Content-Type': 'application/json', 'Authorization': f'Bearer {self.__token}'}
-        response = requests.delete(url + f'carts/{id}', headers=headers)
-        return response.status_code

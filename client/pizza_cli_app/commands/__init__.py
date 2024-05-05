@@ -7,7 +7,7 @@ from .menu import Menu
 from .reset_password import ResetPasssword
 from .change_email import ChangeEmail
 from .change_password import ChangePasssword
-from .showcart import ShowCart
-from .add_cart import AddCart
-from .change_cart import ChangeCart
-from .remove import RemoveItem
+from .cart import ShowCart
+from .add import Add
+from .change import Change
+from .remove import Remove

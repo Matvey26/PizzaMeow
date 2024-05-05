@@ -1,7 +1,8 @@
 from .base import Base
 from ..api import Session
 
-class AddCart(Base):
+
+class Add(Base):
     def run(self, session : Session):
         pizza_id = self.options.pizza_id
         size = self.options.size
@@ -9,7 +10,7 @@ class AddCart(Base):
         quantity = self.options.quantity
         data = {'pizza_id' : pizza_id, 'size' : size, 'dough' : dough, 'quantity' : quantity}
         response = session.add_item_to_cart(data)
-        if response == '400':
-            print(f'Добавление прошло успешно!')
+        if response:
+            print(response[1])
             return
-        print(f'Добавление прошло не успешно.')
+        print('Пицца добавлена в корзину')
