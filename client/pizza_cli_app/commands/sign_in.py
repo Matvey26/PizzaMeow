@@ -1,9 +1,10 @@
 from .base import Base
 import getpass, os
+from ..api import Session
 
 class SignIn(Base):
     """Вход"""
-    def run(self, session):
+    def run(self, session: Session):
         email = self.options.email
 
         password = getpass.getpass("Введите пароль: ")

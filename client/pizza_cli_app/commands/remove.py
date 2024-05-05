@@ -3,6 +3,7 @@ from ..api import Session
 
 
 class Remove(Base):
+    """Удаляет элемент из корзины"""
     def run(self, session : Session):
         item_id = self.options.item_id
         response = session.delete_item(item_id)

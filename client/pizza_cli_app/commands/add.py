@@ -3,6 +3,7 @@ from ..api import Session
 
 
 class Add(Base):
+    """Добавляет новый объект в корзину"""
     def run(self, session : Session):
         pizza_id = self.options.pizza_id
         size = self.options.size

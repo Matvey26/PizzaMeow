@@ -2,7 +2,8 @@ from .base import Base
 from ..api import Session
 
 
-class ShowCart(Base):
+class Cart(Base):
+    """Выводит корзину пользователя"""
     def run(self, session : Session):
         show_id = self.options.show_id
         answer = session.get_cart_items()

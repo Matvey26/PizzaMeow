@@ -265,7 +265,7 @@ class Session:
         Добавляет пиццу в корзину
         """
         headers = {'Content-Type': 'application/json', 'Authorization': f'Bearer {self.token}'}
-        response = requests.post(url + '/carts', json=data, headers=headers)
+        response = requests.post(url + 'carts', json=data, headers=headers)
         if response.status_code != 204:
             return (response.status_code, response.json()['detail'])
     
@@ -286,7 +286,7 @@ class Session:
             }
         """
         headers = {'Content-Type': 'application/json', 'Authorization': f'Bearer {self.token}'}
-        response = requests.patch(url + '/carts', json=data, headers=headers)
+        response = requests.patch(url + f'carts/{item_id}', json=data, headers=headers)
         if response.status_code != 204:
             return (response.status_code, response.json()['detail'])
     

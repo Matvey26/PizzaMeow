@@ -262,7 +262,6 @@ paths:
           description: Объект корзины успешно обновлён
       security:
         - jwt: []
-  /carts/{item_id}:
     delete:
       summary: Удалить объект из корзины
       operationId: server.app.views.carts.remove_item_from_cart

@@ -1,4 +1,3 @@
-from server.app.model.models import Model
 from .repository import Repository
 from .models import User, Order, OrderStatusEnum, PaymentMethodEnum
 from .payment_repository import PaymentRepository

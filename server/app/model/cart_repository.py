@@ -1,4 +1,3 @@
-from server.app.model.models import Model
 from .repository import Repository
 from .models import User, Cart, CartItem
 
@@ -34,7 +33,7 @@ class CartRepository(Repository):
     def get_items(self, cart: Cart):
         return cart.cart_items
 
-    def is_invalid(self, model: Cart) -> list:
+    def is_invalid(self, cart: Cart) -> list:
         invalid_fields = []
         return invalid_fields
 
@@ -52,12 +51,16 @@ class CartRepository(Repository):
             1: 'medium',
             2: 'large'
         }
-        serialized = []
+        serialized = {
+            'id': cart.id,
+            'total_price': cart.total_price,
+            'cart_items': []
+        }
         for cart_item in cart.cart_items:
             data = cart_item.serialize()
             data['pizza_name'] = cart_item.pizza.id
             data['size'] = size_enum[int(data['size'])]
             data['dough'] = dough_enum[int(data['dough'])]
-            serialized.append(data)
+            serialized['cart_items'].append(data)
         
         return serialized
