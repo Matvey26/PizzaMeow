@@ -11,15 +11,22 @@ class ShowCart(Base):
             print(answer[1])
             return
         
-        print('Корзина:')
-        print(f"Цена корзины: {answer['total_price']}")
+        header = [
+            f"Цена корзины: {answer['total_price']}",
+            '+++++++++++++++++++++++++++++'
+        ]
+        sep = [
+            '-----------------------------'
+        ]
+        elements = []
         for item in answer['cart_items']:
-            print('--------------------------------')
+            element = []
             if show_id:
-                print(f"item id: {item['id']}")
-            print(f"Цена - {item['total_price']}")
-            print(f"Название пиццы - {item['pizza_name']}")
-            print(f"Количество - {item['quantity']}")
-            print(f"Размер пиццы - {item['size']}")
-            print(f"Тип теста - {item['dough']}\n")
-        print('--------------------------------')
+                element.append(f"ID элемента корзины: {item['id']}")
+            element.append(f"Цена - {item['total_price']}")
+            element.append(f"Название пиццы - {item['pizza_name']}")
+            element.append(f"Количество - {item['quantity']}")
+            element.append(f"Размер пиццы - {item['size']}")
+            element.append(f"Тип теста - {item['dough']}\n")
+            elements.append(element)
+        self.print_paged(iter([elements]), header=header, sep=sep)

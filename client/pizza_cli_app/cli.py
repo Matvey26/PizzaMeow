@@ -52,8 +52,11 @@ def main():
 
     # Парсер для показа содержимого корзины
     show_cart = sub_parsers.add_parser('cart', help=ShowCart.__doc__)
-    show_cart.add_argument('--show-id', action='store_true', help='Показывать айди элементов корзины.')
-    show_cart.add_argument('--no-show-id', action='store_false', help='Не показывать айди элементов корзины.')
+    cart_arg_group = show_cart.add_mutually_exclusive_group()
+    cart_arg_group.add_argument('--show-id', action='store_true', dest='show_id', help='Показывать айди элементов корзины.')
+    cart_arg_group.add_argument('--no-show-id', action='store_false', dest='show_id', help='Не показывать айди элементов корзины.')
+    show_cart.set_defaults(show_id=False)
+    show_cart.add_argument('--limit', default=20, type=int, help='Максимум элементов корзины на странице.')
 
     # Парсер для добавления элемента в корзину
     add = sub_parsers.add_parser('add', help=AddCart.__doc__)
