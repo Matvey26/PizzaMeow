@@ -68,20 +68,19 @@ class Base:
             while True:
                 key = stdscr.getch()
 
-                match key:
-                    case ord('q'):
-                        break
-                    case ord('p'):
-                        cur = max(0, cur - 1)
-                    case ord('n'):
-                        if cur + 1 < len(pages):
+                if key == ord('q'):
+                    break
+                if key == ord('p'):
+                    cur = max(0, cur - 1)
+                if key == ord('n'):
+                    if cur + 1 < len(pages):
+                        cur += 1
+                    else:
+                        old_pages_len = len(pages)
+                        new_elements = load(loader)
+                        pages = prepare_pages(new_elements, max_rows, pages)
+                        if len(pages) > old_pages_len:
                             cur += 1
-                        else:
-                            old_pages_len = len(pages)
-                            new_elements = load(loader)
-                            pages = prepare_pages(new_elements, max_rows, pages)
-                            if len(pages) > old_pages_len:
-                                cur += 1
 
                 # Очищаем окно и отображаем новую страницу
                 window.clear()
