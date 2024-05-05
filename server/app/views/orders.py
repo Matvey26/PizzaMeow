@@ -21,7 +21,7 @@ def get_order_by_id(id: int, user: str, token_info: dict):
     if order is None:
         abort(400, 'Вы не делали такого заказа, проверьте указанный ID')
 
-    return order_repository.serialize(order)
+    return order_repository.serialize(order)[0]
 
 
 task_queue = asyncio.Queue()

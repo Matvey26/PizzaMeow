@@ -48,8 +48,6 @@ class OrderRepository(Repository):
             for order_item in order.order_items:
                 data['order_items'].append(order_item.serialize())
         
-        if len(serialized) == 1:
-            return serialized[0]
         return serialized
 
     def mark_as_cancelled(self, order: Order):
