@@ -16,7 +16,7 @@ class OrderItemRepository(Repository):
     #     self.session.add(new_order_item)
     #     self.session.commit(new_order_item)
     
-    def create_from_cart_item(self, order: Order, cart_item: CartItem):
+    def create(self, order: Order, cart_item: CartItem):
         """Создаёт позицию заказа из позиции корзины.
         """
         return OrderItem(
@@ -27,3 +27,7 @@ class OrderItemRepository(Repository):
             quantity = cart_item.quantity,
             toppings = cart_item.toppings
         )
+
+    def is_invalid(self, order_item: OrderItem) -> list:
+        invalid_fields = []
+        return invalid_fields

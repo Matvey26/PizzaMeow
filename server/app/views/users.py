@@ -1,11 +1,12 @@
 from . import user_repository
 from flask import abort
+import os
 
 
 def validate_email(email: str) -> bool:
     """Validate email"""
     if '@' not in email:
-        return 'Неверный формат почты: отсутствует символ "@"'
+        return 'Неверный формат почты: отсутствует символ @'
     return 'OK'
 
 
@@ -48,16 +49,17 @@ def sign_up(body):
     email = body.get('email', '')
     password = body.get('password', '')
 
-    user = user_repository.get_by_email(email)
-    if user:
-        abort(400, 'Это почта уже используется')
-    
     validate = (validate_email(email), validate_password(password))
     if validate[0] != 'OK':
         abort(400, validate[0])
     
     if validate[1] != 'OK':
         abort(400, validate[1])
+
+    user = user_repository.get_by_email(email)
+    if user:
+        abort(400, 'Это почта уже используется')
+    
 
     # Создаём нового, неподтверждённого пользователя
     user = user_repository.create(email=email, password=password)
@@ -71,9 +73,8 @@ def sign_up(body):
 def send_confirm_email(email: str):
     # Генерируем токен для подтверждения аккаунта
     from ..utils.auth import generate_token, generate_confirmation_url
-    email_confirmation_token = generate_token(email, 15 * 60)
-    confirm_email_end_point = 'http://127.0.0.1:8000/api/users/confirm'
-    confirm_email_url = generate_confirmation_url(email_confirmation_token, confirm_email_end_point)
+    confirm_email_end_point = os.environ['SERVER_URL'] + 'api/users/confirm'
+    confirm_email_url = generate_confirmation_url(email, confirm_email_end_point)
 
     # Отправляем письмо с просьбой подтвердить аккаунт
     from ..utils.send_email import send_email
@@ -93,12 +94,12 @@ def get_confirm_email(user: str, token_info: dict, email: str):
     send_confirm_email(email)
 
 
-def confirm_email(email_confirmation_token):
-    if not email_confirmation_token:
+def confirm_email(token):
+    if not token:
         abort(500, 'Ссылка на подтверждение почты недействительна')
 
     from ..utils.auth import decode_token
-    email = decode_token(email_confirmation_token)['sub']
+    email = decode_token(token)['sub']
     
     user = user_repository.get_by_email(email)
     if not user_repository.is_confirmed(user):
@@ -177,3 +178,9 @@ def change_email(user: str, token_info: dict, body):
     user_repository.update(user)
 
     send_confirm_email(new_email)
+
+
+def delete_user(user, token_info):
+    user_id = int(user)
+    user = user_repository.get(user_id)
+    user_repository.delete(user)

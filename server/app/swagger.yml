@@ -143,7 +143,7 @@ paths:
       summary: Подтверждает акканут пользователя
       operationId: server.app.views.users.confirm_email
       parameters:
-        - name: email_confirmation_token
+        - name: token
           description: Токен подтверждения аккаунта
           in: query
           schema:
@@ -151,23 +151,32 @@ paths:
       responses:
         '204':
           description: Данные успешно обновлены
+  /users/delete:
+    delete:
+      summary: Удаляет учётную запись
+      operationId: server.app.views.users.delete_user
+      responses:
+        '204':
+          description: Учётная запись пользователя успешно удалена
+      security:
+      - jwt: []
 
 
   # ВСЕ ПУТИ, СВЯЗАННЫЕ
   # С ТАБЛИЦЕЙ PIZZA
   /pizzas:
     get:
-      summary: Получить список всех пицц
+      summary: Получить страницу пицц по указанным параметрам
       operationId: server.app.views.pizzas.get_pizzas_page
       parameters:
         - name: offset
-          description: Число элементов, которые нужно пропустить от начала таблицы перед началом сборки итогового списка
+          description: Число, которое нужно отступить от начала таблицы
           in: query
           schema:
             type: integer
             minimum: 0
         - name: limit
-          description: Максимальное число элементов, которое будет в списке. Сервер будет пытаться заполнить список ровно таким числом элементов.
+          description: Максимальное число пицц в возвращаемой странице
           in: query
           schema:
             type: integer
@@ -181,14 +190,325 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Pizza'
+  /pizzas/{id}:
+    get:
+      summary: Получить пиццу по id
+      operationId: server.app.views.pizzas.get_pizza_by_id
+      parameters:
+      - name: id
+        in: path
+        description: ID пиццы
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Pizza'
+  
+  # ВСЕ ПУТИ, СВЯЗАННЫЕ
+  # С ТАБЛИЦЕЙ CART
+  /carts:
+    get:
+      summary: Получить корзину пользователя
+      operationId: server.app.views.carts.get_cart
+      responses:
+        '200':
+          description: Корзина успешно получена
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/CartGet'
+      security:
+      - jwt: []
+    post:
+      summary: Добавить элемент в корзину
+      operationId: server.app.views.carts.add_item_to_cart
+      requestBody:
+        description: JSON объект объекта корзины
+        required: true
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/CartItem'
+      responses:
+        '204':
+          description: Объект успешно добавлен в корзину
+      security:
+        - jwt: []
+  /carts/{item_id}:
+    patch:
+      summary: Обновить элемент корзины
+      operationId: server.app.views.carts.update_item_in_cart
+      parameters:
+      - name: item_id
+        in: path
+        description: ID элемента корзины
+        required: true
+        schema:
+          type: integer
+      requestBody:
+        description: JSON объект объекта корзины
+        required: true
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/CartItem'
+      responses:
+        '204':
+          description: Объект корзины успешно обновлён
+      security:
+        - jwt: []
+  /carts/{item_id}:
+    delete:
+      summary: Удалить объект из корзины
+      operationId: server.app.views.carts.remove_item_from_cart
+      parameters:
+      - name: item_id
+        in: path
+        description: ID элемента корзины
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: Объект успешно удалён из корзины
+      security:
+        - jwt: []
+  # ВСЕ ПУТИ, СВЯЗАННЫЕ
+  # С ТАБЛИЦЕЙ Order И OrderItem
+  /orders:
+    get:
+      summary: Получить страницу заказов по указанным параметрам
+      operationId: server.app.views.orders.get_orders_page
+      parameters:
+        - name: offset
+          description: Число, которое нужно отступить от начала таблицы
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+        - name: limit
+          description: Максимальное число заказов в возвращаемой странице
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Order'
 
+      security:
+      - jwt: []
 
+    post:
+      summary: Создать заказ
+      operationId: server.app.views.orders.create_order
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/CreateOrder'
+      responses:
+        '201':
+          description: Заказ создан
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  payment_url:
+                    type: string
+      security:
+        - jwt: []
+
+  /orders/{id}:
+    get:
+      summary: Получить заказ по id
+      operationId: server.app.views.orders.get_order_by_id
+      parameters:
+      - name: id
+        in: path
+        description: ID заказа
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Order'
+      security:
+      - jwt: []
+  
+  /pizzeria/address:
+    get:
+      summary: Получить адреса пиццерий. Если указан параметр address, то возвращает count[=10] ближайших пиццерий.
+      operationId: server.app.views.pizzerias.get_addresses
+      parameters:
+      - name: address
+        in: query
+        description: адрес пользователя
+        schema:
+          type: string
+      - name: count
+        in: query
+        description: количество ближайших пиццерий, которое нужно вернуть
+        schema:
+          type: integer
+          default: 10
+      responses:
+        '200':
+          description: Адреса пиццерий успешно получены
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Pizzeria'
+  
+  /time/delivery:
+    get:
+      summary: Возвращает время в минутах, которое потребуется курьеру, чтобы доставить заказ
+      operationId: server.app.views.time.get_delivery_time
+      parameters:
+      - name: address
+        in: query
+        description: Адрес, до которого нужно доставить заказ
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Время доставки в минутах
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  time:
+                    type: integer
+                required:
+                - time
+      security:
+      - jwt: []
+  /time/cooking:
+    get:
+      summary: Возвращает время в минутах, сколько будет готовиться заказ
+      operationId: server.app.views.time.get_cooking_time
+      responses:
+        '200':
+          description: Время готовки в минутах
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  time:
+                    type: integer
+                required:
+                - time
+      security:
+      - jwt: []
+  
+  /payments/confirm:
+    get:
+      summary: Подтвердить платёж
+      operationId: server.app.views.payments.confirm_payment
+      parameters:
+      - name: token
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        '204':
+          description: Платёж подтверждён
 
 
 # КОМПОНЕНТЫ ЗАПРОСОВ
 components:
   # Схемы параметров запроса или ответа
   schemas:
+    # Схема объекта корзины
+    CartItem:
+      type: object
+      properties:
+        pizza_id:
+          type: integer
+          description: id пиццы, которой соответствует этот объект
+        quantity:
+          type: integer
+          description: Количество заказанных пицц
+          minimum: 1
+        size:
+          type: integer
+          description: Размер пиццы (0 == small, 1 == medium, 2 == large)
+          enum: [0, 1, 2]
+        dough:
+          type: integer
+          description: Тип теста пиццы (0 == thin, 1 == classic)
+          enum: [0, 1]
+
+    CartItemGet:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: уникальный id объекта корзины
+        pizza_id:
+          type: integer
+          description: id пиццы, которой соответствует этот объект
+        pizza_name:
+          type: string
+          description: Название пиццы
+        total_price:
+          type: number
+          format: float
+          description: Итоговая цена объекта (количество уже учтено)
+        quantity:
+          type: integer
+          description: Количество заказанных пицц
+          minimum: 1
+        size:
+          type: string
+          description: Размер пиццы (small, medium, large)
+          enum: [small, medium, large]
+        dough:
+          type: string
+          description: Тип теста пиццы (thin, classic)
+          enum: [thin, classic]
+      required:
+        - id
+        - pizza_id
+        - pizza_name
+        - total_price
+        - quantity
+        - size
+        - dough
+    
+    # Схема корзины
+    CartGet:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Уникальный ID корзины
+        cart_items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CartItemGet'
+
     # Схема данных о пицце
     Pizza:
       type: object
@@ -202,9 +522,13 @@ components:
         description:
           type: string
           description: Описание пиццы
+        price:
+          type: number
+          format: float
+          description: Цена пиццы
       required:
-        - id
         - name
+        - price
 
     # Схема регистрационных данных
     UserSignUp:
@@ -240,6 +564,82 @@ components:
     # Схема токена
     Token:
       type: string
+
+    # Схема элемента заказа
+    OrderItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Уникальный ID элемента заказа
+        pizza_id:
+          type: integer
+          description: id пиццы, которой соответствует этот элемент
+        pizza_name:
+          type: string
+          description: Название пиццы
+        total_price:
+          type: number
+          format: float
+          description: Итоговая цена элемента (количество уже учтено)
+        quantity:
+          type: integer
+          description: Количество заказанных пицц
+          minimum: 1
+        size:
+          type: string
+          description: Размер пиццы (small, medium, large)
+          enum: [small, medium, large]
+        dough:
+          type: string
+          description: Тип теста пиццы (thin, classic)
+          enum: [thin, classic]
+      required:
+        - id
+        - pizza_id
+        - pizza_name
+        - total_price
+        - quantity
+        - size
+        - dough
+    
+    # Схема заказа
+    Order:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Уникальный ID заказа
+        order_items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItem'
+    
+    CreateOrder:
+      type: object
+      properties:
+        address:
+          type: string
+        pickup_time:
+          type: string
+          format: date-time
+        payment_method:
+          type: string
+          enum: [online, offline]
+      required:
+        - address
+        - pickup_time
+        - payment_method
+    
+    Pizzeria:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Уникальный ID пиццерии
+        address:
+          type: string
+          description: Адрес пиццерии
   
   # Универсальные ответы от сервера
   responses:

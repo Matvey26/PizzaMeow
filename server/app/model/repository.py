@@ -104,3 +104,24 @@ class Repository(ABC):
 
 
         return []
+
+    def serialize(self, *models: Model) -> dict:
+        """Сериализация объекта.
+        
+        Параметры
+        ---------
+        model : Model
+            Экземпляр модели, который нужно сериализовать.
+        
+        Возвращает
+        ----------
+        dict
+            Сериализованный объект
+        """
+        serialized = []
+        for model in models:
+            serialized.append(model.serialize)
+        
+        if len(serialized) == 1:
+            return serialized[0]
+        return serialized
