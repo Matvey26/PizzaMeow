@@ -60,6 +60,4 @@ class CartRepository(Repository):
             data['dough'] = dough_enum[int(data['dough'])]
             serialized.append(data)
         
-        if len(serialized) == 1:
-            return serialized[0]
         return serialized

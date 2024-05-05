@@ -12,4 +12,4 @@ def get_pizza_by_id(id: int):
     pizza = pizza_repository.get(id)
     if pizza is None:
         abort(400, 'Пиццы с таким id нет.')
-    return pizza_repository.serialize(pizza)
+    return pizza_repository.serialize(pizza)[0]
