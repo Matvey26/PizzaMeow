@@ -11,9 +11,9 @@ class ShowCart(Base):
             return
         for item in answer:
             if show_id:
-                print(f'item id - {item['id']}')
-            print(f'name pizza - {item['pizza_name']}')
-            print(f'price - {item['price']}')
-            print(f'quantity - {item['quantity']}')
-            print(f'size - {item['size']}')
-            print(f'dough - {item['dough']}\n')
+                print(f"item id - {item['id']}")
+            print(f"name pizza - {item['pizza_name']}")
+            print(f"price - {item['price']}")
+            print(f"quantity - {item['quantity']}")
+            print(f"size - {item['size']}")
+            print(f"dough - {item['dough']}\n")

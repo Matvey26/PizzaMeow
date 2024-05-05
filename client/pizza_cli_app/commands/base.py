@@ -1,5 +1,6 @@
 import curses
-from typing import List
+from typing import List, Iterator
+import json
 
 
 class Base:
@@ -13,7 +14,7 @@ class Base:
     def run(self, session):
         raise NotImplementedError('You must implement the run() method!')
 
-    def print_paged(self, elements: List[List[str]]) -> None:
+    def print_paged(self, loader: Iterator[List[str]]) -> None:
         """Разбивает список элементов на страницы и выводит их постранично.
 
         Параметры
@@ -22,25 +23,29 @@ class Base:
             Список элементов. Элемент - список из строк, который представляет собой обособленный элемент вывода.
             Например, каждый элемент меню пиццерии может представлено в виде списка ["название пиццы", "описание пиццы"].
         """
-        def prepare_pages(elements: List[List[str]], max_rows: int) -> List[List[str]]:
-            pages = []
-            buffer = []
-            rest_row = max_rows
-            for element in elements:
-                if len(element) > rest_row:
+        def prepare_pages(new_elements: List[List[str]], max_rows: int, pages: List[List[str]]) -> List[List[str]]:
+            buffer = pages.pop()
+            for element in new_elements:
+                if len(buffer) + len(element) >= max_rows:
                     pages.append(buffer)
                     buffer = element
-                    rest_row = max_rows - len(element)
                     continue
 
                 buffer.extend(element)
-                rest_row -= len(element)
             pages.append(buffer)
 
             return pages
-
+    
+    
+        def load(loader):
+            try:
+                return next(loader)
+            except StopIteration:
+                return []
+    
         HELP_TEXT = "Type n, p or q (next, prev or quit):"
 
+        error_message = ''
         try:
             stdscr = curses.initscr()
             stdscr.refresh()  # Обновляем экран после инициализации
@@ -51,7 +56,10 @@ class Base:
             # Определяем количество строк, которое может отображаться в окне
             max_rows = window.getmaxyx()[0] - 1
 
-            pages = prepare_pages(elements, max_rows)
+            # Подгружаем первую пачку элементов и формируем страницы
+            new_elements = load(loader)
+            pages = prepare_pages(new_elements, max_rows, [[]])
+            text = '\n'.join(map(str, pages))
             cur = 0  # номер текущей страницы
 
             # Отображаем первую страницу
@@ -71,10 +79,17 @@ class Base:
                     break
 
                 # Перемещаемся на следующую страницу
-                elif key == ord('n') and cur + 1 < len(pages):
-                    cur += 1
                 elif key == ord('p') and cur > 0:
                     cur -= 1
+                elif key == ord('n'):
+                    if cur + 1 < len(pages):
+                        cur += 1
+                    else:
+                        old_pages_len = len(pages)
+                        new_elements = load(loader)
+                        pages = prepare_pages(new_elements, max_rows, pages)
+                        if len(pages) > old_pages_len:
+                            cur += 1
 
                 # Очищаем окно и отображаем новую страницу
                 window.clear()
@@ -86,8 +101,9 @@ class Base:
                 window.refresh()
 
         except Exception as e:
-            print(f"An error occurred: {e}")
+            error_message += 'При постраничном выводе произошла неизвестная ошибка.\n'
+            error_message += f"An error occurred: {e}\n"
         finally:
             # Завершаем работу с curses и восстанавливаем терминал
             curses.endwin()
-            print('При постраничном выводе произошла неизвестная ошибка.')
+            print(error_message, end='')
