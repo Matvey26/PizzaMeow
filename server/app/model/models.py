@@ -96,7 +96,7 @@ class PaymentMethodEnum(enum.Enum):
     
 
 class PaymentStatusEnum(enum.Enum):
-    AWAITING = 0
+    PENDING = 0
     PAID = 1
 
     def serialize(self):
@@ -147,7 +147,7 @@ class Order(Base, Model):
 
     user = relationship('User', back_populates='orders')
     order_items = relationship('OrderItem', back_populates='order', cascade='all, delete-orphan, save-update')
-    payment = relationship('Payment', back_populates='order', cascade='all, delete-orphan, save-update')
+    payment = relationship('Payment', back_populates='order', cascade='all, delete-orphan, save-update', uselist=False)
 
 
 class Cart(Base, Model):
@@ -287,7 +287,7 @@ class Payment(Base, Model):
     amount = sa.Column(sa.Float, nullable=False)
     created_at = sa.Column(sa.DateTime, server_default=func.now())
     payment_date = sa.Column(sa.DateTime)
-    payment_status = sa.Column(sa.Enum(PaymentStatusEnum), default=PaymentStatusEnum.AWAITING)
+    payment_status = sa.Column(sa.Enum(PaymentStatusEnum), default=PaymentStatusEnum.PENDING)
 
     order = relationship('Order', back_populates='payment', uselist=False)
     user = relationship('User', back_populates='payments', uselist=False)

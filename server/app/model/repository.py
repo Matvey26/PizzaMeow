@@ -105,7 +105,7 @@ class Repository(ABC):
 
         return []
 
-    def serialize(self, model: Model) -> dict:
+    def serialize(self, *models: Model) -> dict:
         """Сериализация объекта.
         
         Параметры
@@ -118,4 +118,10 @@ class Repository(ABC):
         dict
             Сериализованный объект
         """
-        return model.serialize()
+        serialized = []
+        for model in models:
+            serialized.append(model.serialize)
+        
+        if len(serialized) == 1:
+            return serialized[0]
+        return serialized

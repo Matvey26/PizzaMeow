@@ -74,7 +74,7 @@ def send_confirm_email(email: str):
     # Генерируем токен для подтверждения аккаунта
     from ..utils.auth import generate_token, generate_confirmation_url
     confirm_email_end_point = os.environ['SERVER_URL'] + 'api/users/confirm'
-    confirm_email_url = generate_confirmation_url(email, confirm_email_end_point, 'email_confirmation_token')
+    confirm_email_url = generate_confirmation_url(email, confirm_email_end_point)
 
     # Отправляем письмо с просьбой подтвердить аккаунт
     from ..utils.send_email import send_email
@@ -94,12 +94,12 @@ def get_confirm_email(user: str, token_info: dict, email: str):
     send_confirm_email(email)
 
 
-def confirm_email(email_confirmation_token):
-    if not email_confirmation_token:
+def confirm_email(token):
+    if not token:
         abort(500, 'Ссылка на подтверждение почты недействительна')
 
     from ..utils.auth import decode_token
-    email = decode_token(email_confirmation_token)['sub']
+    email = decode_token(token)['sub']
     
     user = user_repository.get_by_email(email)
     if not user_repository.is_confirmed(user):

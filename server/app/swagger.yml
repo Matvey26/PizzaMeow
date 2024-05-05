@@ -143,7 +143,7 @@ paths:
       summary: Подтверждает акканут пользователя
       operationId: server.app.views.users.confirm_email
       parameters:
-        - name: email_confirmation_token
+        - name: token
           description: Токен подтверждения аккаунта
           in: query
           schema:
@@ -334,7 +334,7 @@ paths:
   /orders/{id}:
     get:
       summary: Получить заказ по id
-      operationId: server.app.views.orders.order_by_id
+      operationId: server.app.views.orders.get_order_by_id
       parameters:
       - name: id
         in: path
@@ -426,7 +426,7 @@ paths:
       summary: Подтвердить платёж
       operationId: server.app.views.payments.confirm_payment
       parameters:
-      - name: payment_confirmation_token
+      - name: token
         in: query
         required: true
         schema:

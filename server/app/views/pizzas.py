@@ -5,10 +5,7 @@ from flask import abort
 
 def get_pizzas_page(offset: int, limit: int):
     page = pizza_repository.get_page(offset, limit)
-    ret = []
-    for pizza in page:
-        ret.append(pizza_repository.serialize(pizza))
-    return ret
+    return pizza_repository.serialize(*page)
 
 
 def get_pizza_by_id(id: int):

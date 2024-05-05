@@ -1,6 +1,7 @@
 from . import user_repository, cart_repository
 from . import order_repository, payment_repository
 from flask import abort
+import asyncio
 
 
 def get_orders_page(limit: str, offset: str, user: str, token_info: dict):
@@ -8,23 +9,25 @@ def get_orders_page(limit: str, offset: str, user: str, token_info: dict):
     user = user_repository.get(user_id)
     if user is None:
         abort(401, 'Токен недействителен, либо учетная запись удалена')
-
     page = order_repository.get_page_by_user(user=user, limit=limit, offset=offset)
-    ret = []
-    for order in page:
-        data = order.serialize()
-        data['order_items'] = []
-        for order_item in order.order_items:
-            data['order_items'].append(order_item.serialize())
-    return ret
+    
+    return order_repository.serialize(*page)
 
 
-def order_by_id(id: int, user: str, token_info: dict):
+def get_order_by_id(id: int, user: str, token_info: dict):
     order_id = id
     user_id = int(user)
+    order = order_repository.get_by_user_and_order_ids(user_id=user_id, order_id=order_id)
+    if order is None:
+        abort(400, 'Вы не делали такого заказа, проверьте указанный ID')
+
+    return order_repository.serialize(order)
 
 
-def create_order(user, token_info, body):
+task_queue = asyncio.Queue()
+
+
+async def create_order(user, token_info, body):
     user_id = int(user)
     user = user_repository.get(user_id)
     if user is None:
@@ -69,9 +72,27 @@ def create_order(user, token_info, body):
     # очищаем корзину
     cart_repository.clear(user.cart)
 
+    # создаем асинхронную задачу на отмену заказа (точнее добавляем заказ в очередь)
+    await task_queue.put(order.id)
+
     # отправляем ссылку для оплаты
     from ..utils.make_order import generate_payment_url
     if payment_method == 'online':
         return {
             'payment_url': generate_payment_url(payment.id, payment.amount)
         }
+
+
+# Этот фоновый процесс отвечает за выполнение задач на отмену заказов,
+# если те не были оплачены в течение 15 минут
+async def process_queue():
+    from ..utils.make_order import cancel_order_if_not_paid
+    while True:
+        order_id = await task_queue.get()
+        order = order_repository.get(order_id)
+        task = cancel_order_if_not_paid(order)
+        await task
+
+
+# запускаем процесс обработки очереди в фоновом режиме
+asyncio.create_task(process_queue())

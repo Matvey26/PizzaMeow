@@ -1,3 +1,4 @@
+from server.app.model.models import Model
 from .repository import Repository
 from .models import User, Cart, CartItem
 
@@ -36,3 +37,29 @@ class CartRepository(Repository):
     def is_invalid(self, model: Cart) -> list:
         invalid_fields = []
         return invalid_fields
+
+    def serialize(self, cart: Cart) -> dict:
+        """Сериализует корзину. Иначе говоря представляет корзину в виде списка её элементов.
+        Все поля, содержащие enum переводятся в текст.
+        """
+
+        dough_enum = {
+            0: 'thin',
+            1: 'classic'
+        }
+        size_enum = {
+            0: 'small',
+            1: 'medium',
+            2: 'large'
+        }
+        serialized = []
+        for cart_item in cart.cart_items:
+            data = cart_item.serialize()
+            data['pizza_name'] = cart_item.pizza.id
+            data['size'] = size_enum[int(data['size'])]
+            data['dough'] = dough_enum[int(data['dough'])]
+            serialized.append(data)
+        
+        if len(serialized) == 1:
+            return serialized[0]
+        return serialized

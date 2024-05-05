@@ -1,7 +1,9 @@
+from server.app.model.models import Model
 from .repository import Repository
 from .models import User, Order, OrderStatusEnum, PaymentMethodEnum
 from .payment_repository import PaymentRepository
 from datetime import datetime
+from typing import List
 
 payment_repository = PaymentRepository()
 
@@ -32,3 +34,23 @@ class OrderRepository(Repository):
     def is_invalid(self, order: Order) -> list:
         invalid_fields = []
         return invalid_fields
+    
+    def get_by_user_and_order_ids(self, user_id, order_id):
+        return self.session.query(Order).filter(Order.id == order_id, Order.user_id == user_id).first()
+
+    def serialize(self, *orders: Order) -> dict:
+        serialized = []
+        for order in orders:
+            if not isinstance(order, Order):
+                raise TypeError('В списке заказов найден экземпляр другого класса')
+            data = order.serialize()
+            data['order_items'] = []
+            for order_item in order.order_items:
+                data['order_items'].append(order_item.serialize())
+        
+        if len(serialized) == 1:
+            return serialized[0]
+        return serialized
+
+    def mark_as_cancelled(self, order: Order):
+        order.status = OrderStatusEnum.CANCELLED

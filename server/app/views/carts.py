@@ -10,24 +10,7 @@ def get_cart(user, token_info):
     user_id = int(user)
     user = user_repository.get(user_id)
     cart = cart_repository.get_by_user(user)
-    dough_enum = {
-        0: 'thin',
-        1: 'classic'
-    }
-    size_enum = {
-        0: 'small',
-        1: 'medium',
-        2: 'large'
-    }
-    result = []
-    for cart_item in cart.cart_items:
-        data = cart_item.serialize()
-        data['pizza_name'] = cart_item.pizza.id
-        data['size'] = size_enum[int(data['size'])]
-        data['dough'] = dough_enum[int(data['dough'])]
-        result.append(data)
-        
-    return result
+    return cart_repository.serialize(cart)
 
 
 def add_item_to_cart(user, token_info, body):
