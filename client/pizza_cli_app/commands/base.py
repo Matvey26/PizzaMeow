@@ -14,7 +14,7 @@ class Base:
     def run(self, session):
         raise NotImplementedError('You must implement the run() method!')
 
-    def print_paged(self, loader: Iterator[List[str]]) -> None:
+    def print_paged(self, limit: int, loader: Iterator[List[str]]) -> None:
         """Разбивает список элементов на страницы и выводит их постранично.
 
         Параметры
@@ -23,15 +23,19 @@ class Base:
             Список элементов. Элемент - список из строк, который представляет собой обособленный элемент вывода.
             Например, каждый элемент меню пиццерии может представлено в виде списка ["название пиццы", "описание пиццы"].
         """
-        def prepare_pages(new_elements: List[List[str]], max_rows: int, pages: List[List[str]]) -> List[List[str]]:
+        def prepare_pages(new_elements: List[List[str]], max_rows: int, limit: int, pages: List[List[str]]) -> List[List[str]]:
             buffer = pages.pop()
+            buffer_elements_count = buffer.pop()
             for element in new_elements:
-                if len(buffer) + len(element) >= max_rows:
+                if len(buffer) + len(element) >= max_rows or buffer_elements_count >= limit:
+                    buffer.append(buffer_elements_count)
                     pages.append(buffer)
                     buffer = element
                     continue
-
+                
+                buffer_elements_count += 1
                 buffer.extend(element)
+            buffer.append(buffer_elements_count)
             pages.append(buffer)
 
             return pages
@@ -56,10 +60,12 @@ class Base:
 
             # Подгружаем первую пачку элементов, формируем страницы и отображаем первую страницу
             new_elements = load(loader)
-            pages = prepare_pages(new_elements, max_rows, [[]])
+            pages = prepare_pages(new_elements, max_rows, limit, [[0]])
             cur = 0  # номер текущей страницы
 
             for i, s in enumerate(pages[cur]):
+                if isinstance(s, int):
+                    continue
                 window.addstr(i, 0, s)
             window.addstr(max_rows, 0, HELP_TEXT)
             window.refresh()
@@ -78,13 +84,15 @@ class Base:
                     else:
                         old_pages_len = len(pages)
                         new_elements = load(loader)
-                        pages = prepare_pages(new_elements, max_rows, pages)
+                        pages = prepare_pages(new_elements, max_rows, limit, pages)
                         if len(pages) > old_pages_len:
                             cur += 1
 
                 # Очищаем окно и отображаем новую страницу
                 window.clear()
                 for i, s in enumerate(pages[cur]):
+                    if isinstance(s, int):
+                        continue
                     window.addstr(i, 0, s)
                 window.addstr(max_rows, 0, HELP_TEXT)
 

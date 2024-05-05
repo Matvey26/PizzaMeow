@@ -44,8 +44,10 @@ def main():
 
     # Парсер для вывода меню
     menu = sub_parsers.add_parser('menu', help=Menu.__doc__)
-    menu.add_argument('--show-id', action='store_true', help='Показывать айди пицц.')
-    menu.add_argument('--no-show-id', action='store_false', help='Не показывать айди пицц.')
+    menu_arg_group = menu.add_mutually_exclusive_group()
+    menu_arg_group.add_argument('--show-id', action='store_true', dest='show_id', help='Показывать айди пицц.')
+    menu_arg_group.add_argument('--no-show-id', action='store_false', dest='show_id', help='Не показывать айди пицц.')
+    menu.set_defaults(show_id=False)  # значение по умолчанию, если ни один из флагов не указан
     menu.add_argument('--limit', default=20, type=int, help='Максимум пицц в странице.')
 
     # Парсер для показа содержимого корзины

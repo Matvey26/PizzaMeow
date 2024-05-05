@@ -25,6 +25,7 @@ class Menu(Base):
                 yield data
                 offset += limit
         try:
-            self.print_paged(get_all_pizzas())
+            self.print_paged(limit, get_all_pizzas())
         except Exception as e:
             print(e)
+            raise
