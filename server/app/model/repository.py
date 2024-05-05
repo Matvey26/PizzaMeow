@@ -120,7 +120,7 @@ class Repository(ABC):
         """
         serialized = []
         for model in models:
-            serialized.append(model.serialize)
+            serialized.append(model.serialize())
         
         if len(serialized) == 1:
             return serialized[0]
