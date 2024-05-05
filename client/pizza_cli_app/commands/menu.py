@@ -1,5 +1,6 @@
 from ..api.api import Session
 from .base import Base
+import curses
 
 
 class Menu(Base):
@@ -25,7 +26,9 @@ class Menu(Base):
                 yield data
                 offset += limit
         try:
-            self.print_paged(limit, get_all_pizzas())
+            self.print_paged(get_all_pizzas(), limit=limit, header=['Меню:', '++++++++++++++++++'], sep=['------------------'])
+        except curses.error as e:
+            print('При постраничном выводе произошла ошибка. Возможно вы изменили размер терминала.')
         except Exception as e:
+            print('Произошла неизвестная ошибка.')
             print(e)
-            raise
