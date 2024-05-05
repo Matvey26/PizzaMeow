@@ -52,44 +52,36 @@ class Base:
 
             # Создаем окно, в котором будет отображаться текст
             window = curses.newwin(curses.LINES, curses.COLS, 0, 0)
-
-            # Определяем количество строк, которое может отображаться в окне
             max_rows = window.getmaxyx()[0] - 1
 
-            # Подгружаем первую пачку элементов и формируем страницы
+            # Подгружаем первую пачку элементов, формируем страницы и отображаем первую страницу
             new_elements = load(loader)
             pages = prepare_pages(new_elements, max_rows, [[]])
-            text = '\n'.join(map(str, pages))
             cur = 0  # номер текущей страницы
 
-            # Отображаем первую страницу
             for i, s in enumerate(pages[cur]):
                 window.addstr(i, 0, s)
             window.addstr(max_rows, 0, HELP_TEXT)
-
-            # Обновляем экран
             window.refresh()
 
+            # Слушаем клавиши
             while True:
-                # Ожидаем нажатия клавиши
                 key = stdscr.getch()
 
-                # Выходим, если нажата клавиша 'q'
-                if key == ord('q'):
-                    break
-
-                # Перемещаемся на следующую страницу
-                elif key == ord('p') and cur > 0:
-                    cur -= 1
-                elif key == ord('n'):
-                    if cur + 1 < len(pages):
-                        cur += 1
-                    else:
-                        old_pages_len = len(pages)
-                        new_elements = load(loader)
-                        pages = prepare_pages(new_elements, max_rows, pages)
-                        if len(pages) > old_pages_len:
+                match key:
+                    case ord('q'):
+                        break
+                    case ord('p'):
+                        cur = max(0, cur - 1)
+                    case ord('n'):
+                        if cur + 1 < len(pages):
                             cur += 1
+                        else:
+                            old_pages_len = len(pages)
+                            new_elements = load(loader)
+                            pages = prepare_pages(new_elements, max_rows, pages)
+                            if len(pages) > old_pages_len:
+                                cur += 1
 
                 # Очищаем окно и отображаем новую страницу
                 window.clear()
@@ -101,9 +93,7 @@ class Base:
                 window.refresh()
 
         except Exception as e:
-            error_message += 'При постраничном выводе произошла неизвестная ошибка.\n'
-            error_message += f"An error occurred: {e}\n"
-        finally:
-            # Завершаем работу с curses и восстанавливаем терминал
             curses.endwin()
-            print(error_message, end='')
+            raise
+        finally:
+            curses.endwin()
