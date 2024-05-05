@@ -2,7 +2,7 @@
 
 import argparse
 import sys
-from .commands import Base, ChangeEmail, ChangePasssword, Config, Logout, Menu, ResetPasssword, SignIn, SignUp
+from .commands import Base, ChangeEmail, ChangePasssword, Config, Logout, Menu, ResetPasssword, SignIn, SignUp, Cart, Add, Change, Remove
 from .api import Session
 
 def main():
@@ -44,9 +44,38 @@ def main():
 
     # Парсер для вывода меню
     menu = sub_parsers.add_parser('menu', help=Menu.__doc__)
-    menu.add_argument('--show-id', action='store_true', help='Показывать айди пицц.')
-    menu.add_argument('--no-show-id', action='store_false', help='Не показывать айди пицц.')
-    menu.add_argument('--limit', default=20, help='Максимум пицц в странице.')
+    menu_arg_group = menu.add_mutually_exclusive_group()
+    menu_arg_group.add_argument('--show-id', action='store_true', dest='show_id', help='Показывать айди пицц.')
+    menu_arg_group.add_argument('--no-show-id', action='store_false', dest='show_id', help='Не показывать айди пицц.')
+    menu.set_defaults(show_id=True)  # значение по умолчанию, если ни один из флагов не указан
+    menu.add_argument('--limit', default=20, type=int, help='Максимум пицц в странице.')
+
+    # Парсер для показа содержимого корзины
+    cart = sub_parsers.add_parser('cart', help=Cart.__doc__)
+    cart_arg_group = cart.add_mutually_exclusive_group()
+    cart_arg_group.add_argument('--show-id', action='store_true', dest='show_id', help='Показывать айди элементов корзины.')
+    cart_arg_group.add_argument('--no-show-id', action='store_false', dest='show_id', help='Не показывать айди элементов корзины.')
+    cart.set_defaults(show_id=True)
+    cart.add_argument('--limit', default=20, type=int, help='Максимум элементов корзины на странице.')
+
+    # Парсер для добавления элемента в корзину
+    add = sub_parsers.add_parser('add', help=Add.__doc__)
+    add.add_argument('pizza_id', type=int, help='ID пиццы, которая будет добавлена в корзину.')
+    add.add_argument('--size', default=1, help='Размер пиццы.', type=int)
+    add.add_argument('--dough', default=1, help='Размер пиццы.', type=int)
+    add.add_argument('--quantity', default=1, help='Размер пиццы.', type=int)
+
+    # Парсер для изменения элемента корзины
+    change = sub_parsers.add_parser('change', help=Change.__doc__)
+    change.add_argument('item_id', type=int, help='ID элемента корзины, который будет изменён.')
+    change.add_argument('--pizza_id', default=-1, type=int, help='ID пиццы.')
+    change.add_argument('--size', default=-1, type=int, help='Размер пиццы.')
+    change.add_argument('--dough', default=-1, type=int, help='Размер пиццы.')
+    change.add_argument('--quantity', default=-1, type=int, help='Размер пиццы.')
+
+    # Парсер для удаления элемента корзины
+    remove = sub_parsers.add_parser('remove', help=Remove.__doc__)
+    remove.add_argument('item_id', type=int, help='ID элемента корзины, нужно удалить.')
 
     args = parser.parse_args()
 
@@ -58,7 +87,11 @@ def main():
         'menu': Menu,
         'reset_password': ResetPasssword,
         'change_email': ChangeEmail,
-        'change_password': ChangePasssword
+        'change_password': ChangePasssword,
+        'cart' : Cart,
+        'add' : Add,
+        'change' : Change,
+        'remove' : Remove
     }
 
     session = Session()

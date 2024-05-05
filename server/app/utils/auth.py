@@ -31,14 +31,16 @@ def decode_token(token):
         raise Unauthorized from e
 
 
-def generate_confirmation_url(email_confirmation_token, end_point: str):
-    """Генерирует ссылку для подтверждения почты.
-    Принимает конечную точку, которая обработает запрос на подтверждение почты.
+def generate_confirmation_url(sub: str, end_point: str):
+    """Генерирует ссылку для подтверждения чего угодно.
+    Принимает конечную точку, которая обработает запрос на подтверждение,
+    Название параметра в запросе: "token"
     """
     from urllib.parse import urlencode
 
     # URL-кодирование токена подтверждения электронной почты
-    encoded_token = urlencode({"email_confirmation_token": email_confirmation_token})
+    sub_confirmation_token = generate_token(sub, 15 * 60)
+    encoded_token = urlencode({'token': sub_confirmation_token})
 
     # Генерация URL-адреса с кодированным токеном в качестве параметра запроса
     confirmation_url = f'{end_point}?{encoded_token}'
