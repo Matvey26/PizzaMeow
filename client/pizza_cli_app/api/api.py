@@ -305,7 +305,7 @@ class Session:
         response = requests.post(url + '/orders', json=data, headers=headers)
         if response.status_code == 200:
             return response.text # ссылка на оплату
-        return response.status_code
+        return (response.status_code, response.json()['detail'])
 
     @connection_error_handler
     def get_orders(self, limit : int, offset : int):
@@ -314,7 +314,7 @@ class Session:
         response = requests.get(url + 'orders', headers=headers, params=params)
         if response.status_code == 200:
             return response.json()
-        return response.status_code
+        return (response.status_code, response.json()['detail'])
 
     @connection_error_handler
     def id_order(self, id : int):
@@ -322,13 +322,4 @@ class Session:
         response = requests.get(url + f'orders/{id}', headers=headers)
         if response.status_code == 200:
             return response.json()
-        return response.status_code
-    
-    @connection_error_handler
-    def get_time(self, address : str):
-        params = {'address' : address}
-        response = requests.get(url + 'delivery/time', params=params)
-        if response.status_code == 200:
-            return response.text
-        return response.status_code
-    
+        return (response.status_code, response.json()['detail'])
