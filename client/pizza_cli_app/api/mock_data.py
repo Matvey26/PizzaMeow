@@ -76,5 +76,140 @@ cart = {
             'size': 'medium',
             'dough': 'thin'
         },
+        {
+            'id': 1,
+            'total_price': 10.99,
+            'pizza_id': 101,
+            'pizza_name': 'Margherita',
+            'quantity': 1,
+            'size': 'small',
+            'dough': 'thin'
+        },
+        {
+            'id': 2,
+            'total_price': 13.99,
+            'pizza_id': 102,
+            'pizza_name': 'Pepperoni',
+            'quantity': 1,
+            'size': 'medium',
+            'dough': 'classic'
+        },
+        {
+            'id': 3,
+            'total_price': 16.99,
+            'pizza_id': 103,
+            'pizza_name': 'Veggie Delight',
+            'quantity': 1,
+            'size': 'large',
+            'dough': 'thin'
+        },
+        {
+            'id': 4,
+            'total_price': 10.99,
+            'pizza_id': 101,
+            'pizza_name': 'Margherita',
+            'quantity': 1,
+            'size': 'small',
+            'dough': 'classic'
+        },
+        {
+            'id': 5,
+            'total_price': 12.99,
+            'pizza_id': 104,
+            'pizza_name': 'BBQ Chicken',
+            'quantity': 1,
+            'size': 'medium',
+            'dough': 'thin'
+        },
+        {
+            'id': 1,
+            'total_price': 10.99,
+            'pizza_id': 101,
+            'pizza_name': 'Margherita',
+            'quantity': 1,
+            'size': 'small',
+            'dough': 'thin'
+        },
+        {
+            'id': 2,
+            'total_price': 13.99,
+            'pizza_id': 102,
+            'pizza_name': 'Pepperoni',
+            'quantity': 1,
+            'size': 'medium',
+            'dough': 'classic'
+        },
+        {
+            'id': 3,
+            'total_price': 16.99,
+            'pizza_id': 103,
+            'pizza_name': 'Veggie Delight',
+            'quantity': 1,
+            'size': 'large',
+            'dough': 'thin'
+        },
+        {
+            'id': 4,
+            'total_price': 10.99,
+            'pizza_id': 101,
+            'pizza_name': 'Margherita',
+            'quantity': 1,
+            'size': 'small',
+            'dough': 'classic'
+        },
+        {
+            'id': 5,
+            'total_price': 12.99,
+            'pizza_id': 104,
+            'pizza_name': 'BBQ Chicken',
+            'quantity': 1,
+            'size': 'medium',
+            'dough': 'thin'
+        },
+        {
+            'id': 1,
+            'total_price': 10.99,
+            'pizza_id': 101,
+            'pizza_name': 'Margherita',
+            'quantity': 1,
+            'size': 'small',
+            'dough': 'thin'
+        },
+        {
+            'id': 2,
+            'total_price': 13.99,
+            'pizza_id': 102,
+            'pizza_name': 'Pepperoni',
+            'quantity': 1,
+            'size': 'medium',
+            'dough': 'classic'
+        },
+        {
+            'id': 3,
+            'total_price': 16.99,
+            'pizza_id': 103,
+            'pizza_name': 'Veggie Delight',
+            'quantity': 1,
+            'size': 'large',
+            'dough': 'thin'
+        },
+        {
+            'id': 4,
+            'total_price': 10.99,
+            'pizza_id': 101,
+            'pizza_name': 'Margherita',
+            'quantity': 1,
+            'size': 'small',
+            'dough': 'classic'
+        },
+        {
+            'id': 5,
+            'total_price': 12.99,
+            'pizza_id': 104,
+            'pizza_name': 'BBQ Chicken',
+            'quantity': 1,
+            'size': 'medium',
+            'dough': 'thin'
+        }
     ]
 }

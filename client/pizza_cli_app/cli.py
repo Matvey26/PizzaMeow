@@ -2,8 +2,12 @@
 
 import argparse
 import sys
-from .commands import Base, ChangeEmail, ChangePasssword, Config, Logout, Menu, ResetPasssword, SignIn, SignUp, Cart, Add, Change, Remove
+from .commands import Base
+from .commands import Config, ChangeEmail, ChangePasssword, ResetPasssword
+from .commands import Logout, SignIn, SignUp
+from .commands import Menu, Cart, Add, Change, Remove, Checkout
 from .api import Session
+
 
 def main():
     """Точка входа в CLI"""
@@ -77,21 +81,24 @@ def main():
     remove = sub_parsers.add_parser('remove', help=Remove.__doc__)
     remove.add_argument('item_id', type=int, help='ID элемента корзины, нужно удалить.')
 
+    checkout  = sub_parsers.add_parser('checkout', help=Checkout.__doc__)
+
     args = parser.parse_args()
 
     command_class = {
-        'signup' : SignUp,
-        'signin' : SignIn,
-        'config' : Config,
-        'logout' : Logout,
+        'signup': SignUp,
+        'signin': SignIn,
+        'config': Config,
+        'logout': Logout,
         'menu': Menu,
         'reset_password': ResetPasssword,
         'change_email': ChangeEmail,
         'change_password': ChangePasssword,
-        'cart' : Cart,
-        'add' : Add,
-        'change' : Change,
-        'remove' : Remove
+        'cart': Cart,
+        'add': Add,
+        'change': Change,
+        'remove': Remove,
+        'checkout': Checkout
     }
 
     session = Session()

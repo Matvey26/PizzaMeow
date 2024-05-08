@@ -11,3 +11,4 @@ from .cart import Cart
 from .add import Add
 from .change import Change
 from .remove import Remove
+from .checkout import Checkout
