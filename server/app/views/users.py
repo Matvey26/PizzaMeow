@@ -59,20 +59,22 @@ def sign_up(body):
     user = user_repository.get_by_email(email)
     if user:
         abort(400, 'Это почта уже используется')
-    
+
+    try:
+        send_confirm_email(email)
+    except Exception:
+        abort(400, 'Невозможно отправить письмо на указанную почту.')
 
     # Создаём нового, неподтверждённого пользователя
     user = user_repository.create(email=email, password=password)
     user_repository.save(user)
-
-    send_confirm_email(email)
 
     return sign_in(email, password)
 
 
 def send_confirm_email(email: str):
     # Генерируем токен для подтверждения аккаунта
-    from ..utils.auth import generate_token, generate_confirmation_url
+    from ..utils.auth import generate_confirmation_url
     confirm_email_end_point = os.environ['SERVER_URL'] + 'api/users/confirm'
     confirm_email_url = generate_confirmation_url(email, confirm_email_end_point)
 
