@@ -327,8 +327,43 @@ class Session:
     @connection_error_handler
     def get_time(self, address : str):
         params = {'address' : address}
-        response = requests.get(url + 'delivery/time', params=params)
+        response = requests.get(url + 'time/delivery', params=params)
+        if response.status_code == 200:
+            return response.text
+        return response.status_code
+
+    @connection_error_handler
+    def get_time_prepare(self):
+        headers = {'Authorization': f'Bearer {self.token}'}
+        response = requests.get(url + f'time/cooking', headers=headers)
         if response.status_code == 200:
             return response.text
         return response.status_code
     
+    @connection_error_handler
+    def get_addresses(self, data : dict):
+        response = requests.get(url + f'pizzeria/address', json=data)
+        if response.status_code == 200:
+            return response.text
+        return response.status_code
+
+    @connection_error_handler
+    def create_pizza(self, data : dict):
+        response = requests.post(url + f'pizzas', json=data)
+        return response.status_code
+
+    @connection_error_handler
+    def delete_cart(self, id : int):
+        headers = {'Authorization': f'Bearer {self.token}'}
+        response = requests.delete(url + f'carts/{id}', headers=headers)
+        return response.status_code
+    
+    @connection_error_handler
+    def delete_pizza(self, id : int):
+        response = requests.delete(url + f'pizzas/{id}')
+        return response.status_code
+    
+    @connection_error_handler
+    def update_pizza(self, id : int, params : dict):
+        response = requests.put(url + f'pizzas/{id}', params=params)
+        return response.status_code
