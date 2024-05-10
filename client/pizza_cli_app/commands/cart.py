@@ -1,5 +1,6 @@
 from .base import Base
 from ..api import Session
+import curses
 
 
 class Cart(Base):
@@ -30,4 +31,8 @@ class Cart(Base):
             element.append(f"Размер пиццы - {item['size']}")
             element.append(f"Тип теста - {item['dough']}\n")
             elements.append(element)
-        self.print_paged(iter([elements]), header=header, sep=sep)
+        
+        stdscr = curses.initscr()
+        stdscr.refresh()
+        window = curses.newwin(curses.LINES, curses.COLS, 0, 0)
+        self.print_paged(window, iter([elements]), header=header, sep=sep)

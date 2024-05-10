@@ -1,103 +1,78 @@
+import asyncio
+import curses
+import functools
+import geopy
+from typing import List
+
 from .base import Base
 from ..api.api import Session
-import curses
-from typing import List
+
+import geopy.geocoders
+
+
+geolocator = geopy.geocoders.Nominatim(user_agent='PizzaMeow_ClientApp')
+
+
+async def search_addresses(address):
+    loop = asyncio.get_running_loop()
+    # Используем functools.partial() для передачи аргументов
+    geocode_with_args = functools.partial(geolocator.geocode, address, exactly_one=False)
+    locations = await loop.run_in_executor(None, geocode_with_args)
+    if locations is None:
+        return []
+    return locations
 
 
 class Checkout(Base):
     """Создаёт заказ из собранной корзины."""
-    def cart_information_screen(self, stdscr, cart: dict) -> None:
+
+    def cart_information_screen(self, stdscr: curses.window, cart: dict) -> None:
         # Подготовливаем окно.
-        stdscr.refresh()
         window = curses.newwin(curses.LINES, curses.COLS, 0, 0)
-        try:
-            # Подготавливаем строки для вывода
-            rows = [f"Итоговая цена: {cart['total_price']}"]
-            for i, item in enumerate(cart['cart_items']):
-                line = f"{i}. {item['pizza_name']}, {item['quantity']} шт; "
-                line += f"size: {item['size']}, dough: {item['dough']}"
-                rows.append(line)
 
+        # Подготавливаем строки для вывода
+        rows = [f"Итоговая цена: {cart['total_price']}"]
+        for i, item in enumerate(cart['cart_items']):
+            line = f"{i}. {item['pizza_name']}, {item['quantity']} шт; "
+            line += f"size: {item['size']}, dough: {item['dough']}"
+            rows.append(line)
+        
+        self.print_scrolled(window, rows)
+        stdscr.clear()
             
-            # Выводим строки
-            maxrows = window.getmaxyx()[0]
-            offset = 0
-
-            def print_page():
-                window.clear()
-                for i, row in enumerate(rows[offset:offset+maxrows - 1]):
-                    window.addstr(i, 0, row)
-                window.addstr(maxrows - 1, 0, 'Используйте стрелки вверх/вниз. Нажмите Enter чтобы продолжить.')
-                window.refresh()
-            
-            print_page()
-
-            # Обрабатываем нажатия
-            while True:
-                key = stdscr.getch()
-
-                if key == 27 :
-                    if stdscr.getch() == 91:
-                        k = stdscr.getch()
-                        if k == 66:  # стрелка вниз
-                            offset = min(offset + 1, len(rows) - maxrows)
-                        elif k == 65:  # стрелка вверх
-                            offset = max(offset - 1, 0)
-                elif key == 10:  # Enter
-                    window.clear()
-                    window.refresh()
-                    return
-                print_page()
-
-        except Exception:
-            curses.endwin()
-            raise
     
-    def choose_pickup_method_screen(self, stdscr):
+    def choose_pickup_method_screen(self, stdscr: curses.window) -> int:
         # Подготовливаем окно.
+        stdscr.addstr(0, 0, 'Как будете забирать заказ?')
         stdscr.refresh()
-        window = curses.newwin(curses.LINES, curses.COLS, 0, 0)
+        choice_window = curses.newwin(curses.LINES - 1, curses.COLS, 1, 0)
+        choice_index = self.print_choices(choice_window, ['Доставка', 'Самовывоз'])
+        stdscr.clear()
+        return ['Доставка', 'Самовывоз'][choice_index]
+    
+    async def delivery_screen(self, stdscr: curses.window) -> str:
+        stdscr.addstr(0, 0, 'Начните вводить свой адрес и нажмите Enter:')
+        stdscr.refresh()
+        input_window = curses.newwin(1, curses.COLS, 1, 0)
+        input_window.move(0, 0)
+        address = input_window.getstr()
 
-        try:
-            choices = ["Самовывоз", "Доставка"]
+        output_window = curses.newwin(curses.LINES - 2, curses.COLS, 2, 0)
+        task_load = asyncio.create_task(self.load_spinner(output_window, 1, 0))
+        task_search = asyncio.create_task(search_addresses(address))
 
-            # Выводим варианты выбора
-            selected_choice = 0
+        locations = await task_search
+        task_load.cancel()
 
-            def print_choices():
-                window.clear()
-                window.addstr(0, 0, 'Как будете забирать заказ?')
-                for i, choice in enumerate(choices, 1):
-                    if i - 1 == selected_choice:
-                        window.addstr(i, 0, choice, curses.A_BOLD)
-                    else:
-                        window.addstr(i, 0, choice)
-                window.refresh()
-            print_choices()
-
-            # Обрабатываем нажатия клавиш
-            while True:
-                key = stdscr.getch()
-
-                if key == 27:
-                    if stdscr.getch() == 91:
-                        k = stdscr.getch()
-                        if k == 66:  # стрелка вниз
-                            selected_choice = min(1, selected_choice + 1)
-                        elif k == 65:  # стрелка вверх
-                            selected_choice = max(0, selected_choice - 1)
-                if key == 10:
-                    window.clear()
-                    window.refresh()
-                    return selected_choice
-                print_choices()
-
-        except Exception:
-            curses.endwin()
-            raise
+        addresses = [loc.address for loc in locations]
+        output_window.clear()
+        choice_index = self.print_choices(output_window, addresses)
+        stdscr.clear()
+        return addresses[choice_index]
 
     def run(self, session: Session):
         stdscr = curses.initscr()
+        stdscr.refresh()
 
         answer = session.get_cart_items()
         if isinstance(answer, tuple):
@@ -105,10 +80,14 @@ class Checkout(Base):
         
         self.cart_information_screen(stdscr, answer)
         choice = self.choose_pickup_method_screen(stdscr)
-        if choice:
+        if choice == 'Доставка':
             # Тут для доставки
-            pass
-        else:
+            try:
+                asyncio.run(self.delivery_screen(stdscr))
+            except:
+                curses.endwin()
+                raise
+        elif choice == 'Самовывоз':
             # Тут для самовывоза
             pass
     
