@@ -1,18 +1,18 @@
 from .base import Base
-from ..api import Session
 import curses
 
 
 class Cart(Base):
     """Выводит корзину пользователя"""
-    def run(self, session : Session):
+
+    def run(self):
         show_id = self.options.show_id
-        answer = session.get_cart_items()
+        answer = self.session.get_cart_items()
 
         if isinstance(answer, tuple):
             print(answer[1])
             return
-        
+
         header = [
             f"Цена корзины: {answer['total_price']}",
             '+++++++++++++++++++++++++++++'
@@ -31,7 +31,7 @@ class Cart(Base):
             element.append(f"Размер пиццы - {item['size']}")
             element.append(f"Тип теста - {item['dough']}\n")
             elements.append(element)
-        
+
         stdscr = curses.initscr()
         stdscr.refresh()
         window = curses.newwin(curses.LINES, curses.COLS, 0, 0)

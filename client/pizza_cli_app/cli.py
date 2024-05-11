@@ -103,5 +103,5 @@ def main():
 
     session = Session()
     
-    command = command_class.get(args.command, Base)(args)  # Создаём экземпляр команды
-    command.run(session)
+    command = command_class.get(args.command, Base)(args, session)  # Создаём экземпляр команды
+    command.run()

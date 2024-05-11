@@ -1,11 +1,10 @@
 from .base import Base
-from ..api.api import Session
 
 
 class Config(Base):
     """Ввод/обновление данных."""
-        
-    def run(self, session: Session):
+
+    def run(self):
         firstname = self.options.firstname
         lastname = self.options.lastname
         address = self.options.address
@@ -26,11 +25,10 @@ class Config(Base):
         if phone:
             data['phone'] = phone
             answer += f'Номер телефона успешно обновлен на {phone}\n'
-        
-        response = session.config(data)
+
+        response = self.session.config(data)
         if response:
             print(response[1])
             return
-        
+
         print(answer.rstrip())
-        

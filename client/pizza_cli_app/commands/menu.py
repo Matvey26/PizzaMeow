@@ -1,4 +1,3 @@
-from ..api.api import Session
 from .base import Base
 import curses
 
@@ -6,13 +5,13 @@ import curses
 class Menu(Base):
     """Команда для вывода меню пиццы"""
 
-    def run(self, session: Session):
+    def run(self):
         show_id = self.options.show_id
         limit = self.options.limit
 
         def get_all_pizzas():
             offset = 0
-            while (pizzas := session.get_pizzas_page(offset, limit)):
+            while (pizzas := self.session.get_pizzas_page(offset, limit)):
                 if isinstance(pizzas, tuple):
                     raise Exception(pizzas[1])
                 data = []
@@ -30,7 +29,13 @@ class Menu(Base):
             stdscr.refresh()
             window = curses.newwin(curses.LINES, curses.COLS, 0, 0)
 
-            self.print_paged(window, get_all_pizzas(), limit=limit, header=['Меню:', '++++++++++++++++++'], sep=['------------------'])
+            self.print_paged(
+                window,
+                get_all_pizzas(),
+                limit=limit,
+                header=['Меню:', '++++++++++++++++++'],
+                sep=['------------------']
+            )
         except curses.error as e:
             print('При постраничном выводе произошла ошибка. Возможно вы изменили размер терминала.')
         except Exception as e:

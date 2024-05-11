@@ -2,19 +2,19 @@ import curses
 from typing import List, Iterator
 import itertools
 import asyncio
+from ..api.api import Session
 
 
 class Base:
     """Базовая команда"""
 
-    def __init__(self, options, *args, **kwargs):
+    def __init__(self, options, session: Session):
         self.options = options
-        self.args = args
-        self.kwargs = kwargs
+        self.session = session
 
-    def run(self, session):
+    def run(self):
         raise NotImplementedError('You must implement the run() method!')
-    
+
     async def load_spinner(self, window: curses.window, y: int, x: int):
         """Отрисовывает строчку с загрузкой крутилкой в объекте окна window (библиотека curses)
         на позиции x, y (y - строка терминала, x - столбец терминала).
@@ -45,7 +45,15 @@ class Base:
             window.refresh()
             await asyncio.sleep(0.1)
 
-    def print_paged(self, window: curses.window, loader: Iterator[List[str]], limit: int = 10**9, header: List[str] = [], footer: List[str] = [], sep: List[str] = []) -> None:
+    def print_paged(
+        self,
+        window: curses.window,
+        loader: Iterator[List[str]],
+        limit: int = 10**9,
+        header: List[str] = [],
+        footer: List[str] = [],
+        sep: List[str] = []
+    ) -> None:
         """Разбивает список элементов на страницы и выводит их постранично.
 
         Параметры
@@ -69,7 +77,7 @@ class Base:
 
         # Получаем размеры окна
         MAX_ROWS = window.getmaxyx()[0]
-        free_rows = MAX_ROWS - len(header) - len(footer) - 1  # минус 1, потому что учитываем HELP_TEXT
+        free_rows = MAX_ROWS - len(header) - len(footer) - 1
 
         def extend_pages(new_elements: List[List[str]], pages: List[List[str]]) -> List[List[str]]:
             """Добавляет к текущим страницам новые элементы."""
@@ -85,7 +93,7 @@ class Base:
                     buffer_elements_count = 1
                     buffer.extend(sep)
                     continue
-                
+
                 buffer_elements_count += 1
                 buffer.extend(element)
                 buffer.extend(sep)
@@ -93,13 +101,13 @@ class Base:
             pages.append(buffer)
 
             return pages
-    
+
         def load(loader):
             try:
                 return next(loader)
             except StopIteration:
                 return []
-        
+
         def print_all(page):
             window.clear()
             i = 0
@@ -116,7 +124,7 @@ class Base:
                 i += 1
             window.addstr(MAX_ROWS - 1, 0, HELP_TEXT)
             window.refresh()
-    
+
         error_message = ''
         try:
             # Подгружаем первую пачку элементов, формируем страницы и отображаем первую страницу
@@ -141,14 +149,37 @@ class Base:
 
                 # Отображаем новую страницу
                 print_all(pages[cur])
-        
+
         except Exception as e:
             curses.endwin()
             raise
         finally:
             curses.endwin()
-    
-    def print_scrolled(self, window: curses.window, rows: List[str], header: List[str] = [], footer: List[str] = [], sep: List[str] = []) -> None:
+
+    def print_scrolled(
+        self,
+        window: curses.window,
+        rows: List[str],
+        header: List[str] = [],
+        footer: List[str] = [],
+        sep: List[str] = []
+    ) -> None:
+        """Выводит список строк, который пролистывается вверх и вниз с помощью стрелок (по одной строчке за раз)
+
+        Параметры
+        ---------
+        window: curses.window
+            Объект класса window модуля curses - окно, в котором будут отрисовываться страницы
+        rows: List[str]
+            Строки, которые нужно вывести в виде пролистывающегося списка
+        header: List[str]
+            Фиксированные строки, которые выводятся в верху экрана
+        footer: List[str]
+            Фиксированные строки, которые выводятся снизу экрана
+        sep: List[str]
+            Строки, которые используются как разделитель между элементами
+        """
+
         HELP_TEXT = 'Используйте стрелки вверх/вниз. Нажмите Enter чтобы продолжить.'
 
         MAX_ROWS = window.getmaxyx()[0]
@@ -175,25 +206,28 @@ class Base:
                     i += 1
                 window.addstr(MAX_ROWS - 1, 0, HELP_TEXT)
                 window.refresh()
-            
+
             print_all()
 
             # Обработка нажатий
             while True:
                 key = window.getch()
 
-                if key == 27 :
+                if key == 27:
                     if window.getch() == 91:
                         k = window.getch()
                         if k == 66:  # стрелка вниз
-                            offset = min(offset + 1, max(0, len(rows) - FREE_ROWS))
+                            offset = min(
+                                offset + 1,
+                                max(0, len(rows) - FREE_ROWS)
+                            )
                         elif k == 65:  # стрелка вверх
                             offset = max(offset - 1, 0)
                 elif key == 10:  # Enter
                     window.clear()
                     window.refresh()
                     return
-                
+
                 print_all()
 
         except Exception:
@@ -215,7 +249,7 @@ class Base:
             Фиксированные строки, которые выводятся снизу экрана
         sep: List[str]
             Строки, которые используются как разделитель между элементами
-        
+
         Возвращает
         ----------
         selected_choice: int
@@ -260,7 +294,10 @@ class Base:
                     if window.getch() == 91:
                         k = window.getch()
                         if k == 66:  # стрелка вниз
-                            selected_choice = min(selected_choice + 1, len(choices))
+                            selected_choice = min(
+                                selected_choice + 1,
+                                len(choices)
+                            )
                             if selected_choice >= offset + FREE_ROWS:
                                 offset += 1
                         elif k == 65:  # стрелка вверх

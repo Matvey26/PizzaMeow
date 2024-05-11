@@ -1,9 +1,11 @@
 from .base import Base
-import getpass, os
+import getpass
+
 
 class SignUp(Base):
     """Регистрация"""
-    def run(self, session):
+
+    def run(self):
         email = self.options.email
 
         if '@' not in email:
@@ -16,13 +18,10 @@ class SignUp(Base):
             print(f'Введенные пароли не совпали, попробуйте еще раз')
             return
 
-        answer = session.sign_up(email, password)
+        answer = self.session.sign_up(email, password)
         if answer:
             print(answer[1])
             return
-        
+
         print('Регистрация аккаунта была выполнена успешно. Теперь подтвердите почту.')
         print(f'На {email} было отправлено письмо с ссылкой для подтверждения почты.')
-    
-
-    

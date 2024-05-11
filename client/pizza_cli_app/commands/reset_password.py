@@ -1,10 +1,12 @@
 from .base import Base
 
+
 class ResetPasssword(Base):
     """Востановление пароля"""
-    def run(self, session):
+
+    def run(self):
         email = self.options.email
-        answer = session.reset_password(email)
+        answer = self.session.reset_password(email)
         if answer:
             print(answer[1])
             return
