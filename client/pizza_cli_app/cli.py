@@ -23,7 +23,8 @@ async def run_commands(args):
         'add': Add,
         'change': Change,
         'remove': Remove,
-        'checkout': Checkout
+        'checkout': Checkout,
+        'orders': ShowOrders
     }
 
     session = Session()
@@ -113,6 +114,21 @@ def main():
 
     # Парсер для создания заказа
     checkout  = sub_parsers.add_parser('checkout', help=Checkout.__doc__)
+
+    # Парсер для вывода истории заказов
+    orders = sub_parsers.add_parser('orders', help=ShowOrders.__doc__)
+    orders_arg_group = orders.add_mutually_exclusive_group()
+    orders_arg_group.add_argument('--show-id', action='store_true', dest='show_id', help='Показывать айди заказов.')
+    orders_arg_group.add_argument('--no-show-id', action='store_false', dest='show_id', help='Не показывать айди заказов.')
+    orders_arg_group.add_argument('--activate', help='Показать активные заказы.')
+    orders_arg_group.add_argument('--completed', help='Показать незавершенные заказы.')
+    orders_arg_group.add_argument('--all', help='Показать все заказы.')
+    orders.add_argument('--limit', default=20, type=int, help='Максимум заказов на странице')
+    orders.set_defaults(show_id=False)
+    orders.set_defaults(activate=True)
+    orders.set_defaults(completed=False)
+    orders.set_defaults(all=False)
+    orders.set_defaults(no_show_id=True)
 
     args = parser.parse_args()
     asyncio.run(run_commands(args))
