@@ -40,18 +40,23 @@ def sort_strings_by_similarity(pattern: str, strings: List[str]):
 class Checkout(Base):
     """Создаёт заказ из собранной корзины."""
 
-    def cart_information_screen(self, stdscr: curses.window) -> None:
+    async def cart_information_screen(self, stdscr: curses.window) -> None:
         # Подготовливаем окно.
         window = curses.newwin(curses.LINES, curses.COLS, 0, 0)
 
-        cart = self.session.get_cart_items()
+        task_load = asyncio.create_task(self.load_spinner())
+        task_get_cart_items = asyncio.create_task(self.session.get_cart_items())
+
+        cart = await task_get_cart_items
+        task_load.cancel()
+
         if isinstance(cart, tuple):
             print(cart[1])
 
         # Подготавливаем строки для вывода
         rows = [f"Итоговая цена: {cart['total_price']}"]
         for i, item in enumerate(cart['cart_items']):
-            line = f"{i}. {item['pizza_name']}, {item['quantity']} шт; "
+            line = f"{i}) {item['pizza_name']}, {item['quantity']} шт; "
             line += f"size: {item['size']}, dough: {item['dough']}"
             rows.append(line)
 
@@ -108,21 +113,26 @@ class Checkout(Base):
         stdscr.addstr(0, 0, 'Выберите адрес пиццерии или начните вводить его и нажмите Enter:')
         stdscr.refresh()
 
+        task_load = asyncio.create_task(self.load_spinner())
         # TODO: изменить, когда Сергей напишет этот метод
-        answer = self.session.get_pizzerias_addresses()
-        if isinstance(answer, tuple):
-            print(answer[1])
+        task_get_pizzerias_addresses = asyncio.create_task(self.session.get_pizzerias_addresses())
+
+        addresses = await task_get_pizzerias_addresses
+        task_load.cancel()
+
+        if isinstance(addresses, tuple):
+            print(addresses[1])
 
     async def run(self):
         stdscr = curses.initscr()
         stdscr.refresh()
 
-        self.cart_information_screen(stdscr)
+        await self.cart_information_screen(stdscr)
         choice = self.choose_pickup_method_screen(stdscr)
         if choice == 'Доставка':
             # Тут для доставки
             try:
-                asyncio.run(self.delivery_screen(stdscr))
+                chosen_address = await self.delivery_screen(stdscr)
             except:
                 curses.endwin()
                 raise
