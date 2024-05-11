@@ -1,3 +1,4 @@
+import asyncio
 from .base import Base
 import curses
 
@@ -5,13 +6,13 @@ import curses
 class Menu(Base):
     """Команда для вывода меню пиццы"""
 
-    def run(self):
+    async def run(self):
         show_id = self.options.show_id
         limit = self.options.limit
 
-        def get_all_pizzas():
+        async def get_all_pizzas():
             offset = 0
-            while (pizzas := self.session.get_pizzas_page(offset, limit)):
+            while (pizzas := await self.session.get_pizzas_page(offset, limit)):
                 if isinstance(pizzas, tuple):
                     raise Exception(pizzas[1])
                 data = []
@@ -24,12 +25,13 @@ class Menu(Base):
                     data.append(rows)
                 yield data
                 offset += limit
+
         try:
             stdscr = curses.initscr()
             stdscr.refresh()
             window = curses.newwin(curses.LINES, curses.COLS, 0, 0)
 
-            self.print_paged(
+            await self.print_paged(
                 window,
                 get_all_pizzas(),
                 limit=limit,

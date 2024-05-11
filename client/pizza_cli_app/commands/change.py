@@ -1,10 +1,11 @@
+import asyncio
 from .base import Base
 
 
 class Change(Base):
     """Изменяет сущесвтующий элемент корзины"""
 
-    def run(self):
+    async def run(self):
         item_id = self.options.item_id
         pizza_id = self.options.pizza_id
         size = self.options.size
@@ -23,7 +24,13 @@ class Change(Base):
             data['dough'] = dough
         if quantity > -1:
             data['quantity'] = quantity
-        response = self.session.update_item_in_cart(item_id, data)
+
+        task_load = asyncio.create_task(self.load_spinner())
+        task_update_item_in_cart = asyncio.create_task(self.session.update_item_in_cart(item_id, data))
+
+        response = await task_update_item_in_cart
+        task_load.cancel()
+
         if response:
             print(response[1])
             return

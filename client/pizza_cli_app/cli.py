@@ -1,12 +1,42 @@
 """Тут надо написать help"""
 
 import argparse
-import sys
+import asyncio
 from .commands import Base
 from .commands import Config, ChangeEmail, ChangePasssword, ResetPasssword
 from .commands import Logout, SignIn, SignUp
 from .commands import Menu, Cart, Add, Change, Remove, Checkout
 from .api import Session
+
+
+async def run_commands(args):
+    command_class = {
+        'signup': SignUp,
+        'signin': SignIn,
+        'config': Config,
+        'logout': Logout,
+        'menu': Menu,
+        'reset_password': ResetPasssword,
+        'change_email': ChangeEmail,
+        'change_password': ChangePasssword,
+        'cart': Cart,
+        'add': Add,
+        'change': Change,
+        'remove': Remove,
+        'checkout': Checkout
+    }
+
+    session = Session()
+    
+    # Создаём экземпляр команды
+    command = command_class.get(args.command, Base)(args, session)
+    try:
+        await command.run()
+    except Exception:
+        await session.close()
+        raise
+
+    await session.close()
 
 
 def main():
@@ -81,27 +111,8 @@ def main():
     remove = sub_parsers.add_parser('remove', help=Remove.__doc__)
     remove.add_argument('item_id', type=int, help='ID элемента корзины, нужно удалить.')
 
+    # Парсер для создания заказа
     checkout  = sub_parsers.add_parser('checkout', help=Checkout.__doc__)
 
     args = parser.parse_args()
-
-    command_class = {
-        'signup': SignUp,
-        'signin': SignIn,
-        'config': Config,
-        'logout': Logout,
-        'menu': Menu,
-        'reset_password': ResetPasssword,
-        'change_email': ChangeEmail,
-        'change_password': ChangePasssword,
-        'cart': Cart,
-        'add': Add,
-        'change': Change,
-        'remove': Remove,
-        'checkout': Checkout
-    }
-
-    session = Session()
-    
-    command = command_class.get(args.command, Base)(args, session)  # Создаём экземпляр команды
-    command.run()
+    asyncio.run(run_commands(args))

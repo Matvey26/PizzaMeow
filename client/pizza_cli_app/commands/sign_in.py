@@ -1,3 +1,4 @@
+import asyncio
 from .base import Base
 import getpass
 
@@ -5,11 +6,17 @@ import getpass
 class SignIn(Base):
     """Вход"""
 
-    def run(self):
+    async def run(self):
         email = self.options.email
 
         password = getpass.getpass("Введите пароль: ")
-        answer = self.session.sign_in(email, password)
+
+        task_load = asyncio.create_task(self.load_spinner())
+        task_signin = asyncio.create_task(self.session.sign_in(email, password))
+
+        answer = await task_signin
+        task_load.cancel()
+        
         if answer:
             print(answer[1])
             return

@@ -1,3 +1,4 @@
+import asyncio
 from .base import Base
 import getpass
 
@@ -5,7 +6,7 @@ import getpass
 class ChangePasssword(Base):
     """Востановление пароля"""
 
-    def run(self):
+    async def run(self):
         email = self.options.email
         old_password = getpass.getpass('Введите текущий пароль: ')
         new_password = getpass.getpass('Введите новый пароль: ')
@@ -14,11 +15,18 @@ class ChangePasssword(Base):
             print(f'Введенные пароли не совпали, попробуйте еще раз')
             return
 
-        answer = self.session.change_password(
-            email,
-            old_password,
-            new_password
+        task_load = asyncio.create_task(self.load_spinner())
+        task_change_password = asyncio.create_task(
+            self.session.change_password(
+                email,
+                old_password,
+                new_password
+            )
         )
+
+        answer = await task_change_password
+        task_load.cancel()
+
         if answer:
             print(answer[1])
             return

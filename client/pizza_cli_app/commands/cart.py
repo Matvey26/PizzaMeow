@@ -1,3 +1,5 @@
+import asyncio
+from ..utils import aiter
 from .base import Base
 import curses
 
@@ -5,9 +7,14 @@ import curses
 class Cart(Base):
     """Выводит корзину пользователя"""
 
-    def run(self):
+    async def run(self):
         show_id = self.options.show_id
-        answer = self.session.get_cart_items()
+
+        task_load = asyncio.create_task(self.load_spinner())
+        task_get_cart_items = asyncio.create_task(self.session.get_cart_items())
+
+        answer = await task_get_cart_items
+        task_load.cancel()
 
         if isinstance(answer, tuple):
             print(answer[1])
@@ -35,4 +42,4 @@ class Cart(Base):
         stdscr = curses.initscr()
         stdscr.refresh()
         window = curses.newwin(curses.LINES, curses.COLS, 0, 0)
-        self.print_paged(window, iter([elements]), header=header, sep=sep)
+        await self.print_paged(window, aiter([elements]), header=header, sep=sep)

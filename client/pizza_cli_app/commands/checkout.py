@@ -113,7 +113,7 @@ class Checkout(Base):
         if isinstance(answer, tuple):
             print(answer[1])
 
-    def run(self, session: Session):
+    async def run(self):
         stdscr = curses.initscr()
         stdscr.refresh()
 

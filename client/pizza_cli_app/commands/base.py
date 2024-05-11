@@ -1,8 +1,9 @@
 import curses
-from typing import List, Iterator
+from typing import List, AsyncIterator
 import itertools
 import asyncio
 from ..api.api import Session
+import sys
 
 
 class Base:
@@ -15,9 +16,11 @@ class Base:
     def run(self):
         raise NotImplementedError('You must implement the run() method!')
 
-    async def load_spinner(self, window: curses.window, y: int, x: int):
+    async def load_spinner(self, window: curses.window = None, y: int = 0, x: int = 0):
         """Отрисовывает строчку с загрузкой крутилкой в объекте окна window (библиотека curses)
         на позиции x, y (y - строка терминала, x - столбец терминала).
+
+        Если не указан параметр window, тогда вывод будет происходить в stderr.
         """
         spinner = [
             '⠆ loading.  ',
@@ -39,16 +42,21 @@ class Base:
             '⠰ loading...',
             '⠤ loading...',
         ]
-        for cur_char in itertools.cycle(spinner):
-            window.refresh()
-            window.addstr(y, x, cur_char)
-            window.refresh()
-            await asyncio.sleep(0.1)
+        if window is None:
+            for cur_char in itertools.cycle(spinner):
+                print(cur_char, end='\r', file=sys.stderr, flush=True)
+                await asyncio.sleep(0.1)
+        else:
+            for cur_char in itertools.cycle(spinner):
+                window.refresh()
+                window.addstr(y, x, cur_char)
+                window.refresh()
+                await asyncio.sleep(0.1)
 
-    def print_paged(
+    async def print_paged(
         self,
         window: curses.window,
-        loader: Iterator[List[str]],
+        loader: AsyncIterator[List[str]],
         limit: int = 10**9,
         header: List[str] = [],
         footer: List[str] = [],
@@ -60,8 +68,8 @@ class Base:
         ---------
         window: curses.window
             Объект класса window модуля curses - окно, в котором будут отрисовываться страницы
-        loader: Iterator[List[str]]
-            Генератор элементов. В генераторе каждый элемент должен быть представлен в виде списка строк для вывода
+        loader: AsyncIterator[List[str]]
+            Асинхронный генератор элементов. В генераторе каждый элемент должен быть представлен в виде списка строк для вывода
             Например, каждый элемент меню пиццерии может представлено в виде списка ["название пиццы", "описание пиццы"].
         limit: int
             Максимальное число элементов на странице
@@ -102,10 +110,10 @@ class Base:
 
             return pages
 
-        def load(loader):
+        async def load(loader):
             try:
-                return next(loader)
-            except StopIteration:
+                return await loader.__anext__()
+            except StopAsyncIteration:
                 return []
 
         def print_all(page):
@@ -128,7 +136,16 @@ class Base:
         error_message = ''
         try:
             # Подгружаем первую пачку элементов, формируем страницы и отображаем первую страницу
-            pages = extend_pages(load(loader), [[0]])
+            window.clear()
+            window.refresh()
+
+            task_spinner = asyncio.create_task(self.load_spinner(window, len(header), 0))
+            task_load = asyncio.create_task(load(loader))
+
+            new_elements = await(task_load)
+            task_spinner.cancel()
+
+            pages = extend_pages(new_elements, [[0]])
             cur = 0  # номер текущей страницы
 
             # Отображаем первую страницу
@@ -144,7 +161,15 @@ class Base:
                     cur = max(0, cur - 1)
                 if key == ord('n'):
                     if cur + 1 >= len(pages) - 1:
-                        pages = extend_pages(load(loader), pages)
+                        window.clear()
+                        window.refresh()
+                        task_spinner = asyncio.create_task(self.load_spinner(window, len(header), 0))
+                        task_load = asyncio.create_task(load(loader))
+
+                        new_elements = await(task_load)
+                        task_spinner.cancel()
+
+                        pages = extend_pages(new_elements, pages)
                     cur = min(cur + 1, len(pages) - 1)
 
                 # Отображаем новую страницу

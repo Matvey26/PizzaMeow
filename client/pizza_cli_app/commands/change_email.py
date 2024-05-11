@@ -1,3 +1,4 @@
+import asyncio
 from .base import Base
 import getpass
 
@@ -5,12 +6,17 @@ import getpass
 class ChangeEmail(Base):
     """Привязать к учётной записи другую почту."""
 
-    def run(self):
+    async def run(self):
         old_email = self.options.old_email
         new_email = self.options.new_email
         password = getpass.getpass("Введите пароль: ")
 
-        answer = self.session.change_email(old_email, password, new_email)
+        task_load = asyncio.create_task(self.load_spinner())
+        task_change_email = asyncio.create_task(self.session.change_email(old_email, password, new_email))
+
+        answer = await task_change_email
+        task_load.cancel()
+
         if answer:
             print(answer[1])
             return

@@ -1,3 +1,4 @@
+import asyncio
 from .base import Base
 import getpass
 
@@ -5,7 +6,7 @@ import getpass
 class SignUp(Base):
     """Регистрация"""
 
-    def run(self):
+    async def run(self):
         email = self.options.email
 
         if '@' not in email:
@@ -18,7 +19,12 @@ class SignUp(Base):
             print(f'Введенные пароли не совпали, попробуйте еще раз')
             return
 
-        answer = self.session.sign_up(email, password)
+        task_load = asyncio.create_task(self.load_spinner())
+        task_sign_up = asyncio.create_task(self.session.sign_up(email, password))
+
+        answer = await task_sign_up
+        task_load.cancel()
+
         if answer:
             print(answer[1])
             return
