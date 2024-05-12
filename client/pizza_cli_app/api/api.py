@@ -339,3 +339,26 @@ class Session:
             if response.status == 200:
                 return await response.json()
             return (response.status, (await response.json())['detail'])
+
+    @connection_error_handler
+    async def get_time(self, address : str):
+        params = {'address' : address}
+        async with self._session.get(url + 'time/delivery', params=params) as response:
+            if response.status == 200:
+                return response.text()
+            return response.status
+
+    @connection_error_handler
+    async def get_time_prepare(self):
+        headers = {'Authorization': f'Bearer {self.token}'}
+        async with self._session.get(url + f'time/cooking', headers=headers) as response:
+            if response.status == 200:
+                return response.text()
+            return response.status
+    
+    @connection_error_handler
+    async def get_addresses(self, data : dict):
+        async with self._session.get(url + f'pizzeria/address', json=data) as response:
+            if response.status == 200:
+                return response.text()
+            return response.status
