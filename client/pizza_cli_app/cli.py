@@ -5,7 +5,7 @@ import asyncio
 from .commands import Base
 from .commands import Config, ChangeEmail, ChangePasssword, ResetPasssword
 from .commands import Logout, SignIn, SignUp
-from .commands import Menu, Cart, Add, Change, Remove, Checkout
+from .commands import Menu, Cart, Add, Change, Remove, Checkout, Orders
 from .api import Session
 
 
@@ -24,7 +24,7 @@ async def run_commands(args):
         'change': Change,
         'remove': Remove,
         'checkout': Checkout,
-        'orders': ShowOrders
+        'orders': Orders
     }
 
     session = Session()
@@ -116,16 +116,17 @@ def main():
     checkout  = sub_parsers.add_parser('checkout', help=Checkout.__doc__)
 
     # Парсер для вывода истории заказов
-    orders = sub_parsers.add_parser('orders', help=ShowOrders.__doc__)
-    orders_arg_group = orders.add_mutually_exclusive_group()
-    orders_arg_group.add_argument('--show-id', action='store_true', dest='show_id', help='Показывать айди заказов.')
-    orders_arg_group.add_argument('--no-show-id', action='store_false', dest='show_id', help='Не показывать айди заказов.')
-    orders_arg_group.add_argument('--activate', help='Показать активные заказы.')
-    orders_arg_group.add_argument('--completed', help='Показать незавершенные заказы.')
-    orders_arg_group.add_argument('--all', help='Показать все заказы.')
+    orders = sub_parsers.add_parser('orders', help=Orders.__doc__)
     orders.add_argument('--limit', default=20, type=int, help='Максимум заказов на странице')
+    orders_arg_group_id = orders.add_mutually_exclusive_group()
+    orders_arg_group_id.add_argument('--show-id', action='store_true', dest='show_id', help='Показывать айди заказов.')
+    orders_arg_group_id.add_argument('--no-show-id', action='store_false', dest='show_id', help='Не показывать айди заказов.')
+    orders_arg_group_status = orders.add_mutually_exclusive_group()
+    orders_arg_group_status.add_argument('--active', help='Показать активные заказы.')
+    orders_arg_group_status.add_argument('--completed', help='Показать незавершенные заказы.')
+    orders_arg_group_status.add_argument('--all', help='Показать все заказы.')
     orders.set_defaults(show_id=False)
-    orders.set_defaults(activate=True)
+    orders.set_defaults(active=True)
     orders.set_defaults(completed=False)
     orders.set_defaults(all=False)
     orders.set_defaults(no_show_id=True)

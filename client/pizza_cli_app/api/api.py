@@ -103,7 +103,7 @@ class Session:
                 self.email = email
                 self.token = await response.text()
                 return
-            return (response.status, await response.json()['detail'])
+            return (response.status, (await response.json())['detail'])
 
     def logout(self):
         self.token = ''

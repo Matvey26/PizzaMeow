@@ -115,6 +115,9 @@ class Base:
                 return await loader.__anext__()
             except StopAsyncIteration:
                 return []
+            # Произошла неизвестная ошибка
+            except Exception:
+                raise
 
         def print_all(page):
             window.clear()
