@@ -247,7 +247,7 @@ class Base:
                         if k == 66:  # стрелка вниз
                             offset = min(
                                 offset + 1,
-                                max(0, len(rows) - FREE_ROWS)
+                                max(len(rows) - 1, len(rows) - FREE_ROWS - 1)
                             )
                         elif k == 65:  # стрелка вверх
                             offset = max(offset - 1, 0)
@@ -324,7 +324,7 @@ class Base:
                         if k == 66:  # стрелка вниз
                             selected_choice = min(
                                 selected_choice + 1,
-                                len(choices)
+                                len(choices) - 1
                             )
                             if selected_choice >= offset + FREE_ROWS:
                                 offset += 1

@@ -288,6 +288,7 @@ class Session:
             Айди объекта корзины, который нужно изменить
         data: dict
             Данные для обновления. Словарь вида
+            
             {
                 'pizza_id': ID пиццы (на который нужно поменять)
                 'dough': Другое тесто, а именно 'classic' или 'thin'. По умолчанию должно быть 1
@@ -333,23 +334,33 @@ class Session:
             return (response.status, (await response.json())['detail'])
 
     @connection_error_handler
-    async def id_order(self, id: int):
+    async def get_order_by_id(self, id: int):
         headers = {'Authorization': f'Bearer {self.token}'}
         async with self._session.get(url + f'orders/{id}', headers=headers) as response:
             if response.status == 200:
                 return await response.json()
             return (response.status, (await response.json())['detail'])
+        
+    # ------------------ ВРЕМЯ И АДРЕСА ------------------
 
     @connection_error_handler
-    async def get_time(self, address : str):
-        params = {'address' : address}
+    async def get_time_delivery(self, address: str):
+        """Возвращает список строк, в которых написаны интервалы времени,
+        в которые может приехать курьер.
+        Время в формате datetime.strptime()!!!!
+        (сервер сам учтёт время, которое потребуется на приготовление и сборку заказа).
+        """
+        params = {'address': address}
         async with self._session.get(url + 'time/delivery', params=params) as response:
             if response.status == 200:
-                return response.text()
+                return response.json()
             return response.status
 
     @connection_error_handler
-    async def get_time_prepare(self):
+    async def get_time_cooking(self):
+        """Возвращает время в минутах, которое потребуется на приготовление заказа.
+        (сервер сам посмотрит на корзину и оценит время её приготовления).
+        """
         headers = {'Authorization': f'Bearer {self.token}'}
         async with self._session.get(url + f'time/cooking', headers=headers) as response:
             if response.status == 200:
@@ -357,8 +368,13 @@ class Session:
             return response.status
     
     @connection_error_handler
-    async def get_addresses(self, data : dict):
-        async with self._session.get(url + f'pizzeria/address', json=data) as response:
+    async def get_pizzerias_addresses(self, limit: int = 10, address: str = None):
+        """Если параметры не указаны, то возвращает все адреса пиццерий.
+        Если указан параметр address, то вернёт 10 ближайших пиццерий.
+        Если указаны параметры address и limit, то вернёт limit ближайших пиццерий.
+        """
+        params = {'address': address, 'count': limit}
+        async with self._session.get(url + f'pizzeria/address', params=params) as response:
             if response.status == 200:
                 return response.text()
             return response.status

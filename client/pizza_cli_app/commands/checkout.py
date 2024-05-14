@@ -45,13 +45,16 @@ class Checkout(Base):
         window = curses.newwin(curses.LINES, curses.COLS, 0, 0)
 
         task_load = asyncio.create_task(self.load_spinner())
-        task_get_cart_items = asyncio.create_task(self.session.get_cart_items())
+        task_get_cart_items = asyncio.create_task(
+            self.session.get_cart_items()
+        )
 
         cart = await task_get_cart_items
         task_load.cancel()
 
         if isinstance(cart, tuple):
             print(cart[1])
+            return
 
         # Подготавливаем строки для вывода
         rows = [f"Итоговая цена: {cart['total_price']}"]
@@ -79,7 +82,7 @@ class Checkout(Base):
         return choices[choice_index]
 
     # TODO: на данный момент нельзя повторно ввести адрес, надо добавить цикл
-    async def delivery_screen(self, stdscr: curses.window) -> str:
+    async def choose_delivery_address_screen(self, stdscr: curses.window) -> str:
         # Подготавливаем окно
         stdscr.addstr(0, 0, 'Начните вводить свой адрес и нажмите Enter:')
         stdscr.refresh()
@@ -93,7 +96,7 @@ class Checkout(Base):
         output_window = curses.newwin(curses.LINES - 2, curses.COLS, 2, 0)
 
         # Запускаем загрузку-крутилку
-        task_load = asyncio.create_task(self.load_spinner(output_window, 1, 0))
+        task_load = asyncio.create_task(self.load_spinner(output_window, 0, 0))
         # Делаем запрос к картам
         task_search = asyncio.create_task(search_addresses(address))
 
@@ -108,14 +111,41 @@ class Checkout(Base):
         stdscr.clear()
         return addresses[choice_index]
 
-    async def pickup_screen(self, stdscr: curses.window, pizzerias_addresses: List[str]) -> str:
+    async def choose_delivery_time_screen(self, stdscr: curses.window, address: str) -> str:
         # Подготавливаем окно
-        stdscr.addstr(0, 0, 'Выберите адрес пиццерии или начните вводить его и нажмите Enter:')
+        stdscr.refresh()
+        window = curses.newwin(curses.LINES, curses.COLS, 0, 0)
+
+        # Получаем интервалы времени
+        task_load = asyncio.create_task(self.load_spinner(window, 0, 0))
+        task_get_time_delivery = asyncio.create_task(
+            self.session.get_time_delivery(address)
+        )
+        time_intervals = await task_get_time_delivery
+        task_load.cancel()
+
+        # TODO: Добавить человеческий вывод времени (сначала перевод в datetime, а потом в удобный строчный формат)
+
+        # Предлагаем пользователю выбрать подходящий интервал времени
+        choice_index = self.print_choices(window, time_intervals)
+        stdscr.clear()
+
+        # Однако выбор потом нужно перевести обратно в универсальный строчный формат
+
+        return time_intervals[choice_index]
+
+    # TODO: то же самое, что и в delivery_screen. Да и вообще доделать
+
+    async def pickup_screen(self, stdscr: curses.window) -> str:
+        # Подготавливаем окно
+        stdscr.addstr(
+            0, 0, 'Выберите адрес пиццерии или начните вводить его и нажмите Enter:')
         stdscr.refresh()
 
         task_load = asyncio.create_task(self.load_spinner())
-        # TODO: изменить, когда Сергей напишет этот метод
-        task_get_pizzerias_addresses = asyncio.create_task(self.session.get_pizzerias_addresses())
+        task_get_pizzerias_addresses = asyncio.create_task(
+            self.session.get_pizzerias_addresses()
+        )
 
         addresses = await task_get_pizzerias_addresses
         task_load.cancel()
@@ -128,16 +158,19 @@ class Checkout(Base):
         stdscr.refresh()
 
         await self.cart_information_screen(stdscr)
-        choice = self.choose_pickup_method_screen(stdscr)
-        if choice == 'Доставка':
-            # Тут для доставки
+        chosen_pickup_method = self.choose_pickup_method_screen(stdscr)
+
+        chosen_address = ''
+        chosen_time_interval = ''
+
+        if chosen_pickup_method == 'Доставка':
             try:
-                chosen_address = await self.delivery_screen(stdscr)
+                chosen_address = await self.choose_delivery_address_screen(stdscr)
+                chosen_time_interval = await self.choose_delivery_time_screen(stdscr, chosen_address)
             except:
                 curses.endwin()
-                raise
-        elif choice == 'Самовывоз':
-            # Тут для самовывоза
+
+        elif chosen_pickup_method == 'Самовывоз':
             self.pickup_screen(stdscr)
 
         curses.endwin()
