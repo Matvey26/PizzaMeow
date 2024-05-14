@@ -53,8 +53,7 @@ class Checkout(Base):
         task_load.cancel()
 
         if isinstance(cart, tuple):
-            print(cart[1])
-            return
+            raise RuntimeError(cart[1])
 
         # Подготавливаем строки для вывода
         rows = [f"Итоговая цена: {cart['total_price']}"]
@@ -81,35 +80,41 @@ class Checkout(Base):
 
         return choices[choice_index]
 
-    # TODO: на данный момент нельзя повторно ввести адрес, надо добавить цикл
     async def choose_delivery_address_screen(self, stdscr: curses.window) -> str:
         # Подготавливаем окно
         stdscr.addstr(0, 0, 'Начните вводить свой адрес и нажмите Enter:')
         stdscr.refresh()
         input_window = curses.newwin(1, curses.COLS, 1, 0)
 
-        # Устанавливаем курсор в начало терминала и ожидаем ввод адреса
-        input_window.move(0, 0)
-        address = input_window.getstr()
+        while True:
+            # Устанавливаем курсор в начало терминала и ожидаем ввод адреса
+            input_window.move(0, 0)
+            address = input_window.getstr().decode().strip()
 
-        # Подготавливаем окно для вывода адресов
-        output_window = curses.newwin(curses.LINES - 2, curses.COLS, 2, 0)
+            # Подготавливаем окно для вывода адресов
+            output_window = curses.newwin(curses.LINES - 2, curses.COLS, 2, 0)
 
-        # Запускаем загрузку-крутилку
-        task_load = asyncio.create_task(self.load_spinner(output_window, 0, 0))
-        # Делаем запрос к картам
-        task_search = asyncio.create_task(search_addresses(address))
+            # Запускаем загрузку-крутилку
+            task_load = asyncio.create_task(self.load_spinner(output_window, 0, 0))
+            # Делаем запрос к картам
+            task_search = asyncio.create_task(search_addresses(address))
 
-        locations = await task_search
-        task_load.cancel()
+            locations = await task_search
+            task_load.cancel()
 
-        addresses = [loc.address for loc in locations]
-        output_window.clear()
+            addresses = [loc.address for loc in locations[:25]] + ['Здесь нет моего адреса']
+            output_window.clear()
 
-        # Выводим адреса, чтобы пользователь выбрал нужный и получаем ответ от него
-        choice_index = self.print_choices(output_window, addresses)
-        stdscr.clear()
-        return addresses[choice_index]
+            # Выводим адреса, чтобы пользователь выбрал нужный и получаем ответ от него
+            choice_index = self.print_choices(output_window, addresses)
+
+            # Даём человеку ввести ещё раз, если он не нашёл своего адреса
+            if choice_index == len(addresses) - 1:
+                input_window.clear()
+                output_window.clear()
+                continue
+
+            return addresses[choice_index]
 
     async def choose_delivery_time_screen(self, stdscr: curses.window, address: str) -> str:
         # Подготавливаем окно
@@ -124,6 +129,9 @@ class Checkout(Base):
         time_intervals = await task_get_time_delivery
         task_load.cancel()
 
+        if isinstance(time_intervals, tuple):
+            raise RuntimeError(time_intervals[1])
+
         # TODO: Добавить человеческий вывод времени (сначала перевод в datetime, а потом в удобный строчный формат)
 
         # Предлагаем пользователю выбрать подходящий интервал времени
@@ -135,11 +143,9 @@ class Checkout(Base):
         return time_intervals[choice_index]
 
     # TODO: то же самое, что и в delivery_screen. Да и вообще доделать
-
     async def pickup_screen(self, stdscr: curses.window) -> str:
         # Подготавливаем окно
-        stdscr.addstr(
-            0, 0, 'Выберите адрес пиццерии или начните вводить его и нажмите Enter:')
+        stdscr.addstr(0, 0, 'Выберите адрес пиццерии или начните вводить его и нажмите Enter:')
         stdscr.refresh()
 
         task_load = asyncio.create_task(self.load_spinner())
@@ -151,26 +157,33 @@ class Checkout(Base):
         task_load.cancel()
 
         if isinstance(addresses, tuple):
-            print(addresses[1])
+            raise RuntimeError(addresses[1])
 
     async def run(self):
         stdscr = curses.initscr()
         stdscr.refresh()
 
-        await self.cart_information_screen(stdscr)
-        chosen_pickup_method = self.choose_pickup_method_screen(stdscr)
+        try:
+            await self.cart_information_screen(stdscr)
+            chosen_pickup_method = self.choose_pickup_method_screen(stdscr)
 
-        chosen_address = ''
-        chosen_time_interval = ''
+            chosen_address = ''
+            chosen_time_interval = ''
 
-        if chosen_pickup_method == 'Доставка':
-            try:
-                chosen_address = await self.choose_delivery_address_screen(stdscr)
-                chosen_time_interval = await self.choose_delivery_time_screen(stdscr, chosen_address)
-            except:
-                curses.endwin()
+            if chosen_pickup_method == 'Доставка':
+                try:
+                    chosen_address = await self.choose_delivery_address_screen(stdscr)
+                    chosen_time_interval = await self.choose_delivery_time_screen(stdscr, chosen_address)
+                except:
+                    curses.endwin()
+                    raise
 
-        elif chosen_pickup_method == 'Самовывоз':
-            self.pickup_screen(stdscr)
+            elif chosen_pickup_method == 'Самовывоз':
+                self.pickup_screen(stdscr)
 
-        curses.endwin()
+        except Exception as e:
+            curses.endwin()
+            print(e)
+            raise
+        finally:
+            curses.endwin()
