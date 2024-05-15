@@ -33,11 +33,8 @@ async def run_commands(args):
     command = command_class.get(args.command, Base)(args, session)
     try:
         await command.run()
-    except Exception:
+    finally:
         await session.close()
-        raise
-
-    await session.close()
 
 
 def main():

@@ -1,9 +1,9 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
     name='pizza-cli',
     version='0.2',
-    packages=['pizza_cli_app', 'pizza_cli_app/commands', 'pizza_cli_app/api', 'pizza_cli_app/utils'],
+    packages=find_packages(),
     entry_points="""
         [console_scripts]
         pizza=pizza_cli_app.cli:main

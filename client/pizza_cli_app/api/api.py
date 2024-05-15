@@ -1,10 +1,17 @@
 """Класс текущей сессии, предоставляющий удобный интерфейс взаимодействия клиента с сервером."""
 
+import asyncio
 import aiohttp
+import functools
+import geopy.geocoders
 from .mock_data import *
 import pathlib
 import json
+
+
 url = 'http://127.0.0.1:8000/api/'
+
+geolocator = geopy.geocoders.Nominatim(user_agent='PizzaMeow_ClientApp')
 
 
 def connection_error_handler(func):
@@ -347,9 +354,14 @@ class Session:
     async def get_time_delivery(self, address: str):
         """Возвращает список строк, в которых написаны интервалы времени,
         в которые может приехать курьер.
-        Время в формате datetime.strptime()!!!!
+        Время в формате iso format!!!!
         (сервер сам учтёт время, которое потребуется на приготовление и сборку заказа).
         """
+        return [
+            ['2024-05-15T10:00:15.310793+00:00', '2024-05-15T13:00:15.310793+00:00'],
+            ['2024-05-15T13:00:15.310793+00:00', '2024-05-15T16:00:15.310793+00:00'],
+            ['2024-05-15T16:00:15.310793+00:00', '2024-05-15T19:00:15.310793+00:00']
+        ]
         headers = {'Authorization': f'Bearer {self.token}'}
         params = {'address': address}
         async with self._session.get(url + 'time/delivery', headers=headers, params=params) as response:
@@ -358,12 +370,13 @@ class Session:
             return (response.status, (await response.json())['detail'])
 
     @connection_error_handler
-    async def get_time_cooking(self):
+    async def get_time_cooking(self, pizzeria_address: str) -> str:
         """Возвращает время в минутах, которое потребуется на приготовление заказа.
         (сервер сам посмотрит на корзину и оценит время её приготовления).
         """
         headers = {'Authorization': f'Bearer {self.token}'}
-        async with self._session.get(url + 'time/cooking', headers=headers) as response:
+        params = {'pizzeria_address': pizzeria_address}
+        async with self._session.get(url + 'time/cooking', headers=headers, params=params) as response:
             if response.status == 200:
                 return await response.text()
             return (response.status, (await response.json())['detail'])
@@ -379,3 +392,19 @@ class Session:
             if response.status == 200:
                 return await response.text()
             return (response.status, (await response.json())['detail'])
+    
+    async def search_addresses(self, address):
+        loop = asyncio.get_running_loop()
+        # Используем functools.partial() для передачи аргументов
+        geocode_with_args = functools.partial(
+            geolocator.geocode,
+            address, exactly_one=False
+        )
+        locations = await loop.run_in_executor(None, geocode_with_args)
+        if locations is None:
+            return []
+        return locations
+
+    async def is_valid_pickup_time(self, time: str) -> bool:
+        """Принимает строку с датой и временем в формате iso и проверяет, можно ли забрать заказ в это время"""
+        return True
