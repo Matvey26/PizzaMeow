@@ -357,11 +357,11 @@ class Session:
         Время в формате iso format!!!!
         (сервер сам учтёт время, которое потребуется на приготовление и сборку заказа).
         """
-        return [
-            ['2024-05-15T10:00:15.310793+00:00', '2024-05-15T13:00:15.310793+00:00'],
-            ['2024-05-15T13:00:15.310793+00:00', '2024-05-15T16:00:15.310793+00:00'],
-            ['2024-05-15T16:00:15.310793+00:00', '2024-05-15T19:00:15.310793+00:00']
-        ]
+        # return [
+        #     ['2024-05-15T10:00:15.310793+00:00', '2024-05-15T13:00:15.310793+00:00'],
+        #     ['2024-05-15T13:00:15.310793+00:00', '2024-05-15T16:00:15.310793+00:00'],
+        #     ['2024-05-15T16:00:15.310793+00:00', '2024-05-15T19:00:15.310793+00:00']
+        # ]
         headers = {'Authorization': f'Bearer {self.token}'}
         params = {'address': address}
         async with self._session.get(url + 'time/delivery', headers=headers, params=params) as response:
@@ -374,6 +374,7 @@ class Session:
         """Возвращает время в минутах, которое потребуется на приготовление заказа.
         (сервер сам посмотрит на корзину и оценит время её приготовления).
         """
+        # return '25'
         headers = {'Authorization': f'Bearer {self.token}'}
         params = {'pizzeria_address': pizzeria_address}
         async with self._session.get(url + 'time/cooking', headers=headers, params=params) as response:
@@ -387,6 +388,11 @@ class Session:
         Если указан параметр address, то вернёт 10 ближайших пиццерий.
         Если указаны параметры address и limit, то вернёт limit ближайших пиццерий.
         """
+        # return [
+        #     'Москва',
+        #     'Санкт-Петербург',
+        #     'Лондон'
+        # ]
         params = {'address': address, 'count': limit}
         async with self._session.get(url + 'pizzeria/address', params=params) as response:
             if response.status == 200:
@@ -405,6 +411,7 @@ class Session:
             return []
         return locations
 
-    async def is_valid_pickup_time(self, time: str) -> bool:
-        """Принимает строку с датой и временем в формате iso и проверяет, можно ли забрать заказ в это время"""
-        return True
+    async def is_valid_pickup_time(self, time: str) -> str:
+        """Принимает строку с датой и временем в формате iso и проверяет, можно ли забрать заказ в это время.
+        Ничего не возвращает, если всё хорошо. Если время не подходит, возвращает строку с объяснением."""
+        return
