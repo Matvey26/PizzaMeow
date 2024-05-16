@@ -37,33 +37,39 @@ async def create_order(user, token_info, body):
 
     # -------- ПОЛУЧАЕМ ДАННЫЕ --------
 
-    # адрес назначения заказа
-    address = body.get('address', '')  # TODO: добавить проверку валидности адреса
+    is_delivery = body.get('is_delivery', '')
+    address = body.get('address', '')
+    time_interval = body.get('time_interval', [])
+    payment_method = body.get('payment_method', '')
 
     # время желаемого получения заказа
     from datetime import datetime
-    pickup_time = body.get('pickup_time', '')  # TODO: добавить проверку валидности времени получения заказа
     try:
-        pickup_time = datetime.fromisoformat(pickup_time)
+        time_interval = [datetime.fromisoformat(time) for time in time_interval]
     except Exception:
         abort(400, 'Неверный формат даты')
 
-    # метод оплаты
-    payment_method = body.get('payment_method', '')
     if payment_method not in ['online', 'offline']:
         abort(400, 'Указан неверный метод оплаты')
 
     # ---------- ФОРМИРУЕМ ЗАКАЗ -------------
 
     # создаём заказ
-    from ..utils.make_order import calculate_delivery_cost
+    delivery_cost = 0
+    if is_delivery:
+        from ..utils.make_order import calculate_delivery_cost
+        delivery_cost = calculate_delivery_cost(address)
+
     order = order_repository.create(
         user=user,
-        delivery_cost=calculate_delivery_cost(address),
         address=address,
-        pickuptime=pickup_time
+        delivery_cost=delivery_cost
     )
+
     order_repository.save(order)
+
+    # TODO: Нужно где-то поддерживать все заказы и их time_interval
+    #       (это нужно для самой пиццерии, чтобы выстраивать логистику)
 
     # создаём платёж
     payment = payment_repository.create(order=order, payment_method=payment_method)
@@ -72,15 +78,14 @@ async def create_order(user, token_info, body):
     # очищаем корзину
     cart_repository.clear(user.cart)
 
-    # создаем асинхронную задачу на отмену заказа (точнее добавляем заказ в очередь)
+    # создаем асинхронную задачу на отмену заказа (добавляем заказ в очередь)
     await task_queue.put(order.id)
 
     # отправляем ссылку для оплаты
-    from ..utils.make_order import generate_payment_url
     if payment_method == 'online':
-        return {
-            'payment_url': generate_payment_url(payment.id, payment.amount)
-        }
+        from ..utils.make_order import generate_payment_url
+        if payment_method == 'online':
+            return generate_payment_url(payment.id, payment.amount)
 
 
 # Этот фоновый процесс отвечает за выполнение задач на отмену заказов,

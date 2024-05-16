@@ -11,9 +11,9 @@ class OrderRepository(Repository):
     def __init__(self):
         Repository.__init__(self, Order)
 
-    def create(self, user: User, delivery_cost: float, address: str, pickuptime: datetime):
+    def create(self, user: User, address: str, delivery_cost: float = 0):
         """Создаёт заказ из корзины по указанному пользователю, а также связанный с ним платёж."""
-        new_order = Order(user=user, total_price=user.cart.total_price + delivery_cost, address=address, pickup_time=pickuptime)
+        new_order = Order(user=user, total_price=user.cart.total_price + delivery_cost, address=address)
 
         from .order_item_repository import OrderItemRepository
         order_item_repository = OrderItemRepository()

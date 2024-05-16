@@ -18,9 +18,6 @@ def generate_payment_url(id, amount):
 
 
 def calculate_delivery_cost(address):
-    if pizzeria_repository.is_pizzeria_address(address):
-        return 0
-
     return random.randint(50, 300)
 
 

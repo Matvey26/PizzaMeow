@@ -142,7 +142,7 @@ class Order(Base, Model):
     total_price = sa.Column(sa.Float, nullable=False)
     status = sa.Column(sa.Enum(OrderStatusEnum), default=OrderStatusEnum.PROCESS, nullable=False)
     address = sa.Column(sa.Text, nullable=False)
-    pickup_time = sa.Column(sa.DateTime, nullable=False)
+    pickup_time = sa.Column(sa.DateTime)
     created_at = sa.Column(sa.DateTime, server_default=func.now())
 
     user = relationship('User', back_populates='orders')

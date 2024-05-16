@@ -358,11 +358,6 @@ class Session:
         Время в формате iso format!!!!
         (сервер сам учтёт время, которое потребуется на приготовление и сборку заказа).
         """
-        # return [
-        #     ['2024-05-15T10:00:15.310793+00:00', '2024-05-15T13:00:15.310793+00:00'],
-        #     ['2024-05-15T13:00:15.310793+00:00', '2024-05-15T16:00:15.310793+00:00'],
-        #     ['2024-05-15T16:00:15.310793+00:00', '2024-05-15T19:00:15.310793+00:00']
-        # ]
         headers = {'Authorization': f'Bearer {self.token}'}
         params = {'address': address}
         async with self._session.get(url + 'time/delivery', headers=headers, params=params) as response:
@@ -377,11 +372,6 @@ class Session:
         Время в формате iso format!!!!
         (сервер сам учтёт время, которое потребуется на приготовление заказа).
         """
-        # return [
-        #     ['2024-05-15T10:00:15.310793+00:00', '2024-05-15T13:00:15.310793+00:00'],
-        #     ['2024-05-15T13:00:15.310793+00:00', '2024-05-15T16:00:15.310793+00:00'],
-        #     ['2024-05-15T16:00:15.310793+00:00', '2024-05-15T19:00:15.310793+00:00']
-        # ]
         headers = {'Authorization': f'Bearer {self.token}'}
         params = {'pizzeria_address': pizzeria_address}
         async with self._session.get(url + 'time/cooking', headers=headers, params=params) as response:
@@ -394,11 +384,6 @@ class Session:
         """Если параметры не указаны, то возвращает все адреса пиццерий.
         Если указан параметр address, то отсортирует по отдалению пиццерий
         """
-        # return [
-        #     'Москва',
-        #     'Санкт-Петербург',
-        #     'Лондон'
-        # ]
         params = {'address': address}
         async with self._session.get(url + 'pizzeria/address', params=params) as response:
             if response.status == 200:

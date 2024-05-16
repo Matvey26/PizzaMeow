@@ -24,6 +24,9 @@ class Checkout(Base):
         if isinstance(cart, tuple):
             raise RuntimeError(cart[1])
 
+        if len(cart['cart_items']) == 0:
+            raise LookupError('Ваша корзина пуста')
+
         # Подготавливаем строки для вывода
         rows = [f"Итоговая цена: {cart['total_price']}"]
         for i, item in enumerate(cart['cart_items']):
@@ -193,6 +196,5 @@ class Checkout(Base):
         except Exception as e:
             curses.endwin()
             print(e)
-            raise
         finally:
             curses.endwin()

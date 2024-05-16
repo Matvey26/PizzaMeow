@@ -323,10 +323,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  payment_url:
-                    type: string
+                type: string
       security:
         - jwt: []
 
@@ -353,20 +350,14 @@ paths:
   
   /pizzeria/address:
     get:
-      summary: Получить адреса пиццерий. Если указан параметр address, то возвращает count[=10] ближайших пиццерий.
+      summary: Получить адреса пиццерий. Если указан параметр address, то сортирует пиццерии в порядке отдаления от указанного адреса.
       operationId: server.app.views.pizzerias.get_addresses
       parameters:
       - name: address
         in: query
-        description: адрес пользователя
+        description: адрес
         schema:
           type: string
-      - name: count
-        in: query
-        description: количество ближайших пиццерий, которое нужно вернуть
-        schema:
-          type: integer
-          default: 10
       responses:
         '200':
           description: Адреса пиццерий успешно получены
@@ -375,11 +366,11 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Pizzeria'
+                  type: string
   
   /time/delivery:
     get:
-      summary: Возвращает время в минутах, которое потребуется курьеру, чтобы доставить заказ
+      summary: Возвращает список из пар строк, которые представляют собой интервалы времени, в которые курьер может привести заказ
       operationId: server.app.views.time.get_delivery_time
       parameters:
       - name: address
@@ -389,34 +380,34 @@ paths:
           type: string
       responses:
         '200':
-          description: Время доставки в минутах
+          description: Список интервалов времени, когда может приехать курьер
           content:
             'application/json':
               schema:
-                type: object
-                properties:
-                  time:
-                    type: integer
-                required:
-                - time
+                type: array
+                items:
+                  $ref: '#/components/schemas/TimeInterval'
       security:
       - jwt: []
-  /time/cooking:
+  /time/pickup:
     get:
-      summary: Возвращает время в минутах, сколько будет готовиться заказ
+      summary: Возвращает список из пар строк, которые представляют собой интервалы времени, в которые можно забрать заказ
       operationId: server.app.views.time.get_cooking_time
+      parameters:
+      - name: address
+        in: query
+        description: Адрес пиццерии, в которой будет делаться заказ
+        schema:
+          type: string
       responses:
         '200':
-          description: Время готовки в минутах
+          description: Список интервалов времени, когда можно забрать заказ
           content:
             'application/json':
               schema:
-                type: object
-                properties:
-                  time:
-                    type: integer
-                required:
-                - time
+                type: array
+                items:
+                  $ref: '#/components/schemas/TimeInterval'
       security:
       - jwt: []
   
@@ -617,17 +608,21 @@ components:
     CreateOrder:
       type: object
       properties:
+        is_delivery:
+          type: boolean
         address:
           type: string
-        pickup_time:
-          type: string
-          format: date-time
+        time_interval:
+          type: array
+          items:
+            type: string
         payment_method:
           type: string
           enum: [online, offline]
       required:
+        - is_delivery
         - address
-        - pickup_time
+        - time_interval
         - payment_method
     
     Pizzeria:
@@ -639,6 +634,12 @@ components:
         address:
           type: string
           description: Адрес пиццерии
+      
+    TimeInterval:
+      type: array
+      items:
+        type: string
+        description: Время в формате iso, иначе говоря то, что возвращает datetime_obj.isoformat()
   
   # Универсальные ответы от сервера
   responses:

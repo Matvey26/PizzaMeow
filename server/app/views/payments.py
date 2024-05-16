@@ -7,5 +7,5 @@ def confirm_payment(token):
     payment_id = int(token['sub'])
     payment = payment_repository.get(payment_id)
     payment_repository.mark_as_paid(payment)
-    
+    payment_repository.save(payment)
     
