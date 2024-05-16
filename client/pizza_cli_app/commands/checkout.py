@@ -51,9 +51,9 @@ class Checkout(Base):
         stdscr.clear()
         return choices[choice_index]
 
-    async def choose_delivery_address_screen(self, stdscr: curses.window) -> str:
+    async def choose_address_screen(self, stdscr: curses.window, search_addresses_func) -> str:
         # Подготавливаем окно
-        stdscr.addstr(0, 0, 'Начните вводить свой адрес и нажмите Enter:')
+        stdscr.addstr(0, 0, 'Начните вводить адрес и нажмите Enter:')
         stdscr.refresh()
         input_window = curses.newwin(1, curses.COLS, 1, 0)
 
@@ -68,15 +68,16 @@ class Checkout(Base):
             # Запускаем загрузку-крутилку
             task_load = asyncio.create_task(
                 self.load_spinner(output_window, 0, 0))
-            # Делаем запрос к картам
-            task_search = asyncio.create_task(
-                self.session.search_addresses(address))
+            # Делаем запрос к серверу для получения адресов
+            task_search = asyncio.create_task(search_addresses_func(address))
 
-            locations = await task_search
+            addresses = await task_search
             task_load.cancel()
 
-            addresses = ['Повторить ввод'] + \
-                [loc.address for loc in locations]
+            if isinstance(addresses, tuple):
+                raise RuntimeError(addresses[1])
+
+            addresses = ['Повторить ввод'] + addresses
             output_window.clear()
 
             # Выводим адреса, чтобы пользователь выбрал нужный и получаем ответ от него
@@ -91,18 +92,18 @@ class Checkout(Base):
             stdscr.clear()
             return addresses[choice_index]
 
-    async def choose_delivery_time_screen(self, stdscr: curses.window, address: str) -> List[str]:
+    async def choose_time_interval(self, stdscr: curses.window, address: str, get_time_intervals_func) -> List[str]:
         # Подготавливаем окно
         stdscr.refresh()
         window = curses.newwin(curses.LINES, curses.COLS, 0, 0)
 
         # Получаем интервалы времени
         task_load = asyncio.create_task(self.load_spinner(window, 0, 0))
-        task_get_time_delivery = asyncio.create_task(
-            self.session.get_time_delivery(address)
+        task_get_time_intervals = asyncio.create_task(
+            get_time_intervals_func(address)
         )
         # time_intervals хранит пары строк, которые представляют собой объект datetime в iso формате в часовом поясе UTC
-        time_intervals = await task_get_time_delivery
+        time_intervals = await task_get_time_intervals
         task_load.cancel()
 
         if isinstance(time_intervals, tuple):
@@ -136,135 +137,24 @@ class Checkout(Base):
         stdscr.clear()
 
         # Однако выбор потом нужно перевести обратно в универсальный строчный формат
-
         stdscr.clear()
         return time_intervals[choice_index]
 
-    async def choose_pickup_address_screen(self, stdscr: curses.window) -> str:
-        # Подготавливаем окно
-        stdscr.addstr(0, 0, 'Начните вводить адрес пиццерии и нажмите Enter:')
+    async def choose_payment_method_screen(self, stdscr: curses.window):
+        # Подготовливаем окно.
+        stdscr.addstr(0, 0, 'Как будете оплачивать заказ?')
         stdscr.refresh()
-        input_window = curses.newwin(1, curses.COLS, 1, 0)
+        choice_window = curses.newwin(curses.LINES - 1, curses.COLS, 1, 0)
 
-        while True:
-            # Устанавливаем курсор в начало терминала и ожидаем ввод адреса
-            input_window.move(0, 0)
-            approximate_address = input_window.getstr().decode().strip()
-
-            # Подготавливаем окно для вывода адресов
-            output_window = curses.newwin(curses.LINES - 2, curses.COLS, 2, 0)
-
-            # Запускаем загрузку-крутилку
-            task_load = asyncio.create_task(
-                self.load_spinner(output_window, 0, 0)
-            )
-            # Делаем запрос к серверу
-            task_get_pizzerias_addresses = asyncio.create_task(
-                self.session.get_pizzerias_addresses()
-            )
-
-            pizzerias_addresses = await task_get_pizzerias_addresses
-            task_load.cancel()
-
-            if isinstance(pizzerias_addresses, tuple):
-                raise RuntimeError(pizzerias_addresses[1])
-
-            pizzerias_addresses = ['Повторить ввод'] + pizzerias_addresses
-            output_window.clear()
-
-            # Выводим адреса, чтобы пользователь выбрал нужный и получаем ответ от него
-            choice_index = self.print_choices(
-                output_window,
-                pizzerias_addresses
-            )
-
-            # Даём человеку ввести ещё раз, если он не нашёл своего адреса
-            if choice_index == 0:
-                input_window.clear()
-                output_window.clear()
-                continue
-
-            stdscr.clear()
-            return pizzerias_addresses[choice_index]
-
-    async def choose_pickup_time_screen(self, stdscr: curses.window, pizzeria_address: str) -> str:
-        stdscr.addstr(0, 0, 'Когда будете забирать заказ? (дд.мм.гггг чч:мм):')
-        stdscr.refresh()
-        info_window = curses.newwin(1, curses.COLS, 1, 0)
-        input_window = curses.newwin(1, curses.COLS, 2, 0)
-        output_window = curses.newwin(curses.LINES - 3, curses.COLS, 3, 0)
-
-        task_load = asyncio.create_task(self.load_spinner(info_window, 0, 0))
-        task_get_time_cooking = asyncio.create_task(
-            self.session.get_time_cooking(pizzeria_address)
+        # Выводим список выборов и получаем ответ пользователя
+        choices = ['online', 'offline']
+        choice_index = self.print_choices(
+            choice_window,
+            choices
         )
 
-        minutes_to_cooking = await task_get_time_cooking
-        task_load.cancel()
-
-        if isinstance(minutes_to_cooking, tuple):
-            raise RuntimeError(minutes_to_cooking[1])
-
-        minutes_to_cooking = int(minutes_to_cooking)
-
-        time_text = ''
-        if minutes_to_cooking >= 60:
-            time_text = f"{minutes_to_cooking // 60} ч. {minutes_to_cooking % 60} мин."
-        else:
-            time_text = f"{minutes_to_cooking % 60} мин."
-        info_window.clear()
-        info_window.addstr(0, 0, f"Заказ будет готовиться {time_text}")
-        info_window.refresh()
-
-        time_format = '%d.%m.%Y %H:%M'
-        while True:
-            input_window.move(0, 0)
-            input_window.clear()
-            input_window.refresh()
-            desired_time = input_window.getstr().decode().strip()
-
-            # Текущее время относительно utc и локального часового пояса
-            dt_utc_now = datetime.datetime.now(datetime.timezone.utc)
-            dt_loc_now = datetime.datetime.now()
-
-            # Сначала преобразуем в datetime
-            try:
-                dt_desired_time = datetime.datetime.strptime(
-                    desired_time, time_format)
-            except ValueError:
-                output_window.clear()
-                output_window.addstr(0, 0, 'Неправильный формат ввода')
-                output_window.refresh()
-                continue
-
-            # Первая проверка на валидность
-            if dt_desired_time - dt_loc_now < datetime.timedelta(minutes=minutes_to_cooking):
-                output_window.clear()
-                output_window.addstr(0, 0, 'Нельзя забрать заказ раньше')
-                output_window.refresh()
-                continue
-
-            # Вторая проверка на валидность
-            dt_utc_desired_time = dt_utc_now + (dt_desired_time - dt_loc_now)
-
-            task_load = asyncio.create_task(self.load_spinner())
-            task_is_valid_pickup_time = asyncio.create_task(
-                self.session.is_valid_pickup_time(
-                    dt_utc_desired_time.isoformat()
-                )
-            )
-
-            is_valid_input = await task_is_valid_pickup_time
-            task_load.cancel()
-
-            if is_valid_input is not None:
-                output_window.clear()
-                output_window.addstr(0, 0, is_valid_input)
-                output_window.refresh()
-                continue
-
-            stdscr.clear()
-            return dt_utc_desired_time.isoformat()
+        stdscr.clear()
+        return choices[choice_index]
 
     async def run(self):
         stdscr = curses.initscr()
@@ -274,13 +164,31 @@ class Checkout(Base):
             await self.cart_information_screen(stdscr)
             chosen_pickup_method = self.choose_pickup_method_screen(stdscr)
 
+            search_addresses_function = None
+            get_time_intervals_function = None
+
             if chosen_pickup_method == 'Доставка':
-                chosen_address = await self.choose_delivery_address_screen(stdscr)
-                chosen_time_interval = await self.choose_delivery_time_screen(stdscr, chosen_address)
+                search_addresses_function = self.session.search_addresses
+                get_time_intervals_function = self.session.get_time_delivery
 
             elif chosen_pickup_method == 'Самовывоз':
-                chosen_pizzeria = await self.choose_pickup_address_screen(stdscr)
-                chosen_pickup_time = await self.choose_pickup_time_screen(stdscr, chosen_pizzeria)
+                search_addresses_function = self.session.get_pizzerias_addresses
+                get_time_intervals_function = self.session.get_time_cooking
+
+            address = await self.choose_address_screen(stdscr, search_addresses_function)
+            time_interval = await self.choose_time_interval(stdscr, address, get_time_intervals_function)
+            payment_method = await self.choose_payment_method_screen(stdscr)
+            payref = await self.session.create_order({
+                'is_delivery': bool(chosen_pickup_method == 'Доставка'),
+                'address': address,
+                'time_interval': time_interval,
+                'payment_method': payment_method
+            })
+
+            curses.endwin()
+            if payref is not None:
+                print('Ссылка для оплаты заказа:')
+                print(payref)
 
         except Exception as e:
             curses.endwin()
