@@ -24,6 +24,18 @@ def get_order_by_id(id: int, user: str, token_info: dict):
     return order_repository.serialize(order)[0]
 
 
+def cancel_order(id: int, user: str, token_info: dict):
+    user_id = int(user)
+    user = user_repository.get(user_id)
+    order = order_repository.get(id)
+    if order is None:
+        abort(400, 'Такого заказа нет.')
+    if order.user.id != user_id:
+        abort(400, 'Вы не можете отменить чужой заказ.')
+    order_repository.mark_as_cancelled(order)
+    order_repository.save(order)
+
+
 task_queue = asyncio.Queue()
 
 

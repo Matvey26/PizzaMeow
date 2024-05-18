@@ -46,6 +46,7 @@ class OrderRepository(Repository):
             data['order_items'] = []
             for order_item in order.order_items:
                 data['order_items'].append(order_item.serialize())
+            serialized.append(data)
         
         return serialized
 

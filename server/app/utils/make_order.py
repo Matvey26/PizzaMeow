@@ -25,3 +25,4 @@ async def cancel_order_if_not_paid(order: Order):
     await asyncio.sleep(15 * 60)
     if order.payment.payment_status == PaymentStatusEnum.PENDING:
         order_repository.mark_as_cancelled(order)
+        order_repository.save(order)

@@ -348,6 +348,23 @@ paths:
       security:
       - jwt: []
   
+  /orders/{id}/cancel:
+    put:
+      summary: Отменить заказ с номер ID
+      operationId: server.app.views.orders.cancel_order
+      parameters:
+      - name: id
+        in: path
+        description: ID заказа, который нужно отменить
+        required: true
+        schema:
+          type: integer
+      responses:
+        '204':
+          description: Заказ отменён успешно
+      security:
+      - jwt: []
+  
   /pizzeria/address:
     get:
       summary: Получить адреса пиццерий. Если указан параметр address, то сортирует пиццерии в порядке отдаления от указанного адреса.
