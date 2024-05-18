@@ -140,6 +140,7 @@ class Order(Base, Model):
     id = sa.Column(sa.Integer, primary_key=True)
     user_id = sa.Column(sa.Integer, sa.ForeignKey('users.id'), nullable=False)
     total_price = sa.Column(sa.Float, nullable=False)
+    delivery_price = sa.Column(sa.Float, default=0.)
     status = sa.Column(sa.Enum(OrderStatusEnum), default=OrderStatusEnum.PROCESS, nullable=False)
     address = sa.Column(sa.Text, nullable=False)
     pickup_time = sa.Column(sa.DateTime)

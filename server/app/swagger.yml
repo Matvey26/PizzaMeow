@@ -365,6 +365,32 @@ paths:
       security:
       - jwt: []
   
+  /orders/{id}/repeat:
+    put:
+      summary: Повторить заказ с номером ID
+      operationId: server.app.views.orders.repeat_order
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/CreateOrder'
+      parameters:
+      - name: id
+        in: path
+        description: ID заказа, который нужно повторить
+        required: true
+        schema:
+          type: integer
+      responses:
+        '201':
+          description: Заказ создан
+          content:
+            application/json:
+              schema:
+                type: string
+      security:
+        - jwt: []
+  
   /pizzeria/address:
     get:
       summary: Получить адреса пиццерий. Если указан параметр address, то сортирует пиццерии в порядке отдаления от указанного адреса.
