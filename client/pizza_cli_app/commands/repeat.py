@@ -68,12 +68,15 @@ class Repeat(Base):
                 stdscr, address, get_time_intervals_function
             )
             payment_method = await checkout_cmd.choose_payment_method_screen(stdscr)
-            payref = await self.session.create_order({
-                'is_delivery': bool(chosen_pickup_method == 'Доставка'),
-                'address': address,
-                'time_interval': time_interval,
-                'payment_method': payment_method
-            })
+            payref = await self.session.repeat_order(
+                order_id,
+                {
+                    'is_delivery': bool(chosen_pickup_method == 'Доставка'),
+                    'address': address,
+                    'time_interval': time_interval,
+                    'payment_method': payment_method
+                }
+            )
 
             curses.endwin()
             if payref is not None:
@@ -83,5 +86,6 @@ class Repeat(Base):
         except Exception as e:
             curses.endwin()
             print(e)
+            raise
         finally:
             curses.endwin()

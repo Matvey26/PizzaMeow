@@ -32,9 +32,9 @@ class Orders(Base):
                     for order_item in order['order_items']:
                         rows.append(f"итого: {order_item['total_price']}₽")
                         rows.append(f"{order_item['pizza_name']}, "
-                                    "{order_item['quantity']} шт.")
-                        rows.append(f"\tразмер: {order_item['size']}")
-                        rows.append(f"\tтесто: {order_item['dough']}")
+                                    f"{order_item['quantity']} шт.")
+                        rows.append(f"    размер: {order_item['size']}")
+                        rows.append(f"    тесто: {order_item['dough']}")
                     data.append(rows)
                 yield data
                 offset += limit
@@ -57,6 +57,6 @@ class Orders(Base):
             print(e)
         except Exception as e:
             curses.endwin()
-            print('Произошла неизвестная ошибка.')
-            print('Может быть, вы забыли авторизоваться?')
+            print('Произошла ошибка.')
             print(e)
+            raise

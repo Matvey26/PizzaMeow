@@ -376,7 +376,7 @@ paths:
       - jwt: []
   
   /orders/{id}/repeat:
-    put:
+    post:
       summary: Повторить заказ с номером ID
       operationId: server.app.views.orders.repeat_order
       requestBody:

@@ -91,7 +91,9 @@ class OrderRepository(Repository):
             data = order.serialize()
             data['order_items'] = []
             for order_item in order.order_items:
-                data['order_items'].append(order_item.serialize())
+                serialized_order_item = order_item.serialize()
+                serialized_order_item['pizza_name'] = order_item.pizza.name
+                data['order_items'].append(serialized_order_item)
             serialized.append(data)
 
         return serialized

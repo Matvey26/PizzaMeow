@@ -162,7 +162,7 @@ class Cart(Base, Model):
     cart_items = relationship('CartItem', back_populates='cart', cascade='all, delete-orphan, save-update')
 
 
-# Промежуточная таблица, чтобы сделать отношение "многие ко многим". Не обращайте внимание
+# Промежуточная таблица, чтобы сделать отношение "многие ко многим"
 class OrderItemTopping(Base, Model):
     __tablename__ = 'order_item_toppings'
 
@@ -178,7 +178,7 @@ class OrderItemTopping(Base, Model):
     )
 
 
-# Промежуточная таблица, чтобы сделать отношение "многие ко многим". Не обращайте внимание
+# Промежуточная таблица, чтобы сделать отношение "многие ко многим"
 class CartItemTopping(Base, Model):
     __tablename__ = 'cart_item_toppings'
 
@@ -202,6 +202,7 @@ class OrderItem(Base, Model):
     total_price = sa.Column(sa.Float, nullable=False)
     size = sa.Column(sa.Enum(PizzaSizeEnum))
     quantity = sa.Column(sa.Integer)
+    dough = sa.Column(sa.Enum(PizzaDoughEnum))
     order_id = sa.Column(
         sa.Integer,
         sa.ForeignKey('orders.id'),

@@ -507,7 +507,7 @@ class Session:
             return (response.status, (await response.json())['detail'])
 
     @connection_error_handler
-    async def repeat_order(self, data: dict, order_id: int):
+    async def repeat_order(self, order_id: int, data: dict):
         """Повторить заказ.
 
         Параметры
@@ -597,8 +597,8 @@ class Session:
         params = {
             'limit': limit,
             'offset': offset,
-            'active': active,
-            'completed': completed
+            'active': str(active).lower(),
+            'completed': str(completed).lower()
         }
         headers = {'Authorization': f'Bearer {self.token}'}
         async with self._session.get(
@@ -735,7 +735,7 @@ class Session:
         async with self._session.get(
                 url + 'pizzeria/address', params=params) as response:
             if response.status == 200:
-                return await response.text()
+                return await response.json()
             return (response.status, (await response.json())['detail'])
 
     @connection_error_handler

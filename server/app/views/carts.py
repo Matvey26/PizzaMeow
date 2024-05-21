@@ -3,7 +3,6 @@ from . import pizza_repository
 from . import cart_repository
 from . import cart_item_repository
 from flask import abort
-from ..model.models import PizzaSizeEnum, PizzaDoughEnum
 
 
 conv_size_enum = {
@@ -26,6 +25,8 @@ conv_dough_enum = {
 def get_cart(user, token_info):
     user_id = int(user)
     user = user_repository.get(user_id)
+    if user is None:
+        abort(400, 'Токен недействителен.')
     cart = cart_repository.get_by_user(user)
     return cart_repository.serialize(cart)
 
@@ -42,8 +43,8 @@ def add_item_to_cart(user, token_info, body):
         abort(400, 'Такой пиццы не существует =(')
     quantity = body.get('quantity', 1)
     try:
-        size = PizzaSizeEnum(conv_size_enum[body.get('size', 1)])
-        dough = PizzaDoughEnum(conv_dough_enum[body.get('dough', 1)])
+        size = conv_size_enum[body.get('size', 1)]
+        dough = conv_dough_enum[body.get('dough', 1)]
     except ValueError:
         abort(400, 'Неверный формат поля size или dough.')
     total_price = pizza.price * quantity
@@ -77,9 +78,9 @@ def update_item_in_cart(user, token_info, item_id, body):
         cart_item.quantity = body['quantity']
     try:
         if 'size' in body:
-            cart_item.size = PizzaSizeEnum(conv_size_enum[body['size']])
+            cart_item.size = conv_size_enum[body['size']]
         if 'dough' in body:
-            cart_item.dough = PizzaDoughEnum(conv_dough_enum[body['dough']])
+            cart_item.dough = conv_dough_enum[body['dough']]
     except ValueError:
         abort(400, 'Неверный формат полей size или dough.')
     cart_item.total_price = cart_item.quantity * cart_item.pizza.price

@@ -15,6 +15,7 @@ class OrderItemRepository(Repository):
             total_price=cart_item.total_price,
             size=cart_item.size,
             quantity=cart_item.quantity,
+            dough=cart_item.dough,
             toppings=cart_item.toppings
         )
 
@@ -25,6 +26,7 @@ class OrderItemRepository(Repository):
             total_price=order_item.total_price,
             size=order_item.size,
             quantity=order_item.quantity,
+            dough=order_item.dough,
             toppings=order_item.toppings
         )
 
