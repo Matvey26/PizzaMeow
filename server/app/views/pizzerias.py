@@ -2,7 +2,7 @@ from . import pizzeria_repository
 
 
 def get_addresses(address=None):
-    pizzerias = [] 
+    pizzerias = []
     if address is None:
         pizzerias = pizzeria_repository.get_all()
     else:
@@ -10,5 +10,5 @@ def get_addresses(address=None):
     ret = []
     for pizzeria in pizzerias:
         ret.append(pizzeria.address)
-    
+
     return ret

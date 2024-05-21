@@ -44,7 +44,7 @@ def add_item_to_cart(user, token_info, body):
     try:
         size = PizzaSizeEnum(conv_size_enum[body.get('size', 1)])
         dough = PizzaDoughEnum(conv_dough_enum[body.get('dough', 1)])
-    except:
+    except ValueError:
         abort(400, 'Неверный формат поля size или dough.')
     total_price = pizza.price * quantity
 
@@ -80,7 +80,7 @@ def update_item_in_cart(user, token_info, item_id, body):
             cart_item.size = PizzaSizeEnum(conv_size_enum[body['size']])
         if 'dough' in body:
             cart_item.dough = PizzaDoughEnum(conv_dough_enum[body['dough']])
-    except:
+    except ValueError:
         abort(400, 'Неверный формат полей size или dough.')
     cart_item.total_price = cart_item.quantity * cart_item.pizza.price
 

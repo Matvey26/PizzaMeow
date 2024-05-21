@@ -6,7 +6,7 @@ class CartRepository(Repository):
     def __init__(self):
         Repository.__init__(self, Cart)
 
-    def create(self, user : User):
+    def create(self, user: User):
         return Cart(user_id=user.id, total_price=0)
 
     def get_by_user(self, user: User):
@@ -24,7 +24,7 @@ class CartRepository(Repository):
         cart.total_price += sum_price
         self.session.commit()
 
-    def clear(self, cart : Cart):
+    def clear(self, cart: Cart):
         for item in cart.cart_items:
             self.session.delete(item)
         cart.total_price = 0
@@ -42,15 +42,6 @@ class CartRepository(Repository):
         Все поля, содержащие enum переводятся в текст.
         """
 
-        dough_enum = {
-            0: 'thin',
-            1: 'classic'
-        }
-        size_enum = {
-            0: 'small',
-            1: 'medium',
-            2: 'large'
-        }
         serialized = {
             'id': cart.id,
             'total_price': cart.total_price,
@@ -59,8 +50,6 @@ class CartRepository(Repository):
         for cart_item in cart.cart_items:
             data = cart_item.serialize()
             data['pizza_name'] = cart_item.pizza.name
-            # data['size'] = size_enum[int(data['size'])]
-            # data['dough'] = dough_enum[int(data['dough'])]
             serialized['cart_items'].append(data)
-        
+
         return serialized

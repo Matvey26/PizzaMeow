@@ -1,7 +1,7 @@
 from ..model.pizzeria_repository import PizzeriaRepository
 from ..model.order_repository import OrderRepository
 from ..model.payment_repository import PaymentRepository
-from ..model.models import PaymentStatusEnum, OrderStatusEnum
+from ..model.models import PaymentStatusEnum
 from ..model.models import Order
 import random
 import os

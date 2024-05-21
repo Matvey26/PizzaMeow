@@ -31,7 +31,7 @@ class Model:
         ModelSchema = type(
             f'{self.__class__.__name__}Schema',
             (CustomSQLAlchemyAutoSchema,),
-            { 'Meta': Meta }
+            {'Meta': Meta}
         )
 
         self.model_schema = ModelSchema()
@@ -64,7 +64,7 @@ class OrderStatusEnum(enum.Enum):
     EN_ROUTE = 'en_route'  # в пути (если доставка)
     READY_TO_PICKUP = 'ready_to_pickup'  # готов к выдаче (если самовывоз)
     DONE = 'done'  # заказ завершён
-    CANCELLED = 'cancelled' # заказ был отменён
+    CANCELLED = 'cancelled'  # заказ был отменён
 
     def serialize(self):
         return self.value
@@ -93,7 +93,7 @@ class PaymentMethodEnum(enum.Enum):
 
     def serialize(self):
         return self.value
-    
+
 
 class PaymentStatusEnum(enum.Enum):
     PENDING = 0
@@ -196,7 +196,6 @@ class CartItemTopping(Base, Model):
 
 class OrderItem(Base, Model):
     __tablename__ = 'order_items'
-
 
     id = sa.Column(sa.Integer, primary_key=True)
     pizza_id = sa.Column(sa.Integer, sa.ForeignKey('pizzas.id'), nullable=False)

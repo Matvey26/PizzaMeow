@@ -19,7 +19,7 @@ def validate_password(password: str) -> bool:
 
 def sign_in(email: str, password: str) -> str:
     """Авторизация.
-    
+
     Параметры
     ---------
     email: str
@@ -35,12 +35,12 @@ def sign_in(email: str, password: str) -> str:
     user = user_repository.get_by_email(email)
     if user is None:
         abort(404, 'Аккаунта с такой почтой не существует. Проверьте правильность ввода или зарегистрируйтесь.')
-    
+
     if user_repository.authenticate(email, password):
         from ..utils.auth import generate_token
         return generate_token(user.id, 24 * 60 * 60)
-    
-    abort(401, f'Введён неверный пароль. Пожалуйста, проверьте правильность ввода или восстановите пароль.')
+
+    abort(401, 'Введён неверный пароль. Пожалуйста, проверьте правильность ввода или восстановите пароль.')
 
 
 def sign_up(body):
@@ -52,7 +52,7 @@ def sign_up(body):
     validate = (validate_email(email), validate_password(password))
     if validate[0] != 'OK':
         abort(400, validate[0])
-    
+
     if validate[1] != 'OK':
         abort(400, validate[1])
 
@@ -92,7 +92,7 @@ def get_confirm_email(user: str, token_info: dict, email: str):
 
     if user_repository.is_confirmed(user):
         abort(400, 'Аккаунт уже подтверждён')
-    
+
     send_confirm_email(email)
 
 
@@ -102,7 +102,7 @@ def confirm_email(token):
 
     from ..utils.auth import decode_token
     email = decode_token(token)['sub']
-    
+
     user = user_repository.get_by_email(email)
     if not user_repository.is_confirmed(user):
         user_repository.mark_as_confirmed(user)
@@ -125,7 +125,7 @@ def update_config(user: str, token_info: dict, body: dict):
         user.address = address
     if phone:
         user.phone_number = phone
-    
+
     user_repository.update(user)
 
 
@@ -154,7 +154,7 @@ def reset_password(body):
     from ..utils.send_email import send_email
 
     user = user_repository.get_by_email(email)
-    
+
     if user is None:
         abort(400, 'Учётной записи с такой почтой нет. Проверьте правильность ввода.')
 

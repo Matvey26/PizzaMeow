@@ -11,4 +11,3 @@ def confirm_payment(token):
         abort(500, 'Токен недействителен.')
     payment_repository.mark_as_paid(payment)
     payment_repository.save(payment)
-    

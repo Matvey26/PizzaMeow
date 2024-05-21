@@ -717,10 +717,3 @@ class Session:
         if locations is None:
             return []
         return [loc.address for loc in locations]
-
-    async def is_valid_pickup_time(self, time: str) -> str:
-        """Принимает строку с датой и временем в формате iso
-        и проверяет, можно ли забрать заказ в это время.
-        Ничего не возвращает, если всё хорошо.
-        Если время не подходит, возвращает строку с объяснением."""
-        return
