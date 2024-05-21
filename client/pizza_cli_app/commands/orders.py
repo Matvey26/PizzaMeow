@@ -11,23 +11,13 @@ class Orders(Base):
         all = self.options.all
         completed = self.options.completed
 
-        order_status_filter = []
-        if active or all:
-            order_status_filter.extend([
-                'process',
-                'cooking',
-                'en_route',
-                'ready_to_pickup',
-            ])
-        if completed or all:
-            order_status_filter.extend([
-                'done',
-                'cancelled'
-            ])
+        if all:
+            active = True
+            completed = True
 
         async def get_all_orders():
             offset = 0
-            while (orders := await self.session.get_orders(limit, offset)):
+            while (orders := await self.session.get_orders(limit, offset, active=active, completed=completed)):
                 if isinstance(orders, tuple):
                     raise Exception(' '.join(map(str, orders)))
                 data = []
@@ -37,11 +27,10 @@ class Orders(Base):
                     first_row += f"Статус: {order['status']}"
                     rows.append(first_row)
                     for order_item in order['order_items']:
-                        if order_item['status'] in order_status_filter:
-                            rows.append(f"итого: {order_item['total_price']}₽")
-                            rows.append(f"{order_item['pizza_name']}, {order_item['quantity']} шт.")
-                            rows.append(f"\tразмер: {order_item['size']}")
-                            rows.append(f"\tтесто: {order_item['dough']}")
+                        rows.append(f"итого: {order_item['total_price']}₽")
+                        rows.append(f"{order_item['pizza_name']}, {order_item['quantity']} шт.")
+                        rows.append(f"\tразмер: {order_item['size']}")
+                        rows.append(f"\tтесто: {order_item['dough']}")
                     data.append(rows)
                 yield data
                 offset += limit

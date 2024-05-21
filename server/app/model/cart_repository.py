@@ -58,9 +58,9 @@ class CartRepository(Repository):
         }
         for cart_item in cart.cart_items:
             data = cart_item.serialize()
-            data['pizza_name'] = cart_item.pizza.id
-            data['size'] = size_enum[int(data['size'])]
-            data['dough'] = dough_enum[int(data['dough'])]
+            data['pizza_name'] = cart_item.pizza.name
+            # data['size'] = size_enum[int(data['size'])]
+            # data['dough'] = dough_enum[int(data['dough'])]
             serialized['cart_items'].append(data)
         
         return serialized

@@ -1,5 +1,5 @@
 from .repository import Repository
-from .models import OrderItem, Order, Cart, CartItem, Pizza, PizzaSizeEnum
+from .models import OrderItem, Order, CartItem
 
 
 class OrderItemRepository(Repository):

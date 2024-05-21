@@ -71,17 +71,17 @@ class OrderStatusEnum(enum.Enum):
 
 
 class PizzaSizeEnum(enum.Enum):
-    SMALL = 0
-    MEDIUM = 1
-    LARGE = 2
+    SMALL = 'small'
+    MEDIUM = 'medium'
+    LARGE = 'large'
 
     def serialize(self):
         return self.value
 
 
 class PizzaDoughEnum(enum.Enum):
-    THIN = 0
-    CLASSIC = 1
+    THIN = 'thin'
+    CLASSIC = 'classic'
 
     def serialize(self):
         return self.value
