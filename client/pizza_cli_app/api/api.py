@@ -545,7 +545,7 @@ class Session:
             'Content-Type': 'application/json',
             'Authorization': f'Bearer {self.token}'
         }
-        async with self._session.post(url + f'orders/{order_id}/repeat', json=data, headers=headers) as response:
+        async with self._session.put(url + f'orders/{order_id}/repeat', json=data, headers=headers) as response:
             if response.status == 200:
                 return await response.text()  # ссылка на оплату
             return (response.status, (await response.json())['detail'])
@@ -646,6 +646,15 @@ class Session:
             if response.status == 200:
                 return await response.json()
             return (response.status, (await response.json())['detail'])
+
+    @connection_error_handler
+    async def cancel_order(self, id : int):
+        headers = {'Authorization': f'Bearer {self.token}'}
+        async with self._session.put(
+                    url + 'orders/{id}/cancel',
+                    headers=headers) as response:
+                if response.status == 204:
+                    return await response.text()
 
     # ------------------ ВРЕМЯ И АДРЕСА ------------------
 
