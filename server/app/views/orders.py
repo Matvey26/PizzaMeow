@@ -72,6 +72,14 @@ async def create_order(user, token_info, body):
     except Exception:
         abort(400, 'Неверный формат даты')
 
+    from .time import is_valid_delivery_time
+    from .time import is_valid_pickup_time
+
+    if is_delivery and not is_valid_delivery_time(time_interval):
+        abort(400, 'Вы неверно указали время.')
+    if not is_delivery and not is_valid_pickup_time(time_interval):
+        abort(400, 'Вы неверно указали время.')
+
     if payment_method not in ['online', 'offline']:
         abort(400, 'Указан неверный метод оплаты')
 
@@ -110,8 +118,7 @@ async def create_order(user, token_info, body):
     # отправляем ссылку для оплаты
     if payment_method == 'online':
         from ..utils.make_order import generate_payment_url
-        if payment_method == 'online':
-            return generate_payment_url(payment.id, payment.amount)
+        return generate_payment_url(payment.id, payment.amount)
 
 
 async def repeat_order(id: int, user: str, token_info: dict, body: dict):

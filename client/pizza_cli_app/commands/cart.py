@@ -1,7 +1,9 @@
 import asyncio
-from ..utils import aiter
-from .base import Base
 import curses
+
+from ..utils.async_utils import aiter
+from ..utils.print_format import print_paged, load_spinner
+from .base import Base
 
 
 class Cart(Base):
@@ -10,9 +12,9 @@ class Cart(Base):
     async def run(self):
         show_id = self.options.show_id
 
-        task_load = asyncio.create_task(self.load_spinner())
+        task_load = asyncio.create_task(load_spinner())
         task_get_cart_items = asyncio.create_task(
-            self.session.get_cart_items()
+            self.session.get_cart()
         )
 
         answer = await task_get_cart_items
@@ -44,7 +46,7 @@ class Cart(Base):
         stdscr = curses.initscr()
         stdscr.refresh()
         window = curses.newwin(curses.LINES, curses.COLS, 0, 0)
-        await self.print_paged(
+        await print_paged(
             window,
             aiter([elements]),
             header=header,

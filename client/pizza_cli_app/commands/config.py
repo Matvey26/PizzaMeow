@@ -1,5 +1,7 @@
 import asyncio
+
 from .base import Base
+from ..utils.print_format import load_spinner
 
 
 class Config(Base):
@@ -27,7 +29,7 @@ class Config(Base):
             data['phone'] = phone
             answer += f'Номер телефона успешно обновлен на {phone}\n'
 
-        task_load = asyncio.create_task(self.load_spinner())
+        task_load = asyncio.create_task(load_spinner())
         task_config = asyncio.create_task(self.session.config(data))
 
         response = await task_config

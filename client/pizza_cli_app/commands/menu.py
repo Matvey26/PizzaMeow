@@ -1,5 +1,7 @@
-from .base import Base
 import curses
+
+from .base import Base
+from ..utils.print_format import print_paged
 
 
 class Menu(Base):
@@ -33,7 +35,7 @@ class Menu(Base):
             stdscr.refresh()
             window = curses.newwin(curses.LINES, curses.COLS, 0, 0)
 
-            await self.print_paged(
+            await print_paged(
                 window,
                 get_all_pizzas(),
                 limit=limit,

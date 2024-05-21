@@ -1,5 +1,7 @@
 import asyncio
+
 from .base import Base
+from ..utils.print_format import load_spinner
 
 
 class Add(Base):
@@ -17,7 +19,7 @@ class Add(Base):
             'quantity': quantity
         }
 
-        task_load = asyncio.create_task(self.load_spinner())
+        task_load = asyncio.create_task(load_spinner())
         task_add_item_to_cart = asyncio.create_task(
             self.session.add_item_to_cart(data)
         )

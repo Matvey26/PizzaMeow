@@ -314,7 +314,7 @@ class Session:
     # ------------------ РАБОТА С КОРЗИНОЙ ПОЛЬЗОВАТЕЛЯ -----------------
 
     @connection_error_handler
-    async def get_cart_items(self):
+    async def get_cart(self):
         """Получить содержимое своей корзины (без пагинации,
         так как размер корзины заведомо небольшой)
 
@@ -507,6 +507,50 @@ class Session:
             return (response.status, (await response.json())['detail'])
 
     @connection_error_handler
+    async def repeat_order(self, data: dict, order_id: int):
+        """Повторить заказ.
+
+        Параметры
+        ---------
+        order_id: int
+            Заказ, который нужно повторить
+        data: dict
+            Словарь с информацией о заказе в формате:
+
+            {
+                'is_delivery': bool,  # Флаг, требуется ли доставлять заказ.
+                'address': str,  # Если is_delivery = True, тогда это адрес,
+                        куда нужно доставить. Иначе
+                        адрес пиццерии, где нужно забрать заказ.
+                'time_interval': List[str],  # Пара двух строк, в которых
+                        записано время в формате iso
+                        (можно пользоваться datetime.isoformat()).
+                'payment_method': Enum('online', 'offline')  # Одна из двух
+                        строк, которая говорит, как будет
+                        производиться оплата заказа
+            }
+
+        Возвращает
+        ----------
+        payment_url: str
+            Ссылку на оплату заказа, если
+            payment_method = 'online' и запрос обработан успешно
+        ничего
+            Если payment_method = 'offline' и запрос обработан успешно
+        error: tuple
+            кортеж вида (код ошибки, сообщение ошибки),
+            если что-то пошло не так
+        """
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f'Bearer {self.token}'
+        }
+        async with self._session.post(url + f'orders/{order_id}/repeat', json=data, headers=headers) as response:
+            if response.status == 200:
+                return await response.text()  # ссылка на оплату
+            return (response.status, (await response.json())['detail'])
+
+    @connection_error_handler
     async def get_orders(
             self, limit: int, offset: int, active=True, completed=False):
         """Получить страницу со всеми сделанными заказами.
@@ -535,6 +579,8 @@ class Session:
                 'status': Enum('process', 'cooking',
                                'en_route', 'ready_to_pickup',
                                'done', 'cancelled'),
+                'total_price': int,
+                'delivery_price': int,
                 'order_items': {
                     'total_price': int,  # итоговая цена за данную позицию
                     'pizza_name': str,  # название пиццы в этой позиции
@@ -579,6 +625,8 @@ class Session:
                 'status': Enum('process', 'cooking',
                                'en_route', 'ready_to_pickup',
                                'done', 'cancelled'),
+                'total_price': int,
+                'delivery_price': int,
                 'order_items': {
                     'total_price': int,  # итоговая цена за данную позицию
                     'pizza_name': str,  # название пиццы в этой позиции
@@ -690,6 +738,7 @@ class Session:
                 return await response.text()
             return (response.status, (await response.json())['detail'])
 
+    @connection_error_handler
     async def search_addresses(self, address: str):
         """Получить список адресов, наиболее похожий на указанный
 

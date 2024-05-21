@@ -1,6 +1,8 @@
 import asyncio
-from .base import Base
 import getpass
+
+from .base import Base
+from ..utils.print_format import load_spinner
 
 
 class SignUp(Base):
@@ -19,7 +21,7 @@ class SignUp(Base):
             print('Введенные пароли не совпали, попробуйте еще раз')
             return
 
-        task_load = asyncio.create_task(self.load_spinner())
+        task_load = asyncio.create_task(load_spinner())
         task_sign_up = asyncio.create_task(
             self.session.sign_up(email, password))
 

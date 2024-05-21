@@ -1,5 +1,7 @@
 import asyncio
+
 from .base import Base
+from ..utils.print_format import load_spinner
 
 
 class Remove(Base):
@@ -8,7 +10,7 @@ class Remove(Base):
     async def run(self):
         item_id = self.options.item_id
 
-        task_load = asyncio.create_task(self.load_spinner())
+        task_load = asyncio.create_task(load_spinner())
         task_delete_item = asyncio.create_task(
             self.session.delete_item(item_id)
         )

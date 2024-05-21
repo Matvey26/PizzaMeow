@@ -1,4 +1,6 @@
 from .base import Base
+from ..utils.print_format import print_paged
+
 import curses
 
 
@@ -41,7 +43,7 @@ class Orders(Base):
             stdscr.refresh()
             window = curses.newwin(curses.LINES, curses.COLS, 0, 0)
 
-            await self.print_paged(
+            await print_paged(
                 window,
                 get_all_orders(),
                 limit=limit,
@@ -49,10 +51,12 @@ class Orders(Base):
                 sep=['------------------']
             )
         except curses.error as e:
+            curses.endwin()
             print('При постраничном выводе произошла ошибка. '
                   'Возможно вы изменили размер терминала.')
             print(e)
         except Exception as e:
+            curses.endwin()
             print('Произошла неизвестная ошибка.')
             print('Может быть, вы забыли авторизоваться?')
             print(e)

@@ -5,7 +5,7 @@ import asyncio
 from .commands import Base
 from .commands import Config, ChangeEmail, ChangePasssword, ResetPasssword
 from .commands import Logout, SignIn, SignUp
-from .commands import Menu, Cart, Add, Change, Remove, Checkout, Orders
+from .commands import Menu, Cart, Add, Change, Remove, Checkout, Orders, Repeat
 from .api import Session
 
 
@@ -24,7 +24,8 @@ async def run_commands(args):
         'change': Change,
         'remove': Remove,
         'checkout': Checkout,
-        'orders': Orders
+        'orders': Orders,
+        'repeat': Repeat
     }
 
     session = Session()
@@ -218,6 +219,14 @@ def main():
 
     # Парсер для создания заказа
     sub_parsers.add_parser('checkout', help=Checkout.__doc__)
+
+    # Парсер для повторение заказа
+    repeat = sub_parsers.add_parser('repeat', help=Repeat.__doc__)
+    repeat.add_argument(
+        'order_id',
+        type=int,
+        help='ID заказ, который надо повторить'
+    )
 
     # Парсер для вывода истории заказов
     orders = sub_parsers.add_parser('orders', help=Orders.__doc__)

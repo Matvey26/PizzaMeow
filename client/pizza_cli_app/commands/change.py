@@ -1,9 +1,11 @@
 import asyncio
+
 from .base import Base
+from ..utils.print_format import load_spinner
 
 
 class Change(Base):
-    """Изменяет сущесвтующий элемент корзины"""
+    """Изменяет существующий элемент корзины"""
 
     async def run(self):
         item_id = self.options.item_id
@@ -26,11 +28,11 @@ class Change(Base):
             data['quantity'] = quantity
 
         task_load = asyncio.create_task(
-            self.load_spinner()
+            load_spinner()
         )
         task_update_item_in_cart = asyncio.create_task(
             self.session.update_item_in_cart(item_id, data)
-        )
+            )
 
         response = await task_update_item_in_cart
         task_load.cancel()

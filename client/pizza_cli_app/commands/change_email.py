@@ -1,6 +1,8 @@
 import asyncio
-from .base import Base
 import getpass
+
+from .base import Base
+from ..utils.print_format import load_spinner
 
 
 class ChangeEmail(Base):
@@ -11,7 +13,7 @@ class ChangeEmail(Base):
         new_email = self.options.new_email
         password = getpass.getpass("Введите пароль: ")
 
-        task_load = asyncio.create_task(self.load_spinner())
+        task_load = asyncio.create_task(load_spinner())
         task_change_email = asyncio.create_task(
             self.session.change_email(old_email, password, new_email)
         )

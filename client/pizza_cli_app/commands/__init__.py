@@ -13,3 +13,4 @@ from .change import Change
 from .remove import Remove
 from .checkout import Checkout
 from .orders import Orders
+from .repeat import Repeat

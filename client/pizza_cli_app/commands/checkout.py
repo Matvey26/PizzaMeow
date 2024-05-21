@@ -2,6 +2,9 @@ import asyncio
 import curses
 import datetime
 from typing import List
+from ..utils.print_format import load_spinner
+from ..utils.print_format import print_choices
+from ..utils.print_format import print_scrolled
 
 from .base import Base
 
@@ -13,9 +16,9 @@ class Checkout(Base):
         # Подготовливаем окно.
         window = curses.newwin(curses.LINES, curses.COLS, 0, 0)
 
-        task_load = asyncio.create_task(self.load_spinner())
+        task_load = asyncio.create_task(load_spinner())
         task_get_cart_items = asyncio.create_task(
-            self.session.get_cart_items()
+            self.session.get_cart()
         )
 
         cart = await task_get_cart_items
@@ -25,7 +28,7 @@ class Checkout(Base):
             raise RuntimeError(cart[1])
 
         if len(cart['cart_items']) == 0:
-            raise LookupError('Ваша корзина пуста')
+            raise RuntimeError('Ваша корзина пуста')
 
         # Подготавливаем строки для вывода
         rows = [f"Итоговая цена: {cart['total_price']}"]
@@ -35,7 +38,7 @@ class Checkout(Base):
             rows.append(line)
 
         # Выводим корзину
-        self.print_scrolled(window, rows)
+        print_scrolled(window, rows)
         stdscr.clear()
 
     def choose_pickup_method_screen(self, stdscr: curses.window) -> int:
@@ -46,7 +49,7 @@ class Checkout(Base):
 
         # Выводим список выборов и получаем ответ пользователя
         choices = ['Доставка', 'Самовывоз']
-        choice_index = self.print_choices(
+        choice_index = print_choices(
             choice_window,
             choices
         )
@@ -75,7 +78,7 @@ class Checkout(Base):
 
             # Запускаем загрузку-крутилку
             task_load = asyncio.create_task(
-                self.load_spinner(output_window, 0, 0))
+                load_spinner(output_window, 0, 0))
             # Делаем запрос к серверу для получения адресов
             task_search = asyncio.create_task(search_addresses_func(address))
 
@@ -90,7 +93,7 @@ class Checkout(Base):
 
             # Выводим адреса, чтобы пользователь выбрал нужный
             # и получаем ответ от него
-            choice_index = self.print_choices(output_window, addresses)
+            choice_index = print_choices(output_window, addresses)
 
             # Даём человеку ввести ещё раз, если он не нашёл своего адреса
             if choice_index == 0:
@@ -112,7 +115,7 @@ class Checkout(Base):
         window = curses.newwin(curses.LINES, curses.COLS, 0, 0)
 
         # Получаем интервалы времени
-        task_load = asyncio.create_task(self.load_spinner(window, 0, 0))
+        task_load = asyncio.create_task(load_spinner(window, 0, 0))
         task_get_time_intervals = asyncio.create_task(
             get_time_intervals_func(address)
         )
@@ -148,7 +151,7 @@ class Checkout(Base):
                 formated_time_intervals.append(f"{f_start} - {f_end}")
 
         # Предлагаем пользователю выбрать подходящий интервал времени
-        choice_index = self.print_choices(window, formated_time_intervals)
+        choice_index = print_choices(window, formated_time_intervals)
         stdscr.clear()
 
         # Однако выбор потом нужно перевести обратно
@@ -164,7 +167,7 @@ class Checkout(Base):
 
         # Выводим список выборов и получаем ответ пользователя
         choices = ['online', 'offline']
-        choice_index = self.print_choices(
+        choice_index = print_choices(
             choice_window,
             choices
         )
@@ -215,5 +218,5 @@ class Checkout(Base):
         except Exception as e:
             curses.endwin()
             print(e)
-        finally:
-            curses.endwin()
+
+        curses.endwin()
