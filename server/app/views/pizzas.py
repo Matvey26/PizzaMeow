@@ -1,5 +1,4 @@
 from . import pizza_repository
-from . import user_repository
 from flask import abort
 
 

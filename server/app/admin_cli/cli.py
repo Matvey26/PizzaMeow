@@ -3,6 +3,7 @@
 import argparse
 from .commands import Base, Create, Delete
 
+
 def main():
     """Точка входа в CLI"""
     parser = argparse.ArgumentParser()  # Главный парсер
@@ -23,6 +24,6 @@ def main():
         'create': Create,
         'delete': Delete
     }
-    
+
     command = command_class.get(args.command, Base)(args)  # Создаём экземпляр команды
     command.run()

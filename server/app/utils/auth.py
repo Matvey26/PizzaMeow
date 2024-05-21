@@ -6,6 +6,7 @@ JWT_ISSUER = "PizzaMeow.ru"
 JWT_SECRET = "change_this"
 JWT_ALGORITHM = "HS256"
 
+
 def generate_token(sub, life_time_second: int):
     """Генерирует токен доступа. В качестве параметра sub нужно указать владельца.
     Например, в случае токена доступа для пользователя, в качестве sub нужно указать его id.

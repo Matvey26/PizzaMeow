@@ -10,7 +10,7 @@
 1. Для удобства создайте виртуальное окружение (если у вас его нет) `python3 -m venv venv`
 2. Активируйте виртуальное окружение 
 - `./venv/bin/activate` (или `source venv/bin/activate`) - если вы на **Unix**
-- ... - если вы на **Windows**
+- ???????? - если вы на **Windows**
 3. Установите зависимости `pip install -r requirements.txt`
 4. Находясь в папке PizzaMeow, запустите сервер:
 - `server/runserver.sh` - если вы на **Unix**

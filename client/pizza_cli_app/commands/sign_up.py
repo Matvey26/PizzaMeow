@@ -1,9 +1,14 @@
+import asyncio
+import getpass
+
 from .base import Base
-import getpass, os
+from ..utils.print_format import load_spinner
+
 
 class SignUp(Base):
     """Регистрация"""
-    def run(self, session):
+
+    async def run(self):
         email = self.options.email
 
         if '@' not in email:
@@ -13,16 +18,21 @@ class SignUp(Base):
         password = getpass.getpass('Введите пароль: ')
         check_password = getpass.getpass('Подтвердите пароль: ')
         if password != check_password:
-            print(f'Введенные пароли не совпали, попробуйте еще раз')
+            print('Введенные пароли не совпали, попробуйте еще раз')
             return
 
-        answer = session.sign_up(email, password)
+        task_load = asyncio.create_task(load_spinner())
+        task_sign_up = asyncio.create_task(
+            self.session.sign_up(email, password))
+
+        answer = await task_sign_up
+        task_load.cancel()
+
         if answer:
             print(answer[1])
             return
-        
-        print('Регистрация аккаунта была выполнена успешно. Теперь подтвердите почту.')
-        print(f'На {email} было отправлено письмо с ссылкой для подтверждения почты.')
-    
 
-    
+        print('Регистрация аккаунта была выполнена '
+              'успешно. Теперь подтвердите почту.')
+        print(f'Проверьте свою почту: {email}. На неё было '
+              'отправлено письмо с ссылкой для подтверждения почты.')

@@ -5,6 +5,7 @@ from sqlalchemy import desc
 from ..database import db_session
 from .models import Model
 
+
 class Repository(ABC):
     """Этот класс содержит общие методы, которые
     используются для всех других классов-репозиториев.
@@ -17,13 +18,12 @@ class Repository(ABC):
 
     def get(self, model_id: int) -> Model:
         """Получает модель из базы данных по id.
-        
+
         Параметры
         ---------
         model_id : int
             Целое число, айди записи, которую вы хотите получить.
-        
-    
+
         Возвращает
         ----------
         Model
@@ -37,7 +37,7 @@ class Repository(ABC):
     def get_all(self) -> list:
         """Получает все модели этого класса, которые
         содержатся в базе данных.
-        
+
         Возвращает
         ----------
         list :
@@ -48,7 +48,7 @@ class Repository(ABC):
 
     def save(self, model: Model) -> None:
         """Сохраняет модель в базе данных.
-        
+
         Параметры
         ---------
         model : Model
@@ -60,7 +60,7 @@ class Repository(ABC):
 
     def update(self, model: Model) -> None:
         """Обновляет существующую модель в базе данных.
-        
+
         Параметры
         ---------
         model : Model
@@ -71,12 +71,12 @@ class Repository(ABC):
 
     def delete(self, model: Model) -> int:
         """Удаляет модель из базы данных.
-        
+
         Параметры
         ---------
         model : Model
             Экземпляр модели, который нужно удалить.
-        
+
         Возвращает
         ----------
         id : int
@@ -102,17 +102,16 @@ class Repository(ABC):
             list: Список, содержащий ошибки полей.
         """
 
-
         return []
 
     def serialize(self, *models: Model) -> dict:
         """Сериализация объекта.
-        
+
         Параметры
         ---------
         model : Model
             Экземпляр модели, который нужно сериализовать.
-        
+
         Возвращает
         ----------
         dict
@@ -121,5 +120,5 @@ class Repository(ABC):
         serialized = []
         for model in models:
             serialized.append(model.serialize())
-        
+
         return serialized

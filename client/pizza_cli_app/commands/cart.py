@@ -1,17 +1,29 @@
+import asyncio
+import curses
+
+from ..utils.async_utils import aiter
+from ..utils.print_format import print_paged, load_spinner
 from .base import Base
-from ..api import Session
 
 
 class Cart(Base):
     """Выводит корзину пользователя"""
-    def run(self, session : Session):
+
+    async def run(self):
         show_id = self.options.show_id
-        answer = session.get_cart_items()
+
+        task_load = asyncio.create_task(load_spinner())
+        task_get_cart_items = asyncio.create_task(
+            self.session.get_cart()
+        )
+
+        answer = await task_get_cart_items
+        task_load.cancel()
 
         if isinstance(answer, tuple):
             print(answer[1])
             return
-        
+
         header = [
             f"Цена корзины: {answer['total_price']}",
             '+++++++++++++++++++++++++++++'
@@ -30,4 +42,13 @@ class Cart(Base):
             element.append(f"Размер пиццы - {item['size']}")
             element.append(f"Тип теста - {item['dough']}\n")
             elements.append(element)
-        self.print_paged(iter([elements]), header=header, sep=sep)
+
+        stdscr = curses.initscr()
+        stdscr.refresh()
+        window = curses.newwin(curses.LINES, curses.COLS, 0, 0)
+        await print_paged(
+            window,
+            aiter([elements]),
+            header=header,
+            sep=sep
+        )

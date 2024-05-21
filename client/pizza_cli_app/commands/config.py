@@ -1,11 +1,13 @@
+import asyncio
+
 from .base import Base
-from ..api.api import Session
+from ..utils.print_format import load_spinner
 
 
 class Config(Base):
     """Ввод/обновление данных."""
-        
-    def run(self, session: Session):
+
+    async def run(self):
         firstname = self.options.firstname
         lastname = self.options.lastname
         address = self.options.address
@@ -26,11 +28,15 @@ class Config(Base):
         if phone:
             data['phone'] = phone
             answer += f'Номер телефона успешно обновлен на {phone}\n'
-        
-        response = session.config(data)
+
+        task_load = asyncio.create_task(load_spinner())
+        task_config = asyncio.create_task(self.session.config(data))
+
+        response = await task_config
+        task_load.cancel()
+
         if response:
             print(response[1])
             return
-        
+
         print(answer.rstrip())
-        

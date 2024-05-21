@@ -31,7 +31,7 @@ class Model:
         ModelSchema = type(
             f'{self.__class__.__name__}Schema',
             (CustomSQLAlchemyAutoSchema,),
-            { 'Meta': Meta }
+            {'Meta': Meta}
         )
 
         self.model_schema = ModelSchema()
@@ -64,24 +64,24 @@ class OrderStatusEnum(enum.Enum):
     EN_ROUTE = 'en_route'  # в пути (если доставка)
     READY_TO_PICKUP = 'ready_to_pickup'  # готов к выдаче (если самовывоз)
     DONE = 'done'  # заказ завершён
-    CANCELLED = 'cancelled' # заказ был отменён
+    CANCELLED = 'cancelled'  # заказ был отменён
 
     def serialize(self):
         return self.value
 
 
 class PizzaSizeEnum(enum.Enum):
-    SMALL = 0
-    MEDIUM = 1
-    LARGE = 2
+    SMALL = 'small'
+    MEDIUM = 'medium'
+    LARGE = 'large'
 
     def serialize(self):
         return self.value
 
 
 class PizzaDoughEnum(enum.Enum):
-    THIN = 0
-    CLASSIC = 1
+    THIN = 'thin'
+    CLASSIC = 'classic'
 
     def serialize(self):
         return self.value
@@ -93,7 +93,7 @@ class PaymentMethodEnum(enum.Enum):
 
     def serialize(self):
         return self.value
-    
+
 
 class PaymentStatusEnum(enum.Enum):
     PENDING = 0
@@ -140,9 +140,10 @@ class Order(Base, Model):
     id = sa.Column(sa.Integer, primary_key=True)
     user_id = sa.Column(sa.Integer, sa.ForeignKey('users.id'), nullable=False)
     total_price = sa.Column(sa.Float, nullable=False)
+    delivery_price = sa.Column(sa.Float, default=0.)
     status = sa.Column(sa.Enum(OrderStatusEnum), default=OrderStatusEnum.PROCESS, nullable=False)
     address = sa.Column(sa.Text, nullable=False)
-    pickup_time = sa.Column(sa.DateTime, nullable=False)
+    pickup_time = sa.Column(sa.DateTime)
     created_at = sa.Column(sa.DateTime, server_default=func.now())
 
     user = relationship('User', back_populates='orders')
@@ -161,7 +162,7 @@ class Cart(Base, Model):
     cart_items = relationship('CartItem', back_populates='cart', cascade='all, delete-orphan, save-update')
 
 
-# Промежуточная таблица, чтобы сделать отношение "многие ко многим". Не обращайте внимание
+# Промежуточная таблица, чтобы сделать отношение "многие ко многим"
 class OrderItemTopping(Base, Model):
     __tablename__ = 'order_item_toppings'
 
@@ -177,7 +178,7 @@ class OrderItemTopping(Base, Model):
     )
 
 
-# Промежуточная таблица, чтобы сделать отношение "многие ко многим". Не обращайте внимание
+# Промежуточная таблица, чтобы сделать отношение "многие ко многим"
 class CartItemTopping(Base, Model):
     __tablename__ = 'cart_item_toppings'
 
@@ -196,12 +197,12 @@ class CartItemTopping(Base, Model):
 class OrderItem(Base, Model):
     __tablename__ = 'order_items'
 
-
     id = sa.Column(sa.Integer, primary_key=True)
     pizza_id = sa.Column(sa.Integer, sa.ForeignKey('pizzas.id'), nullable=False)
     total_price = sa.Column(sa.Float, nullable=False)
     size = sa.Column(sa.Enum(PizzaSizeEnum))
     quantity = sa.Column(sa.Integer)
+    dough = sa.Column(sa.Enum(PizzaDoughEnum))
     order_id = sa.Column(
         sa.Integer,
         sa.ForeignKey('orders.id'),

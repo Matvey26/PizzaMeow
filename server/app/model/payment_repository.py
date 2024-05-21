@@ -1,12 +1,12 @@
 from .repository import Repository
-from .models import Payment, User, Order, PaymentMethodEnum, PaymentStatusEnum
-import datetime
+from .models import Payment, Order, PaymentMethodEnum, PaymentStatusEnum
+
 
 class PaymentRepository(Repository):
     def __init__(self):
         Repository.__init__(self, Payment)
 
-    def create(self, order : Order, payment_method: str):
+    def create(self, order: Order, payment_method: str):
         return Payment(
             user=order.user,
             order=order,

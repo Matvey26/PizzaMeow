@@ -1,7 +1,7 @@
 from ..model.pizzeria_repository import PizzeriaRepository
 from ..model.order_repository import OrderRepository
 from ..model.payment_repository import PaymentRepository
-from ..model.models import PaymentStatusEnum, OrderStatusEnum
+from ..model.models import PaymentStatusEnum
 from ..model.models import Order
 import random
 import os
@@ -18,9 +18,6 @@ def generate_payment_url(id, amount):
 
 
 def calculate_delivery_cost(address):
-    if pizzeria_repository.is_pizzeria_address(address):
-        return 0
-
     return random.randint(50, 300)
 
 
@@ -28,3 +25,4 @@ async def cancel_order_if_not_paid(order: Order):
     await asyncio.sleep(15 * 60)
     if order.payment.payment_status == PaymentStatusEnum.PENDING:
         order_repository.mark_as_cancelled(order)
+        order_repository.save(order)
