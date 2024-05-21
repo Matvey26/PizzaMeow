@@ -1,11 +1,11 @@
-"""Класс текущей сессии, предоставляющий удобный интерфейс взаимодействия клиента с сервером."""
+"""Класс текущей сессии, предоставляющий
+интерфейс взаимодействия клиента с сервером."""
 
 import asyncio
 import aiohttp
 import functools
 from typing import List
 import geopy.geocoders
-from .mock_data import *
 import pathlib
 import json
 
@@ -29,8 +29,11 @@ def connection_error_handler(func):
 
 
 class Session:
-    """Класс текущей сессии. Предоставляет интерфейс для взаимодействия с сервером.
-    Автоматически запоминает токен доступа, что позволяет единожды авторизоваться и длительное время пользоваться приложением.
+    """Класс текущей сессии. Предоставляет интерфейс
+    для взаимодействия с сервером.
+    Автоматически запоминает токен доступа,
+    что позволяет единожды авторизоваться и
+    длительное время пользоваться приложением.
     По окончании работы необходимо закрыть сессию с помощью метода close()
     """
 
@@ -46,7 +49,8 @@ class Session:
             self.__token = json.load(file).get('token', '')
 
     async def close(self):
-        """Закрывает сессию. Необходимо вызывать после окончания работы с сессией."""
+        """Закрывает сессию. Необходимо вызывать
+        после окончания работы с сессией."""
         await self._session.close()
 
     @property
@@ -66,11 +70,12 @@ class Session:
         with save_path.open('w') as file:
             json.dump({'token': self.token}, file)
 
-    # ---------------- РАБОТА С УЧЁТНОЙ ЗАПИСЬЮ ПОЛЬЗОВАТЕЛЯ ---------------------
+    # ---------------- РАБОТА С УЧЁТНОЙ ЗАПИСЬЮ ПОЛЬЗОВАТЕЛЯ ------------------
 
     @connection_error_handler
     async def sign_in(self, email: str, password: str):
-        """По данным регистрационным данным запрашивает у сервера токен доступа.
+        """По данным регистрационным данным
+        запрашивает у сервера токен доступа.
 
         Параметры
         ---------
@@ -88,7 +93,8 @@ class Session:
         """
 
         params = {'email': email, 'password': password}
-        async with self._session.get(url + 'users/signin', params=params) as response:
+        async with self._session.get(url + 'users/signin', params=params) \
+                as response:
             if response.status == 200:
                 self.password = password
                 self.email = email
@@ -103,7 +109,8 @@ class Session:
         Параметры
         ---------
         email: str
-            Почта, которая будет привязана к аккаунту (которая будет использоваться при входе)
+            Почта, которая будет привязана к аккаунту
+            (которая будет использоваться при входе)
         password: str
             Пароль от аккаунта
 
@@ -115,7 +122,8 @@ class Session:
             Если запрос был обработан успешно, функция ничего не возвращает
         """
         params = {'email': email, 'password': password}
-        async with self._session.post(url + 'users/signup', json=params) as response:
+        async with self._session.post(url + 'users/signup', json=params) \
+                as response:
             if response.status == 200:
                 self.password = password
                 self.email = email
@@ -150,24 +158,33 @@ class Session:
         ничего,
             если данные успешно обновлены
         error: tuple
-            кортеж вида (код ошибки, сообщение ошибки), если что-то пошло не так
+            кортеж вида (код ошибки, сообщение ошибки),
+            если что-то пошло не так
         """
         headers = {
             'Content-Type': 'application/json',
             'Authorization': f'Bearer {self.token}'
         }
-        async with self._session.patch(url + 'users/config', json=data, headers=headers) as response:
+        async with self._session.patch(
+            url + 'users/config', json=data, headers=headers
+        ) as response:
             if response.status != 204:
                 return (response.status, (await response.json())['detail'])
 
     @connection_error_handler
-    async def change_password(self, email: str, old_password: str, new_password: str):
+    async def change_password(
+        self,
+        email: str,
+        old_password: str,
+        new_password: str
+    ):
         """Изменяет пароль от учётной записи на указанный.
 
         Параметры
         ---------
         email: str
-            Почта, которая привязана к той учётной записи, от которой надо поменять пароль
+            Почта, которая привязана к той учётной записи,
+            от которой надо поменять пароль
         old_password: str
             Старый пароль от учётной записи
         new_password: str
@@ -178,32 +195,45 @@ class Session:
             return answer
 
         headers = {'Authorization': f'Bearer {self.token}'}
-        async with self._session.put(url + 'users/change_password', data=new_password, headers=headers) as response:
+        async with self._session.put(
+            url + 'users/change_password',
+            data=new_password,
+            headers=headers
+        ) as response:
             if response.status != 204:
                 return (response.status, (await response.json())['detail'])
 
     @connection_error_handler
     async def reset_password(self, email: str):
-        """Отправляет сообщение с новыым паролем на указанную почту. Старый пароль сбрасывается и перестаёт работать.
+        """Отправляет сообщение с новыым паролем на указанную почту.
+        Старый пароль сбрасывается и перестаёт работать.
 
         Параметры
         ---------
         email: str
-            Почта, к которой был привязан аккаунт и на которую нужно отправить новый пароль.
+            Почта, к которой был привязан аккаунт
+            и на которую нужно отправить новый пароль.
 
         Возвращает
         ----------
         ничего,
             если сообщение было отправлено успешно
         error: tuple
-            кортеж вида (код ошибки, сообщение ошибки), если что-то пошло не так
+            кортеж вида (код ошибки, сообщение ошибки),
+            если что-то пошло не так
         """
-        async with self._session.put(url + 'users/reset_password', data=email) as response:
+        async with self._session.put(
+                url + 'users/reset_password', data=email) as response:
             if response.status != 204:
                 return (response.status, (await response.json())['detail'])
 
     @connection_error_handler
-    async def change_email(self, old_email: str, password: str, new_email: str):
+    async def change_email(
+        self,
+        old_email: str,
+        password: str,
+        new_email: str
+    ):
         """Изменяет почту от учётной записи на указанную.
 
         Параметры
@@ -220,7 +250,8 @@ class Session:
         ничего,
             если сообщение было отправлено успешно
         error: tuple
-            кортеж вида (код ошибки, сообщение ошибки), если что-то пошло не так
+            кортеж вида (код ошибки, сообщение ошибки),
+            если что-то пошло не так
         """
 
         answer = await self.sign_in(old_email, password)
@@ -228,7 +259,11 @@ class Session:
             return answer
 
         headers = {'Authorization': f'Bearer {self.token}'}
-        async with self._session.put(url + 'users/change_email', data=new_email, headers=headers) as response:
+        async with self._session.put(
+            url + 'users/change_email',
+            data=new_email,
+            headers=headers
+        ) as response:
             if response.status != 204:
                 return (response.status, (await response.json())['detail'])
 
@@ -258,11 +293,13 @@ class Session:
             }
 
         error: tuple
-            кортеж вида (код ошибки, сообщение ошибки), если что-то пошло не так
+            кортеж вида (код ошибки, сообщение ошибки),
+            если что-то пошло не так
         """
 
         params = {'limit': limit, 'offset': offset}
-        async with self._session.get(url + 'pizzas', params=params) as response:
+        async with self._session.get(
+                url + 'pizzas', params=params) as response:
             if response.status == 200:
                 return await response.json()
             return (response.status, (await response.json())['detail'])
@@ -278,7 +315,9 @@ class Session:
 
     @connection_error_handler
     async def get_cart_items(self):
-        """Получить содержимое своей корзины (без пагинации, так как размер корзины заведомо небольшой)
+        """Получить содержимое своей корзины (без пагинации,
+        так как размер корзины заведомо небольшой)
+
         Корзина представляет собой словарь вида
 
         {
@@ -291,7 +330,8 @@ class Session:
 
         {
             'id': int,  # уникальный ID элемента корзины
-            'total_price': float  # цена за объект корзины (с учётом количества, размера, теста)
+            'total_price': float  # цена за объект корзины
+                (с учётом количества, размера, теста)
             'pizza_id': int,
             'pizza_name': str,
             'quantity': int,
@@ -304,11 +344,13 @@ class Session:
         cart: dict
             Корзина в указанном формате
         error: tuple
-            кортеж вида (код ошибки, сообщение ошибки), если что-то пошло не так
+            кортеж вида (код ошибки, сообщение ошибки),
+            если что-то пошло не так
         """
 
         headers = {'Authorization': f'Bearer {self.token}'}
-        async with self._session.get(url + 'carts', headers=headers) as response:
+        async with self._session.get(
+                url + 'carts', headers=headers) as response:
             if response.status == 200:
                 return await response.json()
             return (response.status, (await response.json())['detail'])
@@ -327,10 +369,14 @@ class Session:
             Словарь с добавляемым объектом в следующем формате:
 
             {
-                'pizza_id': int,  # Айди пиццы, которую нужно добавить в корзину
-                'quantity': int,  # Количество штук пицц. По умолчанию должно быть 1
-                'size': str | int,  #Размер пиццы, а именно 'small', 'medium', 'large' или 1, 2, 3. По умолчанию 1
-                'dough': str | int,  # Желаемое тесто, а именно 'classic' или 'thin'. По умолчанию должно быть 1
+                'pizza_id': int,  # Айди пиццы, которую
+                                    нужно добавить в корзину
+                'quantity': int,  # Количество штук пицц.
+                                    По умолчанию должно быть 1
+                'size': str | int,  # Размер пиццы, а именно 'small', 'medium',
+                                      'large' или 1, 2, 3. По умолчанию 1
+                'dough': str | int,  # Желаемое тесто, а именно 'classic' или
+                                       'thin'. По умолчанию должно быть 1
             }
 
         Возвращает
@@ -338,14 +384,16 @@ class Session:
         ничего,
             если сообщение было отправлено успешно
         error: tuple
-            кортеж вида (код ошибки, сообщение ошибки), если что-то пошло не так
+            кортеж вида (код ошибки, сообщение ошибки),
+            если что-то пошло не так
         """
 
         headers = {
             'Content-Type': 'application/json',
             'Authorization': f'Bearer {self.token}'
         }
-        async with self._session.post(url + 'carts', json=data, headers=headers) as response:
+        async with self._session.post(
+                url + 'carts', json=data, headers=headers) as response:
             if response.status != 204:
                 return (response.status, (await response.json())['detail'])
 
@@ -362,9 +410,12 @@ class Session:
 
             {
                 'pizza_id': ID пиццы (на который нужно поменять)
-                'dough': Другое тесто, а именно 'classic' или 'thin'. По умолчанию должно быть 1
-                'quantity': Другое количество штук пицц. По умолчанию должно быть 1
-                'size': Новый размер пиццы, а именно 'small', 'medium', 'large' или 1, 2, 3. По умолчанию 1
+                'dough': Другое тесто, а именно 'classic' или 'thin'.
+                         По умолчанию должно быть 1
+                'quantity': Другое количество штук пицц.
+                            По умолчанию должно быть 1
+                'size': Новый размер пиццы, а именно 'small', 'medium',
+                        'large' или 1, 2, 3. По умолчанию 1
             }
 
         Возвращает
@@ -372,14 +423,17 @@ class Session:
         ничего,
             если сообщение было отправлено успешно
         error: tuple
-            кортеж вида (код ошибки, сообщение ошибки), если что-то пошло не так
+            кортеж вида (код ошибки, сообщение ошибки),
+            если что-то пошло не так
         """
 
         headers = {
             'Content-Type': 'application/json',
             'Authorization': f'Bearer {self.token}'
         }
-        async with self._session.patch(url + f'carts/{item_id}', json=data, headers=headers) as response:
+        async with self._session.patch(
+                url + f'carts/{item_id}',
+                json=data, headers=headers) as response:
             if response.status != 204:
                 return (response.status, (await response.json())['detail'])
 
@@ -397,11 +451,13 @@ class Session:
         ничего,
             если сообщение было отправлено успешно
         error: tuple
-            кортеж вида (код ошибки, сообщение ошибки), если что-то пошло не так
+            кортеж вида (код ошибки, сообщение ошибки),
+            если что-то пошло не так
         """
 
         headers = {'Authorization': f'Bearer {self.token}'}
-        async with self._session.delete(url + f'carts/{item_id}', headers=headers) as response:
+        async with self._session.delete(
+                url + f'carts/{item_id}', headers=headers) as response:
             if response.status != 204:
                 return (response.status, (await response.json())['detail'])
 
@@ -418,31 +474,41 @@ class Session:
 
             {
                 'is_delivery': bool,  # Флаг, требуется ли доставлять заказ.
-                'address': str,  # Если is_delivery = True, тогда это адрес, куда нужно доставить. Иначе адрес пиццерии, где нужно забрать заказ.
-                'time_interval': List[str],  # Пара двух строк, в которых записано время в формате iso (можно пользоваться datetime.isoformat()).
-                'payment_method': Enum('online', 'offline')  # Одна из двух строк, которая говорит, как будет производиться оплата заказа
+                'address': str,  # Если is_delivery = True, тогда это адрес,
+                        куда нужно доставить. Иначе
+                        адрес пиццерии, где нужно забрать заказ.
+                'time_interval': List[str],  # Пара двух строк, в которых
+                        записано время в формате iso
+                        (можно пользоваться datetime.isoformat()).
+                'payment_method': Enum('online', 'offline')  # Одна из двух
+                        строк, которая говорит, как будет
+                        производиться оплата заказа
             }
 
         Возвращает
         ----------
         payment_url: str
-            Ссылку на оплату заказа, если payment_method = 'online' и запрос обработан успешно
+            Ссылку на оплату заказа, если
+            payment_method = 'online' и запрос обработан успешно
         ничего
             Если payment_method = 'offline' и запрос обработан успешно
         error: tuple
-            кортеж вида (код ошибки, сообщение ошибки), если что-то пошло не так
+            кортеж вида (код ошибки, сообщение ошибки),
+            если что-то пошло не так
         """
         headers = {
             'Content-Type': 'application/json',
             'Authorization': f'Bearer {self.token}'
         }
-        async with self._session.post(url + 'orders', json=data, headers=headers) as response:
+        async with self._session.post(
+                url + 'orders', json=data, headers=headers) as response:
             if response.status == 200:
                 return await response.text()  # ссылка на оплату
             return (response.status, (await response.json())['detail'])
 
     @connection_error_handler
-    async def get_orders(self, limit: int, offset: int, active=True, completed=False):
+    async def get_orders(
+            self, limit: int, offset: int, active=True, completed=False):
         """Получить страницу со всеми сделанными заказами.
 
         Параметры
@@ -450,11 +516,14 @@ class Session:
         limit: int
             Максимум заказов в странице
         offset: int
-            Отступ от начала всех заказов (не глобально всех заказов, а относительно заказов пользователя)
+            Отступ от начала всех заказов (не глобально всех заказов,
+            а относительно заказов пользователя)
         active: bool
-            Флаг, active=True, возвращаются в том числе активные заказы (по умолчанию = True)
+            Флаг, active=True, возвращаются в том числе
+            активные заказы (по умолчанию = True)
         completed: bool
-            Флаг, completed=True, возвращаются в том числе завершённые заказы (по умолчанию = False)
+            Флаг, completed=True, возвращаются в том числе
+            завершённые заказы (по умолчанию = False)
 
         Возвращает
         ----------
@@ -463,22 +532,31 @@ class Session:
 
             {
                 'id': int,  # ID заказа
-                'status': Enum('process', 'cooking', 'en_route', 'ready_to_pickup', 'done', 'cancelled'),  # Строка, описывающая состояние заказа
+                'status': Enum('process', 'cooking',
+                               'en_route', 'ready_to_pickup',
+                               'done', 'cancelled'),
                 'order_items': {
                     'total_price': int,  # итоговая цена за данную позицию
                     'pizza_name': str,  # название пиццы в этой позиции
                     'quantity': int,  # количество заказанных пицц
-                    'size': Enum('small', 'medium', 'large'),  # размер заканных пицц
+                    'size': Enum('small', 'medium', 'large'),
                     'dough': Enum('thin', 'classic')  # тесто заканных пицц
                 }
             }
         error: tuple
-            Кортеж вида (код ошибки, сообщение ошибки), если что-то пошло не так
+            Кортеж вида (код ошибки, сообщение ошибки),
+            если что-то пошло не так
         """
 
-        params = {'limit': limit, 'offset': offset}
+        params = {
+            'limit': limit,
+            'offset': offset,
+            'active': active,
+            'completed': completed
+        }
         headers = {'Authorization': f'Bearer {self.token}'}
-        async with self._session.get(url + 'orders', headers=headers, params=params) as response:
+        async with self._session.get(
+                url + 'orders', headers=headers, params=params) as response:
             if response.status == 200:
                 return await response.json()
             return (response.status, (await response.json())['detail'])
@@ -498,21 +576,25 @@ class Session:
 
             {
                 'id': int,  # ID заказа
-                'status': Enum('process', 'cooking', 'en_route', 'ready_to_pickup', 'done', 'cancelled'),  # Строка, описывающая состояние заказа
+                'status': Enum('process', 'cooking',
+                               'en_route', 'ready_to_pickup',
+                               'done', 'cancelled'),
                 'order_items': {
                     'total_price': int,  # итоговая цена за данную позицию
                     'pizza_name': str,  # название пиццы в этой позиции
                     'quantity': int,  # количество заказанных пицц
-                    'size': Enum('small', 'medium', 'large'),  # размер заканных пицц
+                    'size': Enum('small', 'medium', 'large'),  # размер пицц
                     'dough': Enum('thin', 'classic')  # тесто заканных пицц
                 }
             }
         error: tuple
-            Кортеж вида (код ошибки, сообщение ошибки), если что-то пошло не так
+            Кортеж вида (код ошибки, сообщение ошибки),
+            если что-то пошло не так
         """
 
         headers = {'Authorization': f'Bearer {self.token}'}
-        async with self._session.get(url + f'orders/{order_id}', headers=headers) as response:
+        async with self._session.get(
+                url + f'orders/{order_id}', headers=headers) as response:
             if response.status == 200:
                 return await response.json()
             return (response.status, (await response.json())['detail'])
@@ -526,20 +608,25 @@ class Session:
         Параметры
         ---------
         address: str
-            Адрес, куда нужно доставить заказ. Сервер сам учтёт время на приготовление заказа.
+            Адрес, куда нужно доставить заказ.
+            Сервер сам учтёт время на приготовление заказа.
 
         Возвращает
         ----------
         time_intervals: List[List[str]]
             Список интервалов времени, в которые может приехать курьер.
-            Список состоит из пар строк, которые являются временем в формате iso (можно воспользоваться datetime.isoformat()).
+            Список состоит из пар строк, которые являются временем
+            в формате iso (можно воспользоваться datetime.isoformat()).
         error: tuple
-            Кортеж вида (код ошибки, сообщение ошибки), если что-то пошло не так
+            Кортеж вида (код ошибки, сообщение ошибки),
+            если что-то пошло не так
         """
 
         headers = {'Authorization': f'Bearer {self.token}'}
         params = {'address': address}
-        async with self._session.get(url + 'time/delivery', headers=headers, params=params) as response:
+        async with self._session.get(
+                url + 'time/delivery',
+                headers=headers, params=params) as response:
             if response.status == 200:
                 return await response.json()
             return (response.status, (await response.json())['detail'])
@@ -551,20 +638,25 @@ class Session:
         Параметры
         ---------
         address: str
-            Адрес пиццерии, где пользователь хочет забрать заказ. Сервер сам учтёт время на приготовление заказа.
+            Адрес пиццерии, где пользователь хочет забрать заказ.
+            Сервер сам учтёт время на приготовление заказа.
 
         Возвращает
         ----------
         time_intervals: List[List[str]]
             Список интервалов времени, в которые можно забрать заказ
-            Список состоит из пар строк, которые являются временем в формате iso (можно воспользоваться datetime.isoformat()).
+            Список состоит из пар строк, которые являются временем
+            в формате iso (можно воспользоваться datetime.isoformat()).
         error: tuple
-            Кортеж вида (код ошибки, сообщение ошибки), если что-то пошло не так
+            Кортеж вида (код ошибки, сообщение ошибки),
+            если что-то пошло не так
         """
 
         headers = {'Authorization': f'Bearer {self.token}'}
         params = {'pizzeria_address': pizzeria_address}
-        async with self._session.get(url + 'time/cooking', headers=headers, params=params) as response:
+        async with self._session.get(
+                url + 'time/cooking',
+                headers=headers, params=params) as response:
             if response.status == 200:
                 return await response.text()
             return (response.status, (await response.json())['detail'])
@@ -579,18 +671,21 @@ class Session:
         Параметры
         ---------
         address: str
-            Необязательный параметр. Если указан, то адреса пиццерий отсортируются в порядке удаления от этого адреса
+            Необязательный параметр. Если указан, то адреса
+            пиццерий отсортируются в порядке удаления от этого адреса
 
         Возвращает
         ----------
         pizzeria_addresses: List[str]
             Адреса пиццерий
         error: tuple
-            Кортеж вида (код ошибки, сообщение ошибки), если что-то пошло не так
+            Кортеж вида (код ошибки, сообщение ошибки),
+            если что-то пошло не так
         """
 
         params = {'address': address}
-        async with self._session.get(url + 'pizzeria/address', params=params) as response:
+        async with self._session.get(
+                url + 'pizzeria/address', params=params) as response:
             if response.status == 200:
                 return await response.text()
             return (response.status, (await response.json())['detail'])
@@ -601,14 +696,16 @@ class Session:
         Параметры
         ---------
         address: str
-            Адрес, который будет геокодирован и для которого будут найдены наиболее релевантные адреса
+            Адрес, который будет геокодирован и для которого
+            будут найдены наиболее релевантные адреса
 
         Возвращает
         ----------
         addresses: List[str]
             Список адресов, похожих на указанный
         error: tuple
-            Кортеж вида (код ошибки, сообщение ошибки), если что-то пошло не так
+            Кортеж вида (код ошибки, сообщение ошибки),
+            если что-то пошло не так
         """
 
         loop = asyncio.get_running_loop()
@@ -622,6 +719,8 @@ class Session:
         return [loc.address for loc in locations]
 
     async def is_valid_pickup_time(self, time: str) -> str:
-        """Принимает строку с датой и временем в формате iso и проверяет, можно ли забрать заказ в это время.
-        Ничего не возвращает, если всё хорошо. Если время не подходит, возвращает строку с объяснением."""
+        """Принимает строку с датой и временем в формате iso
+        и проверяет, можно ли забрать заказ в это время.
+        Ничего не возвращает, если всё хорошо.
+        Если время не подходит, возвращает строку с объяснением."""
         return

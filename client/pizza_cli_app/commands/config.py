@@ -27,7 +27,6 @@ class Config(Base):
             data['phone'] = phone
             answer += f'Номер телефона успешно обновлен на {phone}\n'
 
-
         task_load = asyncio.create_task(self.load_spinner())
         task_config = asyncio.create_task(self.session.config(data))
 

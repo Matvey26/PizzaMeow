@@ -25,8 +25,12 @@ class Change(Base):
         if quantity > -1:
             data['quantity'] = quantity
 
-        task_load = asyncio.create_task(self.load_spinner())
-        task_update_item_in_cart = asyncio.create_task(self.session.update_item_in_cart(item_id, data))
+        task_load = asyncio.create_task(
+            self.load_spinner()
+        )
+        task_update_item_in_cart = asyncio.create_task(
+            self.session.update_item_in_cart(item_id, data)
+        )
 
         response = await task_update_item_in_cart
         task_load.cancel()

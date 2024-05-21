@@ -54,7 +54,12 @@ class Checkout(Base):
         stdscr.clear()
         return choices[choice_index]
 
-    async def choose_address_screen(self, stdscr: curses.window, search_addresses_func) -> str:
+    async def choose_address_screen(
+        self,
+        stdscr: curses.window,
+        search_addresses_func
+    ) -> str:
+
         # Подготавливаем окно
         stdscr.addstr(0, 0, 'Начните вводить адрес и нажмите Enter:')
         stdscr.refresh()
@@ -83,7 +88,8 @@ class Checkout(Base):
             addresses = ['Повторить ввод'] + addresses
             output_window.clear()
 
-            # Выводим адреса, чтобы пользователь выбрал нужный и получаем ответ от него
+            # Выводим адреса, чтобы пользователь выбрал нужный
+            # и получаем ответ от него
             choice_index = self.print_choices(output_window, addresses)
 
             # Даём человеку ввести ещё раз, если он не нашёл своего адреса
@@ -95,7 +101,12 @@ class Checkout(Base):
             stdscr.clear()
             return addresses[choice_index]
 
-    async def choose_time_interval(self, stdscr: curses.window, address: str, get_time_intervals_func) -> List[str]:
+    async def choose_time_interval(
+        self,
+        stdscr: curses.window,
+        address: str,
+        get_time_intervals_func
+    ) -> List[str]:
         # Подготавливаем окно
         stdscr.refresh()
         window = curses.newwin(curses.LINES, curses.COLS, 0, 0)
@@ -105,7 +116,8 @@ class Checkout(Base):
         task_get_time_intervals = asyncio.create_task(
             get_time_intervals_func(address)
         )
-        # time_intervals хранит пары строк, которые представляют собой объект datetime в iso формате в часовом поясе UTC
+        # time_intervals хранит пары строк, которые представляют собой
+        # объект datetime в iso формате в часовом поясе UTC
         time_intervals = await task_get_time_intervals
         task_load.cancel()
 
@@ -139,7 +151,8 @@ class Checkout(Base):
         choice_index = self.print_choices(window, formated_time_intervals)
         stdscr.clear()
 
-        # Однако выбор потом нужно перевести обратно в универсальный строчный формат
+        # Однако выбор потом нужно перевести обратно
+        # в универсальный строчный формат
         stdscr.clear()
         return time_intervals[choice_index]
 
@@ -175,11 +188,17 @@ class Checkout(Base):
                 get_time_intervals_function = self.session.get_time_delivery
 
             elif chosen_pickup_method == 'Самовывоз':
-                search_addresses_function = self.session.get_pizzerias_addresses
+                search_addresses_function = (
+                    self.session.get_pizzerias_addresses
+                )
                 get_time_intervals_function = self.session.get_time_cooking
 
-            address = await self.choose_address_screen(stdscr, search_addresses_function)
-            time_interval = await self.choose_time_interval(stdscr, address, get_time_intervals_function)
+            address = await self.choose_address_screen(
+                stdscr, search_addresses_function
+            )
+            time_interval = await self.choose_time_interval(
+                stdscr, address, get_time_intervals_function
+            )
             payment_method = await self.choose_payment_method_screen(stdscr)
             payref = await self.session.create_order({
                 'is_delivery': bool(chosen_pickup_method == 'Доставка'),

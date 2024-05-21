@@ -12,7 +12,9 @@ class ChangeEmail(Base):
         password = getpass.getpass("Введите пароль: ")
 
         task_load = asyncio.create_task(self.load_spinner())
-        task_change_email = asyncio.create_task(self.session.change_email(old_email, password, new_email))
+        task_change_email = asyncio.create_task(
+            self.session.change_email(old_email, password, new_email)
+        )
 
         answer = await task_change_email
         task_load.cancel()
@@ -22,4 +24,7 @@ class ChangeEmail(Base):
             return
 
         print('Новая почта привязана к учётной записи.')
-        print(f'На {new_email} было отправлено письмо с ссылкой для её подтверждения.')
+        print(
+            f'На {new_email} было отправлено '
+            'письмо с ссылкой для её подтверждения.'
+        )

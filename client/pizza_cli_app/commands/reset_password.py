@@ -9,7 +9,9 @@ class ResetPasssword(Base):
         email = self.options.email
 
         task_load = asyncio.create_task(self.load_spinner())
-        task_reset_password = asyncio.create_task(self.session.reset_password(email))
+        task_reset_password = asyncio.create_task(
+            self.session.reset_password(email)
+        )
 
         answer = await task_reset_password
         task_load.cancel()

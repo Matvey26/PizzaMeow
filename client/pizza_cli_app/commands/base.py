@@ -6,6 +6,11 @@ from ..api.api import Session
 import sys
 
 
+PAGED_HELP = 'Type n, p or q (next, prev or quit):'
+SCROLLED_HELP = 'Use up/down arrows. Press Enter to continue.'
+CHOICES_HELP = 'Use up/down arrows. Press Enter to continue.'
+
+
 class Base:
     """Базовая команда"""
 
@@ -16,8 +21,14 @@ class Base:
     def run(self):
         raise NotImplementedError('You must implement the run() method!')
 
-    async def load_spinner(self, window: curses.window = None, y: int = 0, x: int = 0):
-        """Отрисовывает строчку с загрузкой крутилкой в объекте окна window (библиотека curses)
+    async def load_spinner(
+        self,
+        window: curses.window = None,
+        y: int = 0,
+        x: int = 0
+    ):
+        """Отрисовывает строчку с загрузкой крутилкой
+        в объекте окна window (библиотека curses)
         на позиции x, y (y - строка терминала, x - столбец терминала).
 
         Если не указан параметр window, тогда вывод будет происходить в stderr.
@@ -67,10 +78,13 @@ class Base:
         Параметры
         ---------
         window: curses.window
-            Объект класса window модуля curses - окно, в котором будут отрисовываться страницы
+            Объект класса window модуля curses - окно,
+            в котором будут отрисовываться страницы
         loader: AsyncIterator[List[str]]
-            Асинхронный генератор элементов. В генераторе каждый элемент должен быть представлен в виде списка строк для вывода
-            Например, каждый элемент меню пиццерии может представлено в виде списка ["название пиццы", "описание пиццы"].
+            Асинхронный генератор элементов. В генераторе каждый элемент
+            должен быть представлен в виде списка строк для вывода
+            Например, каждый элемент меню пиццерии может быть представлен
+            в виде списка ["название пиццы", "описание пиццы"].
         limit: int
             Максимальное число элементов на странице
         header: List[str]
@@ -81,20 +95,23 @@ class Base:
             Строки, которые используются как разделитель между элементами
         """
 
-        HELP_TEXT = "Type n, p or q (next, prev or quit):"
-
         # Получаем размеры окна
         MAX_ROWS = window.getmaxyx()[0]
         free_rows = MAX_ROWS - len(header) - len(footer) - 1
 
-        def extend_pages(new_elements: List[List[str]], pages: List[List[str]]) -> List[List[str]]:
+        def extend_pages(
+            new_elements: List[List[str]],
+            pages: List[List[str]]
+        ) -> List[List[str]]:
             """Добавляет к текущим страницам новые элементы."""
             buffer = pages.pop()
             buffer_elements_count = buffer.pop()
             for element in new_elements:
                 if not element:
                     continue
-                if len(buffer) + len(element) + len(sep) >= free_rows or buffer_elements_count >= limit:
+                if len(buffer) + len(element) + len(sep) >= free_rows or \
+                        buffer_elements_count >= limit:
+
                     buffer.append(buffer_elements_count)
                     pages.append(buffer)
                     buffer = element
@@ -133,19 +150,21 @@ class Base:
             for s in footer:
                 window.addstr(i, 0, s)
                 i += 1
-            window.addstr(MAX_ROWS - 1, 0, HELP_TEXT)
+            window.addstr(MAX_ROWS - 1, 0, PAGED_HELP)
             window.refresh()
 
         error_message = ''
         try:
-            # Подгружаем первую пачку элементов, формируем страницы и отображаем первую страницу
+            # Подгружаем первую пачку элементов,
+            # формируем страницы и отображаем первую страницу
             window.clear()
             window.refresh()
 
-            task_spinner = asyncio.create_task(self.load_spinner(window, len(header), 0))
+            task_spinner = asyncio.create_task(
+                self.load_spinner(window, len(header), 0))
             task_load = asyncio.create_task(load(loader))
 
-            new_elements = await(task_load)
+            new_elements = await (task_load)
             task_spinner.cancel()
 
             pages = extend_pages(new_elements, [[0]])
@@ -166,10 +185,11 @@ class Base:
                     if cur + 1 >= len(pages) - 1:
                         window.clear()
                         window.refresh()
-                        task_spinner = asyncio.create_task(self.load_spinner(window, len(header), 0))
+                        task_spinner = asyncio.create_task(
+                            self.load_spinner(window, len(header), 0))
                         task_load = asyncio.create_task(load(loader))
 
-                        new_elements = await(task_load)
+                        new_elements = await (task_load)
                         task_spinner.cancel()
 
                         pages = extend_pages(new_elements, pages)
@@ -192,12 +212,14 @@ class Base:
         footer: List[str] = [],
         sep: List[str] = []
     ) -> None:
-        """Выводит список строк, который пролистывается вверх и вниз с помощью стрелок (по одной строчке за раз)
+        """Выводит список строк, который пролистывается
+        вверх и вниз с помощью стрелок (по одной строчке за раз)
 
         Параметры
         ---------
         window: curses.window
-            Объект класса window модуля curses - окно, в котором будут отрисовываться страницы
+            Объект класса window модуля curses - окно,
+            в котором будут отрисовываться страницы
         rows: List[str]
             Строки, которые нужно вывести в виде пролистывающегося списка
         header: List[str]
@@ -207,8 +229,6 @@ class Base:
         sep: List[str]
             Строки, которые используются как разделитель между элементами
         """
-
-        HELP_TEXT = 'Используйте стрелки вверх/вниз. Нажмите Enter чтобы продолжить.'
 
         MAX_ROWS = window.getmaxyx()[0]
         FREE_ROWS = MAX_ROWS - len(header) - len(footer) - 1
@@ -232,7 +252,7 @@ class Base:
                 for s in footer:
                     window.addstr(i, 0, s)
                     i += 1
-                window.addstr(MAX_ROWS - 1, 0, HELP_TEXT)
+                window.addstr(MAX_ROWS - 1, 0, SCROLLED_HELP)
                 window.refresh()
 
             print_all()
@@ -262,13 +282,21 @@ class Base:
             curses.endwin()
             raise
 
-    def print_choices(self, window: curses.window, choices: List[str], header: List[str] = [], footer: List[str] = [], sep: List[str] = []) -> int:
+    def print_choices(
+        self,
+        window: curses.window,
+        choices: List[str],
+        header: List[str] = [],
+        footer: List[str] = [],
+        sep: List[str] = []
+    ) -> int:
         """Разбивает список элементов на страницы и выводит их постранично.
 
         Параметры
         ---------
         window: curses.window
-            Объект класса window модуля curses - окно, в котором всё будет отображаться
+            Объект класса window модуля curses - окно,
+            в котором всё будет отображаться
         choices: List[str]
             Список строк, каждая строка - отдельный выбор.
         header: List[str]
@@ -281,10 +309,9 @@ class Base:
         Возвращает
         ----------
         selected_choice: int
-            Индекс выбранного элемента (0-индексация, относитеьлно списка choices)
+            Индекс выбранного элемента
+            (0-индексация, относитеьлно списка choices)
         """
-
-        HELP_TEXT = 'Используйте стрелки вверх/вниз. Нажмите Enter чтобы продолжить.'
 
         MAX_ROWS = window.getmaxyx()[0]
         FREE_ROWS = MAX_ROWS - len(header) - len(footer) - 1
@@ -299,7 +326,9 @@ class Base:
                 for s in header:
                     window.addstr(i, 0, s)
                     i += 1
-                for choice_index, choice in enumerate(choices[offset:offset + FREE_ROWS]):
+                for choice_index, choice in \
+                        enumerate(choices[offset:offset + FREE_ROWS]):
+
                     choice_index += offset
                     if choice_index == selected_choice:
                         window.addstr(i, 0, choice, curses.A_BOLD)
@@ -309,7 +338,7 @@ class Base:
                 for s in footer:
                     window.addstr(i, 0, s)
                     i += 1
-                window.addstr(MAX_ROWS - 1, 0, HELP_TEXT)
+                window.addstr(MAX_ROWS - 1, 0, CHOICES_HELP)
                 window.refresh()
 
             print_choices()

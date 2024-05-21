@@ -18,11 +18,13 @@ class Add(Base):
         }
 
         task_load = asyncio.create_task(self.load_spinner())
-        task_add_item_to_cart = asyncio.create_task(self.session.add_item_to_cart(data))
+        task_add_item_to_cart = asyncio.create_task(
+            self.session.add_item_to_cart(data)
+        )
 
         response = await task_add_item_to_cart
         task_load.cancel()
-        
+
         if response:
             print(response[1])
             return

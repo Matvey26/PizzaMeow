@@ -12,7 +12,7 @@ class ChangePasssword(Base):
         new_password = getpass.getpass('Введите новый пароль: ')
         check_new_password = getpass.getpass('Подтвердите новый пароль: ')
         if new_password != check_new_password:
-            print(f'Введенные пароли не совпали, попробуйте еще раз')
+            print('Введенные пароли не совпали, попробуйте еще раз')
             return
 
         task_load = asyncio.create_task(self.load_spinner())

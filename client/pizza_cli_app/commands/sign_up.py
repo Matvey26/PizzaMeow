@@ -16,11 +16,12 @@ class SignUp(Base):
         password = getpass.getpass('Введите пароль: ')
         check_password = getpass.getpass('Подтвердите пароль: ')
         if password != check_password:
-            print(f'Введенные пароли не совпали, попробуйте еще раз')
+            print('Введенные пароли не совпали, попробуйте еще раз')
             return
 
         task_load = asyncio.create_task(self.load_spinner())
-        task_sign_up = asyncio.create_task(self.session.sign_up(email, password))
+        task_sign_up = asyncio.create_task(
+            self.session.sign_up(email, password))
 
         answer = await task_sign_up
         task_load.cancel()
@@ -29,5 +30,7 @@ class SignUp(Base):
             print(answer[1])
             return
 
-        print('Регистрация аккаунта была выполнена успешно. Теперь подтвердите почту.')
-        print(f'Проверьте свою почту: {email}. На неё было отправлено письмо с ссылкой для подтверждения почты.')
+        print('Регистрация аккаунта была выполнена '
+              'успешно. Теперь подтвердите почту.')
+        print(f'Проверьте свою почту: {email}. На неё было '
+              'отправлено письмо с ссылкой для подтверждения почты.')
