@@ -4,7 +4,7 @@ from flask import abort
 import asyncio
 
 
-def get_orders_page(limit: str, offset: str, user: str, token_info: dict):
+def get_orders_page(limit: str, offset: str, active: bool, completed: bool, user: str, token_info: dict):
     user_id = int(user)
     user = user_repository.get(user_id)
     if user is None:
@@ -12,7 +12,9 @@ def get_orders_page(limit: str, offset: str, user: str, token_info: dict):
     page = order_repository.get_page_by_user(
         user=user,
         limit=limit,
-        offset=offset
+        offset=offset,
+        active=active,
+        completed=completed
     )
 
     return order_repository.serialize(*page)

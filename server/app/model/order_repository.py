@@ -3,8 +3,21 @@ from .models import User, Order, OrderStatusEnum, PaymentMethodEnum
 from .payment_repository import PaymentRepository
 from datetime import datetime
 from typing import List
+from sqlalchemy import or_
 
 payment_repository = PaymentRepository()
+
+active_statuses = [
+    OrderStatusEnum.PROCESS,
+    OrderStatusEnum.COOKING,
+    OrderStatusEnum.EN_ROUTE,
+    OrderStatusEnum.READY_TO_PICKUP
+]
+
+completed_statuses = [
+    OrderStatusEnum.DONE,
+    OrderStatusEnum.CANCELLED
+]
 
 
 class OrderRepository(Repository):
@@ -44,8 +57,19 @@ class OrderRepository(Repository):
 
         return new_order
 
-    def get_page_by_user(self, user: User, limit: int, offset: int):
-        return tuple(self.session.query(Order).filter_by(user_id=user.id).offset(offset).limit(limit).all())
+    def get_page_by_user(self, user: User, limit: int, offset: int, active: bool, completed: bool):
+        query = self.session.query(Order).filter_by(user_id=user.id)
+
+        if active and not completed:
+            query = query.filter(Order.status.in_(active_statuses))
+        elif completed and not active:
+            query = query.filter(Order.status.in_(completed_statuses))
+        elif active and completed:
+            query = query.filter(or_(Order.status.in_(active_statuses),
+                                     Order.status.in_(completed_statuses)))
+
+        answer = tuple(query.limit(limit).offset(offset).all())
+        return answer
 
     def change_status(self, order: Order, new_status: int):
         order.status = OrderStatusEnum(new_status)
@@ -62,7 +86,8 @@ class OrderRepository(Repository):
         serialized = []
         for order in orders:
             if not isinstance(order, Order):
-                raise TypeError('В списке заказов найден экземпляр другого класса')
+                raise TypeError(
+                    'В списке заказов найден экземпляр другого класса')
             data = order.serialize()
             data['order_items'] = []
             for order_item in order.order_items:

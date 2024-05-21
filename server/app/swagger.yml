@@ -296,6 +296,16 @@ paths:
           schema:
             type: integer
             minimum: 1
+        - name: active
+          description: Если True, тогда будут получены в том числе активные заказы
+          in: query
+          schema:
+            type: boolean
+        - name: completed
+          description: Если True, тогда будут полученые в том числе завершённыые заказы
+          in: query
+          schema:
+            type: boolean
       responses:
         '200':
           description: OK

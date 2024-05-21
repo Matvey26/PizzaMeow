@@ -42,8 +42,8 @@ def add_item_to_cart(user, token_info, body):
         abort(400, 'Такой пиццы не существует =(')
     quantity = body.get('quantity', 1)
     try:
-        size = conv_size_enum[body.get('size', 1)]
-        dough = conv_dough_enum[body.get('dough', 1)]
+        size = PizzaSizeEnum(conv_size_enum[body.get('size', 1)])
+        dough = PizzaDoughEnum(conv_dough_enum[body.get('dough', 1)])
     except:
         abort(400, 'Неверный формат поля size или dough.')
     total_price = pizza.price * quantity
@@ -77,9 +77,9 @@ def update_item_in_cart(user, token_info, item_id, body):
         cart_item.quantity = body['quantity']
     try:
         if 'size' in body:
-            cart_item.size = conv_size_enum[body['size']]
+            cart_item.size = PizzaSizeEnum(conv_size_enum[body['size']])
         if 'dough' in body:
-            cart_item.dough = conv_dough_enum[body['dough']]
+            cart_item.dough = PizzaDoughEnum(conv_dough_enum[body['dough']])
     except:
         abort(400, 'Неверный формат полей size или dough.')
     cart_item.total_price = cart_item.quantity * cart_item.pizza.price
