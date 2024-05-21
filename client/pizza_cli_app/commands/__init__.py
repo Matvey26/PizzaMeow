@@ -14,3 +14,5 @@ from .remove import Remove
 from .checkout import Checkout
 from .orders import Orders
 from .repeat import Repeat
+from .cancel import Cancel
+from .get_confirm_email import GetConfirmEmail

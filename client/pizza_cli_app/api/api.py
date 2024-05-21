@@ -131,6 +131,29 @@ class Session:
                 return
             return (response.status, (await response.json())['detail'])
 
+    @connection_error_handler
+    async def confirm_email(self, email: str):
+        """Отправить письмо на почту с подтверждением учётной записи.
+
+        Параметры
+        ---------
+        email: str
+            Почта, на которую нужно отправить письмо
+
+        Возвращает
+        ----------
+        ничего
+            если письмо было успешно отправлено
+        error: tuple
+            если что-то пошло не так
+        """
+        headers = {'Authorization': f'Bearer {self.token}'}
+        params = {'email': email}
+        async with self._session.get(url + 'users/confirm_email', params=params, headers=headers) \
+                as response:
+            if response.status != 204:
+                return (response.status, (await response.json())['detail'])
+
     def logout(self):
         """Очистить сохранённый токен. Теперь нужно повторно авторизоваться."""
         self.token = ''
@@ -653,8 +676,8 @@ class Session:
         async with self._session.put(
                 url + f'orders/{order_id}/cancel',
                 headers=headers) as response:
-            if response.status == 204:
-                return await response.text()
+            if response.status != 204:
+                return (response.status, (await response.json())['detail'])
 
     # ------------------ ВРЕМЯ И АДРЕСА ------------------
 

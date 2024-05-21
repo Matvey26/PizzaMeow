@@ -4,8 +4,9 @@ import argparse
 import asyncio
 from .commands import Base
 from .commands import Config, ChangeEmail, ChangePasssword, ResetPasssword
-from .commands import Logout, SignIn, SignUp
-from .commands import Menu, Cart, Add, Change, Remove, Checkout, Orders, Repeat
+from .commands import Logout, SignIn, SignUp, GetConfirmEmail
+from .commands import Menu, Cart, Add, Change, Remove, Orders
+from .commands import Checkout, Repeat, Cancel
 from .api import Session
 
 
@@ -25,7 +26,9 @@ async def run_commands(args):
         'remove': Remove,
         'checkout': Checkout,
         'orders': Orders,
-        'repeat': Repeat
+        'repeat': Repeat,
+        'cancel': Cancel,
+        'get_confirm_email': GetConfirmEmail
     }
 
     session = Session()
@@ -267,6 +270,14 @@ def main():
     orders.set_defaults(completed=False)
     orders.set_defaults(all=False)
     orders.set_defaults(no_show_id=True)
+
+    # Отменить заказ
+    cancel = sub_parsers.add_parser('cancel', help=Cancel.__doc__)
+    cancel.add_argument('order_id', type=int, help='ID заказа, который нужно отменить.')
+
+    # Получить письмо для подтверждения почты
+    get_confirm_email = sub_parsers.add_parser('get_confirm_email', help=GetConfirmEmail.__doc__)
+    get_confirm_email.add_argument('email', type=str, help='Почта, на которую нужно отправить письмо.')
 
     args = parser.parse_args()
     asyncio.run(run_commands(args))

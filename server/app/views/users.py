@@ -87,6 +87,8 @@ def get_confirm_email(user: str, token_info: dict, email: str):
     email = email.decode() if isinstance(email, bytes) else email
     user_id = int(user)
     user = user_repository.get_by_email(email)
+    if user is None:
+        abort(400, 'Токен недействителен.')
     if user.id != user_id:
         abort(401, 'Вы не можете запросить письмо с подтверждением почты для другого аккаунта')
 
