@@ -648,13 +648,13 @@ class Session:
             return (response.status, (await response.json())['detail'])
 
     @connection_error_handler
-    async def cancel_order(self, id : int):
+    async def cancel_order(self, order_id: int):
         headers = {'Authorization': f'Bearer {self.token}'}
         async with self._session.put(
-                    url + 'orders/{id}/cancel',
-                    headers=headers) as response:
-                if response.status == 204:
-                    return await response.text()
+                url + f'orders/{order_id}/cancel',
+                headers=headers) as response:
+            if response.status == 204:
+                return await response.text()
 
     # ------------------ ВРЕМЯ И АДРЕСА ------------------
 
