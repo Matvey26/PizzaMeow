@@ -11,7 +11,3 @@ class PizzaRepository(Repository):
 
     def get_page(self, offset: int, limit: int) -> tuple:
         return tuple(self.session.query(Pizza).offset(offset).limit(limit).all())
-
-    def is_invalid(self, model: Pizza) -> list:
-        invalid_fields = []
-        return invalid_fields

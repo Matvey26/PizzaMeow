@@ -75,10 +75,6 @@ class OrderRepository(Repository):
         order.status = OrderStatusEnum(new_status)
         self.session.commit()
 
-    def is_invalid(self, order: Order) -> list:
-        invalid_fields = []
-        return invalid_fields
-
     def get_by_user_and_order_ids(self, user_id, order_id):
         return self.session.query(Order).filter(Order.id == order_id, Order.user_id == user_id).first()
 

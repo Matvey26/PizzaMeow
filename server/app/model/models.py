@@ -162,60 +162,13 @@ class Cart(Base, Model):
     cart_items = relationship('CartItem', back_populates='cart', cascade='all, delete-orphan, save-update')
 
 
-# Промежуточная таблица, чтобы сделать отношение "многие ко многим"
-class OrderItemTopping(Base, Model):
-    __tablename__ = 'order_item_toppings'
-
-    order_item_id = sa.Column(
-        sa.Integer,
-        sa.ForeignKey('order_items.id'),
-        primary_key=True
-    )
-    topping_id = sa.Column(
-        sa.Integer,
-        sa.ForeignKey('toppings.id'),
-        primary_key=True
-    )
-
-
-# Промежуточная таблица, чтобы сделать отношение "многие ко многим"
-class CartItemTopping(Base, Model):
-    __tablename__ = 'cart_item_toppings'
-
-    cart_item_id = sa.Column(
-        sa.Integer,
-        sa.ForeignKey('cart_items.id'),
-        primary_key=True
-    )
-    topping_id = sa.Column(
-        sa.Integer,
-        sa.ForeignKey('toppings.id'),
-        primary_key=True
-    )
-
-
-class OrderItem(Base, Model):
-    __tablename__ = 'order_items'
+class Ingredient(Base, Model):
+    __tablename__ = 'ingredients'
 
     id = sa.Column(sa.Integer, primary_key=True)
-    pizza_id = sa.Column(sa.Integer, sa.ForeignKey('pizzas.id'), nullable=False)
-    total_price = sa.Column(sa.Float, nullable=False)
-    size = sa.Column(sa.Enum(PizzaSizeEnum))
-    quantity = sa.Column(sa.Integer)
-    dough = sa.Column(sa.Enum(PizzaDoughEnum))
-    order_id = sa.Column(
-        sa.Integer,
-        sa.ForeignKey('orders.id'),
-        nullable=False
-    )
-
-    order = relationship('Order', back_populates='order_items')
-    pizza = relationship('Pizza', back_populates='_order_items')
-    toppings = relationship(
-        argument='Topping',
-        secondary='order_item_toppings',
-        back_populates='_order_items'
-    )
+    name = sa.Column(sa.String(150), nullable=False)
+    description = sa.Column(sa.Text)
+    price = sa.Column(sa.Float, nullable=False)
 
 
 class CartItem(Base, Model):
@@ -235,34 +188,63 @@ class CartItem(Base, Model):
 
     cart = relationship('Cart', back_populates='cart_items')
     pizza = relationship('Pizza', back_populates='_cart_items')
-    toppings = relationship(
-        argument='Topping',
-        secondary='cart_item_toppings',
-        back_populates='_cart_items'
-    )
+    ingredients = relationship('CartItemIngredient', back_populates='cart_item')
+
+    def serialize(self) -> dict:
+        """Сериализует аттрибуты объекта в словарь, включая ингредиенты."""
+        data = super().serialize()
+        data['ingredients'] = [{'id': ing.ingredient_id, 'quantity': ing.quantity} for ing in self.ingredients]
+        return data
 
 
-class Topping(Base, Model):
-    __tablename__ = 'toppings'
+class CartItemIngredient(Base, Model):
+    __tablename__ = 'cart_item_ingredients'
 
     id = sa.Column(sa.Integer, primary_key=True)
-    name = sa.Column(sa.String(150), nullable=False)
-    description = sa.Column(sa.Text)
-    price = sa.Column(sa.Float, nullable=False)
+    cart_item_id = sa.Column(sa.Integer, sa.ForeignKey('cart_items.id'), nullable=False)
+    ingredient_id = sa.Column(sa.Integer, sa.ForeignKey('ingredients.id'), nullable=False)
+    quantity = sa.Column(sa.Integer, nullable=False)
 
-    # Не следует использовать этот атрибут вне класса
-    _order_items = relationship(
-        argument='OrderItem',
-        secondary='order_item_toppings',
-        back_populates='toppings'
+    cart_item = relationship('CartItem', back_populates='ingredients')
+    ingredient = relationship('Ingredient')
+
+
+class OrderItem(Base, Model):
+    __tablename__ = 'order_items'
+
+    id = sa.Column(sa.Integer, primary_key=True)
+    pizza_id = sa.Column(sa.Integer,sa.ForeignKey('pizzas.id'), nullable=False)
+    total_price = sa.Column(sa.Float, nullable=False)
+    size = sa.Column(sa.Enum(PizzaSizeEnum))
+    quantity = sa.Column(sa.Integer)
+    dough = sa.Column(sa.Enum(PizzaDoughEnum))
+    order_id = sa.Column(
+        sa.Integer,
+        sa.ForeignKey('orders.id'),
+        nullable=False
     )
 
-    # Не следует использовать этот атрибут вне класса
-    _cart_items = relationship(
-        argument='CartItem',
-        secondary='cart_item_toppings',
-        back_populates='toppings'
-    )
+    order = relationship('Order', back_populates='order_items')
+    pizza = relationship('Pizza', back_populates='_order_items')
+    ingredients = relationship('OrderItemIngredient', back_populates='order_item')
+
+    def serialize(self) -> dict:
+        """Сериализует аттрибуты объекта в словарь, включая ингредиенты."""
+        data = super().serialize()
+        data['ingredients'] = [{'id': ing.ingredient_id, 'quantity': ing.quantity} for ing in self.ingredients]
+        return data
+
+
+class OrderItemIngredient(Base, Model):
+    __tablename__ = 'order_item_ingredients'
+
+    id = sa.Column(sa.Integer, primary_key=True)
+    cart_item_id = sa.Column(sa.Integer, sa.ForeignKey('order_items.id'), nullable=False)
+    ingredient_id = sa.Column(sa.Integer, sa.ForeignKey('ingredients.id'), nullable=False)
+    quantity = sa.Column(sa.Integer, nullable=False)
+
+    order_item = relationship('OrderItem', back_populates='ingredients')
+    ingredient = relationship('Ingredient')
 
 
 class Pizza(Base, Model):

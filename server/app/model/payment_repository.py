@@ -14,9 +14,5 @@ class PaymentRepository(Repository):
             amount=order.total_price,
         )
 
-    def is_invalid(self, payment: Payment) -> list:
-        invalid_fields = []
-        return invalid_fields
-
     def mark_as_paid(self, payment: Payment):
         payment.payment_status = PaymentStatusEnum.PAID
