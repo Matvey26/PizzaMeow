@@ -177,8 +177,9 @@ def main():
     add.add_argument('pizza_id', type=int,
                      help='ID пиццы, которая будет добавлена в корзину.')
     add.add_argument('--size', default=1, help='Размер пиццы.', type=int)
-    add.add_argument('--dough', default=1, help='Размер пиццы.', type=int)
-    add.add_argument('--quantity', default=1, help='Размер пиццы.', type=int)
+    add.add_argument('--dough', default=1, help='Тесто для пиццы.', type=int)
+    add.add_argument('--quantity', default=1, help='Количество пицц.', type=int)
+    add.add_argument('--ingredients', default=1, help='Ингредиенты пиццы.', type=int)
 
     # Парсер для изменения элемента корзины
     change = sub_parsers.add_parser('change', help=Change.__doc__)
