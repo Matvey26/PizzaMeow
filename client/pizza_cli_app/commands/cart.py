@@ -34,6 +34,10 @@ class Cart(Base):
         elements = []
         for item in answer['cart_items']:
             element = []
+            ingredients_text = []
+            for ingredient, count in item['ingredients'].items():
+                ingredients_text.append(f'{ingredient}: {count}')
+            ingredients_text = ", ".join(ingredients_text)
             if show_id:
                 element.append(f"ID элемента корзины: {item['id']}")
             element.append(f"Цена - {item['total_price']}")
@@ -41,6 +45,7 @@ class Cart(Base):
             element.append(f"Количество - {item['quantity']}")
             element.append(f"Размер пиццы - {item['size']}")
             element.append(f"Тип теста - {item['dough']}\n")
+            element.append(f"Ингредиенты - {ingredients_text}\n")
             elements.append(element)
 
         stdscr = curses.initscr()
