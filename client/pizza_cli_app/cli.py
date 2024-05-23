@@ -213,6 +213,13 @@ def main():
         help='Размер пиццы.'
     )
 
+    change.add_argument(
+        '--ingredients',
+        default=-1,
+        type=int,
+        help='Размер пиццы.'
+    )
+
     # Парсер для удаления элемента корзины
     remove = sub_parsers.add_parser('remove', help=Remove.__doc__)
     remove.add_argument(

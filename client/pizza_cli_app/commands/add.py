@@ -13,12 +13,13 @@ class Add(Base):
         dough = self.options.dough
         quantity = self.options.quantity
         ingredients = []
-        for ingredient in self.options.ingredients.split(', '):
-            ing_id, count_ing = ingredient.split(':')
-            ingredients.append({ing_id : count_ing})
-            if int(count_ing) < 0:
-                print('Введено отрицательное количество ингредиента')
-                return 
+        if self.options.ingredients != -1:
+            for ingredient in self.options.ingredients.split(', '):
+                    ing_id, count_ing = ingredient.split(':')
+                    ingredients.append({ing_id : count_ing})
+                    if int(count_ing) < 0:
+                        print('Введено отрицательное количество ингредиента')
+                        return 
         data = {
             'pizza_id': pizza_id,
             'size': size,
