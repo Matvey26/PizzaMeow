@@ -5,7 +5,7 @@ import asyncio
 from .commands import Base
 from .commands import Config, ChangeEmail, ChangePasssword, ResetPasssword
 from .commands import Logout, SignIn, SignUp, GetConfirmEmail
-from .commands import Menu, Cart, Add, Change, Remove, Orders
+from .commands import Menu, Cart, Add, Change, Remove, Orders, Ingredients
 from .commands import Checkout, Repeat, Cancel
 from .api import Session
 
@@ -28,7 +28,8 @@ async def run_commands(args):
         'orders': Orders,
         'repeat': Repeat,
         'cancel': Cancel,
-        'get_confirm_email': GetConfirmEmail
+        'get_confirm_email': GetConfirmEmail,
+        'ingredients': Ingredients
     }
 
     session = Session()
@@ -147,6 +148,30 @@ def main():
         default=20,
         type=int,
         help='Максимум пицц в странице.'
+    )
+
+    # Парсер для вывода ингредиентов
+    ingredients = sub_parsers.add_parser('ingredients', help=Ingredients.__doc__)
+    ingredients_arg_group = menu.add_mutually_exclusive_group()
+    ingredients_arg_group.add_argument(
+        '--show-id',
+        action='store_true',
+        dest='show_id',
+        help='Показывать айди ингредиентов.'
+    )
+    ingredients_arg_group.add_argument(
+        '--no-show-id',
+        action='store_false',
+        dest='show_id',
+        help='Не показывать айди ингредиентов.'
+    )
+    # значение по умолчанию, если ни один из флагов не указан
+    ingredients.set_defaults(show_id=True)
+    ingredients.add_argument(
+        '--limit',
+        default=20,
+        type=int,
+        help='Максимум ингредиентов в странице.'
     )
 
     # Парсер для показа содержимого корзины
