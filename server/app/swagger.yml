@@ -709,7 +709,7 @@ components:
         quantity:
           type: integer
           description: Выбранное количество
-          minimum: 1
+          minimum: 0
     
     IngredientsList:
       type: array

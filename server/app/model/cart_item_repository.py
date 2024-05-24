@@ -30,8 +30,11 @@ class CartItemRepository(Repository):
         quantity: int = 1,
         size: int = 1,
         dough: int = 1,
-        ingredients: list = []
+        ingredients: list = None
     ) -> CartItem:
+
+        if ingredients is None:
+            ingredients = []
 
         size = conv_size_enum[size]
         dough = conv_dough_enum[dough]
@@ -43,13 +46,15 @@ class CartItemRepository(Repository):
             quantity=quantity,
             dough=PizzaDoughEnum(dough)
         )
+        self.session.add(new_cart_item)
+        self.session.commit()
 
         for ingredient in ingredients:
             cart_item_ingredient = CartItemIngredient(
-                cart_item_id=new_cart_item.id,
                 ingredient_id=ingredient['id'],
                 quantity=ingredient['quantity']
             )
+            new_cart_item.ingredients.append(cart_item_ingredient)
             self.session.add(cart_item_ingredient)
 
         return new_cart_item

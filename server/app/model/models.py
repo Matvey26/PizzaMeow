@@ -183,7 +183,6 @@ class CartItem(Base, Model):
     cart_id = sa.Column(
         sa.Integer,
         sa.ForeignKey('carts.id'),
-        nullable=False
     )
 
     cart = relationship('Cart', back_populates='cart_items')
@@ -201,7 +200,7 @@ class CartItemIngredient(Base, Model):
     __tablename__ = 'cart_item_ingredients'
 
     id = sa.Column(sa.Integer, primary_key=True)
-    cart_item_id = sa.Column(sa.Integer, sa.ForeignKey('cart_items.id'), nullable=False)
+    cart_item_id = sa.Column(sa.Integer, sa.ForeignKey('cart_items.id'))
     ingredient_id = sa.Column(sa.Integer, sa.ForeignKey('ingredients.id'), nullable=False)
     quantity = sa.Column(sa.Integer, nullable=False)
 

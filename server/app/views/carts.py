@@ -3,6 +3,7 @@ from . import pizza_repository
 from . import cart_repository
 from . import cart_item_repository
 from . import ingredient_repository
+from . import cart_item_ingredient_repository
 from flask import abort
 
 
@@ -58,18 +59,20 @@ def add_item_to_cart(user, token_info, body):
     ingredients = body.get('ingredients', [])
     all_ingredients_quantity = 0
     ingredients_total_price = 0
-    for pair_ingredient in ingredients:
-        if 'quantity' not in pair_ingredient or \
-                'id' not in pair_ingredient:
+    for ser_ingredient in ingredients:
+        if 'quantity' not in ser_ingredient or \
+                'id' not in ser_ingredient:
             abort(400, 'Неверный формат списка выбранных ингредиентов.')
-        if pair_ingredient['quantity'] < 0:
-            abort(400, 'Количество ингридиентов не может быть отрицательным.')
-        ingredient = ingredient_repository.get(pair_ingredient['id'])
-        all_ingredients_quantity += pair_ingredient['quantity']
-        ingredients_total_price += ingredient.price * pair_ingredient['quantity']
+        ingredient = ingredient_repository.get(ser_ingredient['id'])
+        if ingredient is None:
+            abort(400, 'Такого ингредиента не существует.')
+        all_ingredients_quantity += ser_ingredient['quantity']
+        ingredients_total_price += ingredient.price * \
+            ser_ingredient['quantity']
 
     if all_ingredients_quantity > 15:
-        abort(400, f'Вы выбрали слишком много ингридиентов, {all_ingredients_quantity} > 15.')
+        abort(
+            400, f'Вы выбрали слишком много ингридиентов, {all_ingredients_quantity} > 15.')
 
     # Считаем итоговую цену
     total_price = pizza.price * quantity + ingredients_total_price
@@ -79,7 +82,8 @@ def add_item_to_cart(user, token_info, body):
         total_price=total_price,
         quantity=quantity,
         size=size,
-        dough=dough
+        dough=dough,
+        ingredients=ingredients
     )
 
     cart_repository.add_item(cart, cart_item)
@@ -101,6 +105,7 @@ def update_item_in_cart(user, token_info, item_id, body):
         cart_item.pizza = pizza
     if 'quantity' in body:
         cart_item.quantity = body['quantity']
+
     try:
         if 'size' in body:
             cart_item.size = conv_size_enum[body['size']]
@@ -108,7 +113,34 @@ def update_item_in_cart(user, token_info, item_id, body):
             cart_item.dough = conv_dough_enum[body['dough']]
     except ValueError:
         abort(400, 'Неверный формат полей size или dough.')
-    cart_item.total_price = cart_item.quantity * cart_item.pizza.price
+
+    ingredients_total_price = 0
+    if 'ingredients' in body:
+        try:
+            new_ingredients_map = {}
+            for item in body['ingredients']:
+                new_ingredients_map[item['id']] = item['quantity']
+                if ingredient_repository.get(item['id']) is None:
+                    abort(400, 'Не существует такого ингредиента')
+        except KeyError:
+            abort(400, 'Неверный формат ингредиентов.')
+
+        for cart_item_ingredient in cart_item.ingredients:
+            if cart_item_ingredient.id in new_ingredients_map:
+                cart_item_ingredient.quantity = \
+                    new_ingredients_map[cart_item_ingredient.id]
+                del new_ingredients_map[cart_item_ingredient.id]
+
+        for ing_id, ing_cnt in new_ingredients_map.items():
+            cart_item.ingredients.append(
+                cart_item_ingredient_repository.create(
+                    ingredient_id=ing_id,
+                    quantity=ing_cnt
+                )
+            )
+
+    cart_item.total_price = cart_item.quantity * \
+        cart_item.pizza.price + ingredients_total_price
 
     cart_item_repository.update(cart_item)
 

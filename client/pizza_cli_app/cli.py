@@ -270,9 +270,9 @@ def main():
 
     change.add_argument(
         '--ingredients',
-        default=-1,
-        type=int,
-        help='Размер пиццы.'
+        default=0,
+        type=str,
+        help='Ингредиенты.'
     )
 
     # Парсер для удаления элемента корзины

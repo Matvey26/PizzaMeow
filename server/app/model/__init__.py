@@ -11,3 +11,4 @@ from .order_item_repository import OrderItemRepository
 from .payment_repository import PaymentRepository
 from .pizzeria_repository import PizzeriaRepository
 from .ingredient_repository import IngredientRepository
+from .cart_item_ingredients_repository import CartItemIngredientRepository

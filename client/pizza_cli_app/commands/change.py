@@ -17,7 +17,10 @@ class Change(Base):
         if self.options.ingredients != -1:
             for ingredient in self.options.ingredients.split(', '):
                 ing_id, count_ing = ingredient.split(':')
-                ingredients.append({ing_id: count_ing})
+                ingredients.append({
+                    'id': int(ing_id),
+                    'quantity': int(count_ing)
+                })
                 if int(count_ing) < 0:
                     print('Введено отрицательное количество ингредиента')
                     return

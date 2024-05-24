@@ -389,8 +389,10 @@ class Session:
             'size': str,  # а точнее enum: [small, medium, large]
             'dough': str  # а точнее enum: [thin, classic]
             'ingredients': [
-                {'ing_id_1': cnt_1},  # Пары вида "ID ингредиента":
-                {'ing_id_2': cnt_2},  # "его количество в пицце"
+                {
+                    'id': int,  # ID ингредиента
+                    'quantity': int  # его количество в пицце
+                },
                 ...
             ]
         }
@@ -436,8 +438,10 @@ class Session:
                                 1: 'classic' или 0: 'thin'.
                                 По умолчанию должно быть 1
                 'ingredients': [
-                    {'ing_id_1': cnt_1},  # Пары вида "ID ингредиента":
-                    {'ing_id_2': cnt_2},  # "его количество в пицце"
+                    {
+                        'id': int,  # ID ингредиента
+                        'quantity': int  # его количество в пицце
+                    },
                     ...
                 ]
             }
@@ -481,8 +485,10 @@ class Session:
                 'size': Новый размер пиццы, а именно 'small', 'medium',
                         'large' или 1, 2, 3. По умолчанию 1
                 'ingredients': [
-                    {'ing_id_1': cnt_1},  # Пары вида "ID ингредиента":
-                    {'ing_id_2': cnt_2},  # "его количество в пицце"
+                    {
+                        'id': int,  # ID ингредиента
+                        'quantity': int  # его количество в пицце
+                    },
                     ...
                 ]
             }
@@ -660,8 +666,10 @@ class Session:
                     'size': Enum('small', 'medium', 'large'),
                     'dough': Enum('thin', 'classic')  # тесто заканных пицц
                     'ingredients': [
-                        {'ing_id_1': cnt_1},  # Пары вида "ID ингредиента":
-                        {'ing_id_2': cnt_2},  # "его количество в пицце"
+                        {
+                            'id': int,  # ID ингредиента
+                            'quantity': int  # его количество в пицце
+                        },
                         ...
                     ]
                 }

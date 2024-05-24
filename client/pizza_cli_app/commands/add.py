@@ -13,10 +13,17 @@ class Add(Base):
         dough = self.options.dough
         quantity = self.options.quantity
         ingredients = []
-        if self.options.ingredients != -1:
-            for ingredient in self.options.ingredients.split(', '):
-                ing_id, count_ing = ingredient.split(':')
-                ingredients.append({ing_id: count_ing})
+        if self.options.ingredients != '':
+            for pair_ingredient in self.options.ingredients.split(','):
+                pair_ingredient = pair_ingredient.strip()
+                if ':' not in pair_ingredient:
+                    print('Неверный формат ингредиентов.')
+                    return
+                ing_id, count_ing = pair_ingredient.split(':')
+                ingredients.append({
+                    'id': int(ing_id),
+                    'quantity': int(count_ing)
+                })
                 if int(count_ing) < 0:
                     print('Введено отрицательное количество ингредиента')
                     return

@@ -126,7 +126,7 @@ async def print_paged(
             window.addstr(i, 0, s)
             i += 1
         for s in page[offset:]:
-            if i >= curses.LINES:
+            if i >= len(header) + FREE_ROWS:
                 break
             if isinstance(s, int):
                 break
