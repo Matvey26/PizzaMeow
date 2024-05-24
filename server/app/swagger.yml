@@ -502,6 +502,8 @@ components:
           type: integer
           description: Тип теста пиццы (0 == thin, 1 == classic)
           enum: [0, 1]
+        ingredients:
+          $ref: '#/components/schemas/IngredientsList'
 
     CartItemGet:
       type: object
@@ -531,6 +533,8 @@ components:
           type: string
           description: Тип теста пиццы (thin, classic)
           enum: [thin, classic]
+        ingredients:
+          $ref: '#/components/schemas/IngredientsList'
       required:
         - id
         - pizza_id
@@ -637,6 +641,8 @@ components:
           type: string
           description: Тип теста пиццы (thin, classic)
           enum: [thin, classic]
+        ingredients:
+          $ref: '#/components/schemas/IngredientsList'
       required:
         - id
         - pizza_id
@@ -693,6 +699,22 @@ components:
       items:
         type: string
         description: Время в формате iso, иначе говоря то, что возвращает datetime_obj.isoformat()
+    
+    Ingredient:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Уникальный ID ингредиента
+        quantity:
+          type: integer
+          description: Выбранное количество
+          minimum: 1
+    
+    IngredientsList:
+      type: array
+      items:
+        $ref: '#/components/schemas/Ingredient'
   
   # Универсальные ответы от сервера
   responses:

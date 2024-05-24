@@ -33,12 +33,9 @@ class CartRepository(Repository):
     def get_items(self, cart: Cart):
         return cart.cart_items
 
-    def is_invalid(self, cart: Cart) -> list:
-        invalid_fields = []
-        return invalid_fields
-
     def serialize(self, cart: Cart) -> dict:
-        """Сериализует корзину. Иначе говоря представляет корзину в виде списка её элементов.
+        """Сериализует корзину.
+        Иначе говоря представляет корзину в виде списка её элементов.
         Все поля, содержащие enum переводятся в текст.
         """
 

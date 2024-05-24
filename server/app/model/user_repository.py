@@ -52,23 +52,6 @@ class UserRepository(Repository):
         except exceptions.VerifyMismatchError:
             return False
 
-    def is_invalid(self, user: User) -> list:
-        invalid_fields = []
-
-        if not user.email:
-            invalid_fields.append({'email': 'поле email должно содержать значение'})
-
-        if self.get_by_email(user.email):
-            invalid_fields.append({'email': 'пользователь с такой почтой уже существует'})
-
-        if not user.password:
-            invalid_fields.append({'password': 'поле password должно содержать значение'})
-
-        if len(user.password) < 8:
-            invalid_fields.append({'password': 'пароль должен быть не короче 8 символов'})
-
-        return invalid_fields
-
     def is_confirmed(self, user: User):
         return user._confirmed == UserConfirmEnum.CONFIRMED
 

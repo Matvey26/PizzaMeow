@@ -88,22 +88,6 @@ class Repository(ABC):
 
         return deleted
 
-    @abstractmethod
-    def is_invalid(self, model: Model) -> list:
-        """Проверяет, является ли данный объект модели валидным.
-
-        Параметры
-        ---------
-        model : Model
-            Объект модели.
-
-        Возвращает
-        ----------
-            list: Список, содержащий ошибки полей.
-        """
-
-        return []
-
     def serialize(self, *models: Model) -> dict:
         """Сериализация объекта.
 
