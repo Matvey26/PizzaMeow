@@ -75,7 +75,9 @@ def main():
 
     # Смена пароля
     change_password = sub_parsers.add_parser(
-        'change_password', help=ChangePasssword.__doc__)
+        'change_password',
+        help=ChangePasssword.__doc__
+    )
     change_password.add_argument(
         'email',
         type=str,
@@ -111,7 +113,9 @@ def main():
 
     # Привязка новой почты к аккаунту
     change_email = sub_parsers.add_parser(
-        'change_email', help=ChangeEmail.__doc__)
+        'change_email',
+        help=ChangeEmail.__doc__
+    )
     change_email.add_argument(
         'old_email',
         type=str,

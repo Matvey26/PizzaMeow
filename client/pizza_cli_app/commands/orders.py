@@ -31,15 +31,19 @@ class Orders(Base):
                     rows.append(first_row)
                     for order_item in order['order_items']:
                         ingredients_text = []
-                        for ingredient, count in order_item['ingredients'].items():
-                            ingredients_text.append(f'{ingredient}: {count}')
-                        ingredients_text = "\n ".join(ingredients_text)
+                        for ingredient, count in \
+                                order_item['ingredients'].items():
+                            ingredients_text.append(
+                                f'        {ingredient}: {count}'
+                            )
                         rows.append(f"итого: {order_item['total_price']}₽")
                         rows.append(f"{order_item['pizza_name']}, "
                                     f"{order_item['quantity']} шт.")
                         rows.append(f"    размер: {order_item['size']}")
                         rows.append(f"    тесто: {order_item['dough']}")
-                        rows.append(f"    ингредиенты: {ingredients_text}")
+                        if ingredients_text:
+                            rows.append('    ингредиенты:')
+                            rows.extend(ingredients_text)
                     data.append(rows)
                 yield data
                 offset += limit
