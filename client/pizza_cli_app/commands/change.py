@@ -17,11 +17,11 @@ class Change(Base):
         if self.options.ingredients != -1:
             for ingredient in self.options.ingredients.split(', '):
                 ing_id, count_ing = ingredient.split(':')
-                ingredients.append({ing_id : count_ing})
+                ingredients.append({ing_id: count_ing})
                 if int(count_ing) < 0:
                     print('Введено отрицательное количество ингредиента')
-                    return 
-        
+                    return
+
         if quantity == 0:
             self.session.delete_item(item_id)
             return
@@ -42,7 +42,7 @@ class Change(Base):
         )
         task_update_item_in_cart = asyncio.create_task(
             self.session.update_item_in_cart(item_id, data)
-            )
+        )
 
         response = await task_update_item_in_cart
         task_load.cancel()
