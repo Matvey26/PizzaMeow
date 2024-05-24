@@ -4,7 +4,8 @@ import datetime
 from typing import List
 from ..utils.print_format import load_spinner
 from ..utils.print_format import print_choices
-from ..utils.print_format import print_scrolled
+from ..utils.print_format import print_paged
+from ..utils.async_utils import aiter
 
 from .base import Base
 
@@ -38,7 +39,7 @@ class Checkout(Base):
             rows.append(line)
 
         # Выводим корзину
-        print_scrolled(window, rows)
+        print_paged(window, aiter([rows]))
         stdscr.clear()
 
     def choose_pickup_method_screen(self, stdscr: curses.window) -> int:

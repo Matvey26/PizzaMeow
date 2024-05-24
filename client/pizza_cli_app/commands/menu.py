@@ -9,7 +9,7 @@ class Menu(Base):
 
     async def run(self):
         show_id = self.options.show_id
-        limit = self.options.limit
+        limit = 15
 
         async def get_all_pizzas():
             offset = 0
@@ -38,7 +38,6 @@ class Menu(Base):
             await print_paged(
                 window,
                 get_all_pizzas(),
-                limit=limit,
                 header=['Меню:', '++++++++++++++++++'],
                 sep=['------------------']
             )
