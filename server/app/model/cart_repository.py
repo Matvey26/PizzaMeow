@@ -51,7 +51,9 @@ class CartRepository(Repository):
         for cart_item in cart.cart_items:
             data = cart_item.serialize()
             data['pizza_name'] = cart_item.pizza.name
-            data['ingredients'] = cart_item_ingredients_repository.serialize(*cart_item.ingredients)
+            data['ingredients'] = cart_item_ingredients_repository.serialize(
+                *cart_item.ingredients
+            )
             print(data)
             serialized['cart_items'].append(data)
 

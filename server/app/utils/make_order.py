@@ -14,7 +14,9 @@ payment_repository = PaymentRepository()
 
 def generate_payment_url(id, amount):
     from .auth import generate_confirmation_url
-    return generate_confirmation_url(str(id), os.environ['SERVER_URL'] + 'api/payments/confirm')
+    return generate_confirmation_url(
+        str(id), os.environ['SERVER_URL'] + 'api/payments/confirm'
+    )
 
 
 def calculate_delivery_cost(address):

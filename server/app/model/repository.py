@@ -1,4 +1,4 @@
-from abc import ABC, abstractmethod
+from abc import ABC
 
 from sqlalchemy import desc
 
@@ -32,7 +32,9 @@ class Repository(ABC):
             Ничего, если модели с таким id нет.
         """
 
-        return self.session.query(self.__model_class).filter_by(id=model_id).first()
+        return self.session.query(self.__model_class).filter_by(
+            id=model_id
+        ).first()
 
     def get_all(self) -> list:
         """Получает все модели этого класса, которые
@@ -41,10 +43,13 @@ class Repository(ABC):
         Возвращает
         ----------
         list :
-            Список всех моделей, хранящихся в базе данных, упорядоченный по возрастанию их id.
+            Список всех моделей, хранящихся в базе данных,
+            упорядоченный по возрастанию их id.
         """
 
-        return self.session.query(self.__model_class).order_by(desc(self.__model_class.id))
+        return self.session.query(self.__model_class).order_by(
+            desc(self.__model_class.id)
+        )
 
     def save(self, model: Model) -> None:
         """Сохраняет модель в базе данных.

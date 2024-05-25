@@ -72,7 +72,8 @@ def add_item_to_cart(user, token_info, body):
 
     if all_ingredients_quantity > 15:
         abort(
-            400, f'Вы выбрали слишком много ингридиентов, {all_ingredients_quantity} > 15.')
+            400, f'Вы выбрали слишком много ингридиентов, '
+                 f'{all_ingredients_quantity} > 15.')
 
     # Считаем итоговую цену
     total_price = pizza.price * quantity + ingredients_total_price

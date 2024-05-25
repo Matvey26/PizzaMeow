@@ -36,7 +36,8 @@ class Cart(Base):
             element = []
             ingredients_text = []
             for ingredient in item['ingredients']:
-                ingredients_text.append(f'{ingredient["id"]}: {ingredient["quantity"]}')
+                ingredients_text.append(f'{ingredient["id"]}: '
+                                        f'{ingredient["quantity"]}')
             ingredients_text = ", ".join(ingredients_text)
             if show_id:
                 element.append(f"ID элемента корзины: {item['id']}")

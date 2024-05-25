@@ -13,7 +13,8 @@ def init(connex_app: FlaskApp):
     """Эта функция инициализирует SQLAlchemy ORM.
 
     В глобальные переменные Base, engine и db_session этого модуля
-    помещаются базовый декларативный класс, "двигатель" sqlalchemy и текущая сессия соответственно.
+    помещаются базовый декларативный класс, "двигатель" sqlalchemy
+    и текущая сессия соответственно.
 
     Параметры
     ---------
@@ -38,7 +39,8 @@ def init(connex_app: FlaskApp):
     Base = declarative_base()
     Base.query = db_session.query_property()
 
-    # прикрепляем функцию shutdown_session, которая будет автоматически завершать сессию
+    # прикрепляем функцию shutdown_session,
+    # которая будет автоматически завершать сессию
     app.teardown_appcontext(shutdown_session)
 
 

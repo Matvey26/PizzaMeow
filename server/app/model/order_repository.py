@@ -1,8 +1,6 @@
 from .repository import Repository
-from .models import User, Order, OrderStatusEnum, PaymentMethodEnum
+from .models import User, Order, OrderStatusEnum
 from .payment_repository import PaymentRepository
-from datetime import datetime
-from typing import List
 from sqlalchemy import or_
 
 payment_repository = PaymentRepository()
@@ -57,7 +55,14 @@ class OrderRepository(Repository):
 
         return new_order
 
-    def get_page_by_user(self, user: User, limit: int, offset: int, active: bool, completed: bool):
+    def get_page_by_user(
+        self,
+        user: User,
+        limit: int,
+        offset: int,
+        active: bool,
+        completed: bool
+    ):
         query = self.session.query(Order).filter_by(user_id=user.id)
 
         if active and not completed:
@@ -76,7 +81,9 @@ class OrderRepository(Repository):
         self.session.commit()
 
     def get_by_user_and_order_ids(self, user_id, order_id):
-        return self.session.query(Order).filter(Order.id == order_id, Order.user_id == user_id).first()
+        return self.session.query(Order).filter(
+            Order.id == order_id, Order.user_id == user_id
+        ).first()
 
     def serialize(self, *orders: Order) -> dict:
         serialized = []

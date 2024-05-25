@@ -14,7 +14,10 @@ class Ingredients(Base):
         async def get_all_ingredients():
             offset = 0
             while (
-                ingredients := await self.session.get_ingredients_page(offset, limit)
+                ingredients := await self.session.get_ingredients_page(
+                    offset,
+                    limit
+                )
             ):
                 if isinstance(ingredients, tuple):
                     raise Exception(ingredients[1])
