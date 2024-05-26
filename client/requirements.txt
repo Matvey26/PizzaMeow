@@ -10,7 +10,6 @@ geopy==2.4.1
 idna==3.7
 Levenshtein==0.25.1
 multidict==6.0.5
-pizza-cli==0.2
 python-Levenshtein==0.25.1
 rapidfuzz==3.9.0
 yarl==1.9.4
