@@ -31,7 +31,7 @@
 
 Каждая задача разбивалась на множество составных и добавлялась в наш [таск-трекер](https://app.todoist.com/auth/join?invite_code=ks4AAgAc2SA5M2Y0YjhmYjI3YjYzNDdmZTJiYjE0MmRiYWQ5Y2UzNA)  (перейдите во вкладку "Проекты, в которых я не участвую" и нажмите на единственный проект "IT-проекты")
 
-Также некоторые задачи требовали некоторой подготовительной работы, в том числе изучение необходимых технологий. Вы можете посмотреть наш [notion](https://melodic-cormorant-2d7.notion.site/738c803f5ca64cc6b341706a4388f3e1?pvs=25)
+Также некоторые задачи требовали некоторой подготовительной работы, в том числе изучение необходимых технологий. Вы можете посмотреть наш [notion](https://melodic-cormorant-2d7.notion.site/738c803f5ca64cc6b341706a4388f3e1?pvs=25) и [miro](https://miro.com/welcomeonboard/enFtbFJuTXpGUGxwRnpTWlBtcW9ubVl1OE1yUXpwMWlFNDFLeHBUak5ZR0kyR2tsUVFoSENaT2NtcGlEdWI1TnwzNDU4NzY0NTc5NzY5NDUyNzA0fDI=?share_link_id=619084073569)
 
 # О команде
 Наша команда состоит из ~~Python Senior разработчиков~~ 4-х студентов 1-го курса группы М8О-107Б-23
