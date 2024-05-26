@@ -293,10 +293,9 @@ class OrderItemIngredient(Base, Model):
     __tablename__ = 'order_item_ingredients'
 
     id = sa.Column(sa.Integer, primary_key=True)
-    cart_item_id = sa.Column(
+    order_item_id = sa.Column(
         sa.Integer,
-        sa.ForeignKey('order_items.id'),
-        nullable=False
+        sa.ForeignKey('order_items.id')
     )
     ingredient_id = sa.Column(
         sa.Integer,
