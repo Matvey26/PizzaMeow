@@ -190,12 +190,12 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Pizza'
-  /pizzas/{id}:
+  /pizzas/{pizza_id}:
     get:
       summary: Получить пиццу по id
       operationId: server.app.views.pizzas.get_pizza_by_id
       parameters:
-      - name: id
+      - name: pizza_id
         in: path
         description: ID пиццы
         required: true
@@ -208,6 +208,51 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Pizza'
+  
+  /ingredients:
+    get:
+      summary: Получить страницу ингредиентов по указанным параметрам
+      operationId: server.app.views.ingredients.get_ingredients_page
+      parameters:
+        - name: offset
+          description: Число, которое нужно отступить от начала таблицы
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+        - name: limit
+          description: Максимальное число ингредиентов в возвращаемой странице
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Ingredient'
+  /ingredients/{ingredient_id}:
+    get:
+      summary: Получить ингредиент по id
+      operationId: server.app.views.ingredients.get_ingredient_by_id
+      parameters:
+      - name: ingredient_id
+        in: path
+        description: ID ингредиента
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Ingredient'
   
   # ВСЕ ПУТИ, СВЯЗАННЫЕ
   # С ТАБЛИЦЕЙ CART
@@ -337,12 +382,12 @@ paths:
       security:
         - jwt: []
 
-  /orders/{id}:
+  /orders/{order_id}:
     get:
       summary: Получить заказ по id
       operationId: server.app.views.orders.get_order_by_id
       parameters:
-      - name: id
+      - name: order_id
         in: path
         description: ID заказа
         required: true
@@ -503,7 +548,7 @@ components:
           description: Тип теста пиццы (0 == thin, 1 == classic)
           enum: [0, 1]
         ingredients:
-          $ref: '#/components/schemas/IngredientsList'
+          $ref: '#/components/schemas/IngredientsQuantityList'
 
     CartItemGet:
       type: object
@@ -534,7 +579,7 @@ components:
           description: Тип теста пиццы (thin, classic)
           enum: [thin, classic]
         ingredients:
-          $ref: '#/components/schemas/IngredientsList'
+          $ref: '#/components/schemas/IngredientsQuantityList'
       required:
         - id
         - pizza_id
@@ -642,7 +687,7 @@ components:
           description: Тип теста пиццы (thin, classic)
           enum: [thin, classic]
         ingredients:
-          $ref: '#/components/schemas/IngredientsList'
+          $ref: '#/components/schemas/IngredientsQuantityList'
       required:
         - id
         - pizza_id
@@ -699,8 +744,25 @@ components:
       items:
         type: string
         description: Время в формате iso, иначе говоря то, что возвращает datetime_obj.isoformat()
-    
+
     Ingredient:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Уникальный ID ингредиента 
+        name:
+          type: string
+          description: Название игредиента
+        description:
+          type: string
+          description: Описание ингредиента
+        price:
+          type: number
+          format: float
+          description: Цена ингредиента за одну штуку
+    
+    IngredientQuantity:
       type: object
       properties:
         id:
@@ -711,10 +773,10 @@ components:
           description: Выбранное количество
           minimum: 0
     
-    IngredientsList:
+    IngredientsQuantityList:
       type: array
       items:
-        $ref: '#/components/schemas/Ingredient'
+        $ref: '#/components/schemas/IngredientQuantity'
   
   # Универсальные ответы от сервера
   responses:

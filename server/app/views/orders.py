@@ -27,8 +27,8 @@ def get_orders_page(
     return order_repository.serialize(*page)
 
 
-def get_order_by_id(id: int, user: str, token_info: dict):
-    order_id = id
+def get_order_by_id(order_id: int, user: str, token_info: dict):
+    order_id = order_id
     user_id = int(user)
     order = order_repository.get_by_user_and_order_ids(
         user_id=user_id,

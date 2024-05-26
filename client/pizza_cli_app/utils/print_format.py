@@ -5,8 +5,8 @@ import asyncio
 import sys
 
 
-PAGED_HELP = 'Use n/p or up/down arrow. Prees q to quit:'
-CHOICES_HELP = 'Use up/down arrows. Press Enter to continue.'
+PAGED_HELP = 'Use keys w, a, s, d to navigates. Prees q to quit:'
+CHOICES_HELP = 'Use keys w, s to scrolling. Press Enter to continue.'
 
 
 async def load_spinner(
@@ -166,12 +166,12 @@ async def print_paged(
 
             if key == ord('q'):
                 break
-            if key == ord('p'):
+            if key == ord('a'):
                 prev = cur
                 cur = max(0, cur - 1)
                 if prev != cur:
                     offset = 0
-            if key == ord('n'):
+            if key == ord('d'):
                 if cur + 1 >= len(pages) - 1:
                     window.clear()
                     window.refresh()
@@ -188,16 +188,13 @@ async def print_paged(
                 if prev != cur:
                     offset = 0
 
-            if key == 27:
-                if window.getch() == 91:
-                    k = window.getch()
-                    if k == 66:  # стрелка вниз
-                        offset = min(
-                            offset + 1,
-                            FREE_ROWS - 1
-                        )
-                    elif k == 65:  # стрелка вверх
-                        offset = max(offset - 1, 0)
+            if key == ord('s'):
+                offset = min(
+                    offset + 1,
+                    FREE_ROWS - 1
+                )
+            if key == ord('w'):  # стрелка вверх
+                offset = max(offset - 1, 0)
 
             # Отображаем новую страницу
             print_all(pages[cur])
@@ -273,20 +270,17 @@ def print_choices(
         while True:
             key = window.getch()
 
-            if key == 27:
-                if window.getch() == 91:
-                    k = window.getch()
-                    if k == 66:  # стрелка вниз
-                        selected_choice = min(
-                            selected_choice + 1,
-                            len(choices) - 1
-                        )
-                        if selected_choice >= offset + FREE_ROWS:
-                            offset += 1
-                    elif k == 65:  # стрелка вверх
-                        selected_choice = max(selected_choice - 1, 0)
-                        if selected_choice < offset:
-                            offset -= 1
+            if key == ord('s'):
+                selected_choice = min(
+                    selected_choice + 1,
+                    len(choices) - 1
+                )
+                if selected_choice >= offset + FREE_ROWS:
+                    offset += 1
+            if key == ord('w'):  # стрелка вверх
+                selected_choice = max(selected_choice - 1, 0)
+                if selected_choice < offset:
+                    offset -= 1
             if key == 10:
                 window.clear()
                 window.refresh()

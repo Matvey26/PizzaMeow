@@ -362,6 +362,13 @@ class Session:
             если что-то пошло не так
         """
 
+        params = {'limit': limit, 'offset': offset}
+        async with self._session.get(
+                url + 'ingredients', params=params) as response:
+            if response.status == 200:
+                return await response.json()
+            return response.status, (await response.json())['detail']
+
     # ------------------ РАБОТА С КОРЗИНОЙ ПОЛЬЗОВАТЕЛЯ -----------------
 
     @connection_error_handler

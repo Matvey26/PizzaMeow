@@ -15,8 +15,6 @@ def create_app():
 
     connex_app.app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
 
-    print(connex_app.app.config['SQLALCHEMY_DATABASE_URI'])
-
     init_database(connex_app)
 
     return connex_app

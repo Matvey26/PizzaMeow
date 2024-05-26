@@ -19,6 +19,7 @@ class Base:
             'payment': PaymentRepository(),
             'order': OrderRepository(),
             'order_item': OrderItemRepository(),
+            'order_item_ingredient'
             'cart': CartRepository(),
             'cart_item': CartItemRepository(),
             'ingredient': IngredientRepository(),

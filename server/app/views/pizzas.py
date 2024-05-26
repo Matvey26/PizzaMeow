@@ -7,8 +7,8 @@ def get_pizzas_page(offset: int, limit: int):
     return pizza_repository.serialize(*page)
 
 
-def get_pizza_by_id(id: int):
-    pizza = pizza_repository.get(id)
+def get_pizza_by_id(pizza_id: int):
+    pizza = pizza_repository.get(pizza_id)
     if pizza is None:
         abort(400, 'Пиццы с таким id нет.')
     return pizza_repository.serialize(pizza)[0]

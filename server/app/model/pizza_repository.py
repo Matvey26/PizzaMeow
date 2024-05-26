@@ -9,5 +9,3 @@ class PizzaRepository(Repository):
     def create(self, name: str, price: float, description: str = ''):
         return Pizza(name=name, description=description, price=price)
 
-    def get_page(self, offset: int, limit: int) -> tuple:
-        return self.session.query(Pizza).offset(offset).limit(limit).all()

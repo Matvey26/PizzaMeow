@@ -20,6 +20,7 @@ class Create(Base):
 
         try:
             record = repository.create(**kwargs)
+            repository.save(record)
         except Exception as e:
             print('При создании произошла ошибка. '
                   'Возможно, вы указали неверные аргументы.')

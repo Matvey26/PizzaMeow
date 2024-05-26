@@ -1,7 +1,7 @@
 """Тут надо написать help"""
 
 import argparse
-from .commands import Base, Create, Delete
+from .commands import Base, Create, Delete, Find
 
 
 def main():
@@ -34,16 +34,35 @@ def main():
     delete.add_argument(
         'id',
         type=int,
-        help='ID записи, которую нужно удалить'
+        help='ID записи, которую нужно удалить. '
+        'Введите -1, если хотите удалить всё.'
+    )
+
+    find = sub_parsers.add_parser('find', help=Find.__doc__)
+    find.add_argument(
+        'tablename',
+        type=str,
+        help='Название таблицы'
+    )
+    find.add_argument(
+        '-k',
+        '--key',
+        action='append',
+        nargs=2,
+        metavar=('KEY', 'VALUE'),
+        help='Пары вида: <название поля, значение поля>'
     )
 
     args = parser.parse_args()
 
     command_class = {
         'create': Create,
-        'delete': Delete
+        'delete': Delete,
+        'find': Find
     }
 
+    # Создаём экземпляр команды
     command = command_class.get(args.command, Base)(
-        args)  # Создаём экземпляр команды
+        args
+    )
     command.run()

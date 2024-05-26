@@ -9,7 +9,7 @@ class Ingredients(Base):
 
     async def run(self):
         show_id = self.options.show_id
-        limit = self.options.limit
+        limit = 20
 
         async def get_all_ingredients():
             offset = 0
@@ -41,7 +41,6 @@ class Ingredients(Base):
             await print_paged(
                 window,
                 get_all_ingredients(),
-                limit=limit,
                 header=['Ингредиенты:', '++++++++++++++++++'],
                 sep=['------------------']
             )

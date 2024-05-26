@@ -1,7 +1,5 @@
 from abc import ABC
-
 from sqlalchemy import desc
-
 from ..database import db_session
 from .models import Model
 
@@ -9,7 +7,7 @@ from .models import Model
 class Repository(ABC):
     """Этот класс содержит общие методы, которые
     используются для всех других классов-репозиториев.
-    Подклассы могут предоставлять реалищацию этих методов.
+    Подклассы могут предоставлять реализацию этих методов.
     """
 
     def __init__(self, model_class):
@@ -49,7 +47,10 @@ class Repository(ABC):
 
         return self.session.query(self.__model_class).order_by(
             desc(self.__model_class.id)
-        )
+        ).all()
+
+    def get_page(self, offset: int, limit: int) -> tuple:
+        return self.session.query(self.__model_class).offset(offset).limit(limit).all()
 
     def save(self, model: Model) -> None:
         """Сохраняет модель в базе данных.
@@ -69,29 +70,22 @@ class Repository(ABC):
         Параметры
         ---------
         model : Model
-            Экземпляр, с обновлёнными значениями аттрибутов.
+            Экземпляр, с обновлёнными значениями атрибутов.
         """
 
         self.session.commit()
 
-    def delete(self, model: Model) -> int:
+    def delete(self, model: Model) -> None:
         """Удаляет модель из базы данных.
 
         Параметры
         ---------
         model : Model
             Экземпляр модели, который нужно удалить.
-
-        Возвращает
-        ----------
-        id : int
-            Число - id объекта, который был удалён
         """
 
-        deleted = self.session.delete(model)
+        self.session.delete(model)
         self.session.commit()
-
-        return deleted
 
     def serialize(self, *models: Model) -> dict:
         """Сериализация объекта.
@@ -111,3 +105,25 @@ class Repository(ABC):
             serialized.append(model.serialize())
 
         return serialized
+
+    def find_by(self, **kwargs) -> list:
+        """Ищет записи по указанным ключам и значениям.
+
+        Параметры
+        ---------
+        **kwargs
+            Ключи и значения, по которым нужно искать записи.
+
+        Возвращает
+        ----------
+        list :
+            Список найденных записей, удовлетворяющих условиям поиска.
+        """
+        try:
+            return self.session.query(self.__model_class).filter_by(
+                **kwargs
+            ).all()
+        except AttributeError as e:
+            print(f"Error: {e}")
+            print("One or more keys are not valid attributes of the model.")
+            return []
