@@ -190,6 +190,34 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Pizza'
+  /pizzas/preferences:
+    get:
+      summary: Получить страницу пицц с учётом предпочтений
+      operationId: server.app.views.pizzas.get_pizzas_preferences_page
+      parameters:
+        - name: offset
+          description: Число, которое нужно отступить от начала таблицы
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+        - name: limit
+          description: Максимальное число пицц в возвращаемой странице
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Pizza'
+      security:
+      - jwt: []
   /pizzas/{pizza_id}:
     get:
       summary: Получить пиццу по id
