@@ -332,7 +332,9 @@ class Session:
         headers = {'Authorization': f'Bearer {self.token}'}
         params = {'limit': limit, 'offset': offset}
 
-        end_point = 'pizzas/preferences' if with_preferences else 'pizzas'
+        end_point = 'pizzas'
+        if with_preferences and self.token:
+            end_point += '/preferences'
         async with self._session.get(
                 url + end_point, params=params, headers=headers) as response:
             if response.status == 200:
