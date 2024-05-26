@@ -10,11 +10,16 @@ class Menu(Base):
     async def run(self):
         show_id = self.options.show_id
         limit = 15
+        with_preferences = self.options.with_preferences
 
         async def get_all_pizzas():
             offset = 0
             while (
-                pizzas := await self.session.get_pizzas_page(offset, limit)
+                pizzas := await self.session.get_pizzas_page(
+                    offset,
+                    limit,
+                    with_preferences
+                )
             ):
                 if isinstance(pizzas, tuple):
                     raise Exception(pizzas[1])

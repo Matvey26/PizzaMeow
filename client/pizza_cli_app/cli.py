@@ -148,10 +148,12 @@ def main():
     # значение по умолчанию, если ни один из флагов не указан
     menu.set_defaults(show_id=True)
     menu.add_argument(
-        '--limit',
-        default=20,
-        type=int,
-        help='Максимум пицц в странице.'
+        '--with-preferences',
+        '-p',
+        action='store_true',
+        default=True,
+        dest='with_preferences',
+        help='Отсортировать пиццы по предпочтительности'
     )
 
     # Парсер для вывода ингредиентов
@@ -174,12 +176,6 @@ def main():
     )
     # значение по умолчанию, если ни один из флагов не указан
     ingredients.set_defaults(show_id=True)
-    ingredients.add_argument(
-        '--limit',
-        default=20,
-        type=int,
-        help='Максимум ингредиентов в странице.'
-    )
 
     # Парсер для показа содержимого корзины
     cart = sub_parsers.add_parser('cart', help=Cart.__doc__)
@@ -197,12 +193,6 @@ def main():
         help='Не показывать айди элементов корзины.'
     )
     cart.set_defaults(show_id=True)
-    cart.add_argument(
-        '--limit',
-        default=20,
-        type=int,
-        help='Максимум элементов корзины на странице.'
-    )
 
     # Парсер для добавления элемента в корзину
     add = sub_parsers.add_parser('add', help=Add.__doc__)
@@ -213,24 +203,28 @@ def main():
     )
     add.add_argument(
         '--size',
+        '-s',
         default=1,
         help='Размер пиццы.',
         type=int
     )
     add.add_argument(
         '--dough',
+        '-d',
         default=1,
         help='Тесто для пиццы.',
         type=int
     )
     add.add_argument(
         '--quantity',
+        '-q',
         default=1,
         help='Количество пицц.',
         type=int
     )
     add.add_argument(
         '--ingredients',
+        '-i',
         default='',
         help='Ингредиенты пиццы.',
         type=str
@@ -244,25 +238,27 @@ def main():
         help='ID элемента корзины, который будет изменён.'
     )
     change.add_argument(
-        '--pizza_id',
-        default=-1,
+        'pizza_id',
         type=int,
         help='ID пиццы.'
     )
     change.add_argument(
         '--size',
+        '-s',
         default=-1,
         type=int,
         help='Размер пиццы.'
     )
     change.add_argument(
         '--dough',
+        '-d',
         default=-1,
         type=int,
         help='Размер пиццы.'
     )
     change.add_argument(
         '--quantity',
+        '-q',
         default=-1,
         type=int,
         help='Размер пиццы.'
@@ -270,6 +266,7 @@ def main():
 
     change.add_argument(
         '--ingredients',
+        '-i',
         default=0,
         type=str,
         help='Ингредиенты.'
@@ -296,12 +293,6 @@ def main():
 
     # Парсер для вывода истории заказов
     orders = sub_parsers.add_parser('orders', help=Orders.__doc__)
-    orders.add_argument(
-        '--limit',
-        default=20,
-        type=int,
-        help='Максимум заказов на странице'
-    )
     orders_arg_group_id = orders.add_mutually_exclusive_group()
     orders_arg_group_id.add_argument(
         '--show-id',
@@ -318,14 +309,17 @@ def main():
     orders_arg_group_status = orders.add_mutually_exclusive_group()
     orders_arg_group_status.add_argument(
         '--active',
+        '-a',
         help='Показать активные заказы.'
     )
     orders_arg_group_status.add_argument(
         '--completed',
+        '-c',
         help='Показать незавершенные заказы.'
     )
     orders_arg_group_status.add_argument(
         '--all',
+        '-A',
         help='Показать все заказы.'
     )
     orders.set_defaults(show_id=False)

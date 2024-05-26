@@ -294,7 +294,12 @@ class Session:
     # -------------------- РАБОТА С МЕНЮ --------------------
 
     @connection_error_handler
-    async def get_pizzas_page(self, offset: int, limit: int):
+    async def get_pizzas_page(
+        self,
+        offset: int,
+        limit: int,
+        with_preferences: bool = False
+    ):
         """Получить страницу меню пиццерии.
 
         Параметры
@@ -303,6 +308,9 @@ class Session:
             Сколько элементов нужно отсупить от начала таблицы
         limit: int
             Сколько элементов должно быть в странице
+        with_preferences: bool
+            Если True, тогда список пицц будет
+            отсортирован по предпочтительности.
 
         Возвращает
         ----------
@@ -321,9 +329,12 @@ class Session:
             если что-то пошло не так
         """
 
+        headers = {'Authorization': f'Bearer {self.token}'}
         params = {'limit': limit, 'offset': offset}
+
+        end_point = 'pizzas/preferences' if with_preferences else 'pizzas'
         async with self._session.get(
-                url + 'pizzas', params=params) as response:
+                url + end_point, params=params, headers=headers) as response:
             if response.status == 200:
                 return await response.json()
             return response.status, (await response.json())['detail']
