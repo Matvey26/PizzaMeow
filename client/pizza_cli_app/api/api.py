@@ -100,7 +100,7 @@ class Session:
                 self.email = email
                 self.token = await response.text()
                 return
-            return (response.status, (await response.json())['detail'])
+            return response.status, (await response.json())['detail']
 
     @connection_error_handler
     async def sign_up(self, email: str, password: str):
@@ -129,7 +129,7 @@ class Session:
                 self.email = email
                 self.token = await response.text()
                 return
-            return (response.status, (await response.json())['detail'])
+            return response.status, (await response.json())['detail']
 
     @connection_error_handler
     async def confirm_email(self, email: str):
@@ -149,10 +149,11 @@ class Session:
         """
         headers = {'Authorization': f'Bearer {self.token}'}
         params = {'email': email}
-        async with self._session.get(url + 'users/confirm_email', params=params, headers=headers) \
-                as response:
+        async with self._session.get(
+            url + 'users/confirm_email', params=params, headers=headers
+        ) as response:
             if response.status != 204:
-                return (response.status, (await response.json())['detail'])
+                return response.status, (await response.json())['detail']
 
     def logout(self):
         """Очистить сохранённый токен. Теперь нужно повторно авторизоваться."""
@@ -192,7 +193,7 @@ class Session:
             url + 'users/config', json=data, headers=headers
         ) as response:
             if response.status != 204:
-                return (response.status, (await response.json())['detail'])
+                return response.status, (await response.json())['detail']
 
     @connection_error_handler
     async def change_password(
@@ -224,7 +225,7 @@ class Session:
             headers=headers
         ) as response:
             if response.status != 204:
-                return (response.status, (await response.json())['detail'])
+                return response.status, (await response.json())['detail']
 
     @connection_error_handler
     async def reset_password(self, email: str):
@@ -248,7 +249,7 @@ class Session:
         async with self._session.put(
                 url + 'users/reset_password', data=email) as response:
             if response.status != 204:
-                return (response.status, (await response.json())['detail'])
+                return response.status, (await response.json())['detail']
 
     @connection_error_handler
     async def change_email(
@@ -288,7 +289,7 @@ class Session:
             headers=headers
         ) as response:
             if response.status != 204:
-                return (response.status, (await response.json())['detail'])
+                return response.status, (await response.json())['detail']
 
     # -------------------- РАБОТА С МЕНЮ --------------------
 
@@ -325,14 +326,48 @@ class Session:
                 url + 'pizzas', params=params) as response:
             if response.status == 200:
                 return await response.json()
-            return (response.status, (await response.json())['detail'])
+            return response.status, (await response.json())['detail']
 
     @connection_error_handler
     async def get_pizza_by_id(self, id: int):
         async with self._session.get(url + f'pizzas/{id}') as response:
             if response.status == 200:
                 return await response.json()
-            return (response.status, (await response.json())['detail'])
+            return response.status, (await response.json())['detail']
+
+    async def get_ingredients_page(self, offset: int, limit: int):
+        """Получить страницу существующих ингредиентов.
+
+        Параметры
+        ---------
+        offset: int
+            Сколько элементов нужно отсупить от начала таблицы
+        limit: int
+            Сколько элементов должно быть в странице
+
+        Возвращает
+        ----------
+        page: list of dict
+            Возвращает страницу (список) объектов пицц (словарей) вида
+
+            {
+                'id': int           # ID ингредиента
+                'name': str         # Название ингредиента
+                'description': str  # Описание
+                'price': float      # Цена
+            }
+
+        error: tuple
+            кортеж вида (код ошибки, сообщение ошибки),
+            если что-то пошло не так
+        """
+
+        params = {'limit': limit, 'offset': offset}
+        async with self._session.get(
+                url + 'ingredients', params=params) as response:
+            if response.status == 200:
+                return await response.json()
+            return response.status, (await response.json())['detail']
 
     # ------------------ РАБОТА С КОРЗИНОЙ ПОЛЬЗОВАТЕЛЯ -----------------
 
@@ -360,6 +395,13 @@ class Session:
             'quantity': int,
             'size': str,  # а точнее enum: [small, medium, large]
             'dough': str  # а точнее enum: [thin, classic]
+            'ingredients': [
+                {
+                    'id': int,  # ID ингредиента
+                    'quantity': int  # его количество в пицце
+                },
+                ...
+            ]
         }
 
         Возвращает
@@ -376,7 +418,7 @@ class Session:
                 url + 'carts', headers=headers) as response:
             if response.status == 200:
                 return await response.json()
-            return (response.status, (await response.json())['detail'])
+            return response.status, (await response.json())['detail']
 
     @connection_error_handler
     async def add_item_to_cart(self, data: dict):
@@ -396,10 +438,19 @@ class Session:
                                     нужно добавить в корзину
                 'quantity': int,  # Количество штук пицц.
                                     По умолчанию должно быть 1
-                'size': str | int,  # Размер пиццы, а именно 'small', 'medium',
-                                      'large' или 1, 2, 3. По умолчанию 1
-                'dough': str | int,  # Желаемое тесто, а именно 'classic' или
-                                       'thin'. По умолчанию должно быть 1
+                'size': int,  # Размер пиццы, а именно
+                                0: 'small', 1: 'medium', 2: 'large'.
+                                По умолчанию 1
+                'dough': int, # Желаемое тесто, а именно
+                                1: 'classic' или 0: 'thin'.
+                                По умолчанию должно быть 1
+                'ingredients': [
+                    {
+                        'id': int,  # ID ингредиента
+                        'quantity': int  # его количество в пицце
+                    },
+                    ...
+                ]
             }
 
         Возвращает
@@ -416,9 +467,10 @@ class Session:
             'Authorization': f'Bearer {self.token}'
         }
         async with self._session.post(
-                url + 'carts', json=data, headers=headers) as response:
+            url + 'carts', json=data, headers=headers
+        ) as response:
             if response.status != 204:
-                return (response.status, (await response.json())['detail'])
+                return response.status, (await response.json())['detail']
 
     @connection_error_handler
     async def update_item_in_cart(self, item_id: int, data: dict):
@@ -439,6 +491,13 @@ class Session:
                             По умолчанию должно быть 1
                 'size': Новый размер пиццы, а именно 'small', 'medium',
                         'large' или 1, 2, 3. По умолчанию 1
+                'ingredients': [
+                    {
+                        'id': int,  # ID ингредиента
+                        'quantity': int  # его количество в пицце
+                    },
+                    ...
+                ]
             }
 
         Возвращает
@@ -458,7 +517,7 @@ class Session:
                 url + f'carts/{item_id}',
                 json=data, headers=headers) as response:
             if response.status != 204:
-                return (response.status, (await response.json())['detail'])
+                return response.status, (await response.json())['detail']
 
     @connection_error_handler
     async def delete_item(self, item_id: int):
@@ -482,7 +541,7 @@ class Session:
         async with self._session.delete(
                 url + f'carts/{item_id}', headers=headers) as response:
             if response.status != 204:
-                return (response.status, (await response.json())['detail'])
+                return response.status, (await response.json())['detail']
 
     # ------------------ РАБОТА С ЗАКАЗАМИ ------------------
 
@@ -527,7 +586,7 @@ class Session:
                 url + 'orders', json=data, headers=headers) as response:
             if response.status == 200:
                 return await response.text()  # ссылка на оплату
-            return (response.status, (await response.json())['detail'])
+            return response.status, (await response.json())['detail']
 
     @connection_error_handler
     async def repeat_order(self, order_id: int, data: dict):
@@ -568,10 +627,13 @@ class Session:
             'Content-Type': 'application/json',
             'Authorization': f'Bearer {self.token}'
         }
-        async with self._session.put(url + f'orders/{order_id}/repeat', json=data, headers=headers) as response:
+        async with self._session.put(
+            url + f'orders/{order_id}/repeat',
+            json=data, headers=headers
+        ) as response:
             if response.status == 200:
                 return await response.text()  # ссылка на оплату
-            return (response.status, (await response.json())['detail'])
+            return response.status, (await response.json())['detail']
 
     @connection_error_handler
     async def get_orders(
@@ -610,6 +672,13 @@ class Session:
                     'quantity': int,  # количество заказанных пицц
                     'size': Enum('small', 'medium', 'large'),
                     'dough': Enum('thin', 'classic')  # тесто заканных пицц
+                    'ingredients': [
+                        {
+                            'id': int,  # ID ингредиента
+                            'quantity': int  # его количество в пицце
+                        },
+                        ...
+                    ]
                 }
             }
         error: tuple
@@ -628,7 +697,7 @@ class Session:
                 url + 'orders', headers=headers, params=params) as response:
             if response.status == 200:
                 return await response.json()
-            return (response.status, (await response.json())['detail'])
+            return response.status, (await response.json())['detail']
 
     @connection_error_handler
     async def get_order_by_id(self, order_id: int):
@@ -668,7 +737,7 @@ class Session:
                 url + f'orders/{order_id}', headers=headers) as response:
             if response.status == 200:
                 return await response.json()
-            return (response.status, (await response.json())['detail'])
+            return response.status, (await response.json())['detail']
 
     @connection_error_handler
     async def cancel_order(self, order_id: int):
@@ -709,7 +778,7 @@ class Session:
                 headers=headers, params=params) as response:
             if response.status == 200:
                 return await response.json()
-            return (response.status, (await response.json())['detail'])
+            return response.status, (await response.json())['detail']
 
     @connection_error_handler
     async def get_time_cooking(self, pizzeria_address: str) -> List[List[str]]:
@@ -739,7 +808,7 @@ class Session:
                 headers=headers, params=params) as response:
             if response.status == 200:
                 return await response.text()
-            return (response.status, (await response.json())['detail'])
+            return response.status, (await response.json())['detail']
 
     @connection_error_handler
     async def get_pizzerias_addresses(self, address: str = None):
@@ -768,7 +837,7 @@ class Session:
                 url + 'pizzeria/address', params=params) as response:
             if response.status == 200:
                 return await response.json()
-            return (response.status, (await response.json())['detail'])
+            return response.status, (await response.json())['detail']
 
     @connection_error_handler
     async def search_addresses(self, address: str):

@@ -5,9 +5,8 @@ import asyncio
 import sys
 
 
-PAGED_HELP = 'Type n, p or q (next, prev or quit):'
-SCROLLED_HELP = 'Use up/down arrows. Press Enter to continue.'
-CHOICES_HELP = 'Use up/down arrows. Press Enter to continue.'
+PAGED_HELP = 'Use keys w, a, s, d to navigates. Prees q to quit:'
+CHOICES_HELP = 'Use keys w, s to scrolling. Press Enter to continue.'
 
 
 async def load_spinner(
@@ -56,7 +55,6 @@ async def load_spinner(
 async def print_paged(
     window: curses.window,
     loader: AsyncIterator[List[str]],
-    limit: int = 10**9,
     header: List[str] = [],
     footer: List[str] = [],
     sep: List[str] = []
@@ -70,11 +68,9 @@ async def print_paged(
         в котором будут отрисовываться страницы
     loader: AsyncIterator[List[str]]
         Асинхронный генератор элементов. В генераторе каждый элемент
-        должен быть представлен в виде списка строк для вывода
+        должен быть представлен в виде списка строк для вывода.
         Например, каждый элемент меню пиццерии может быть представлен
         в виде списка ["название пиццы", "описание пиццы"].
-    limit: int
-        Максимальное число элементов на странице
     header: List[str]
         Фиксированные строки, которые выводятся в верху экрана
     footer: List[str]
@@ -85,7 +81,7 @@ async def print_paged(
 
     # Получаем размеры окна
     MAX_ROWS = window.getmaxyx()[0]
-    free_rows = MAX_ROWS - len(header) - len(footer) - 1
+    FREE_ROWS = MAX_ROWS - len(header) - len(footer) - 1
 
     def extend_pages(
         new_elements: List[List[str]],
@@ -97,19 +93,16 @@ async def print_paged(
         for element in new_elements:
             if not element:
                 continue
-            if len(buffer) + len(element) + len(sep) >= free_rows or \
-                    buffer_elements_count >= limit:
-
+            if len(buffer) >= FREE_ROWS:
                 buffer.append(buffer_elements_count)
                 pages.append(buffer)
-                buffer = element
-                buffer_elements_count = 1
-                buffer.extend(sep)
-                continue
+                buffer = []
+                buffer_elements_count = 0
 
             buffer_elements_count += 1
             buffer.extend(element)
             buffer.extend(sep)
+
         buffer.append(buffer_elements_count)
         pages.append(buffer)
 
@@ -128,14 +121,20 @@ async def print_paged(
         window.clear()
         i = 0
         for s in header:
+            if i >= curses.LINES:
+                break
             window.addstr(i, 0, s)
             i += 1
-        for s in page:
+        for s in page[offset:]:
+            if i >= len(header) + FREE_ROWS:
+                break
             if isinstance(s, int):
                 break
             window.addstr(i, 0, s)
             i += 1
         for s in footer:
+            if i >= curses.LINES:
+                break
             window.addstr(i, 0, s)
             i += 1
         window.addstr(MAX_ROWS - 1, 0, PAGED_HELP)
@@ -156,9 +155,10 @@ async def print_paged(
 
         pages = extend_pages(new_elements, [[0]])
         cur = 0  # номер текущей страницы
+        offset = 0  # смещение по вертикали текущей страницы
 
         # Отображаем первую страницу
-        print_all(pages[0])
+        print_all(pages[cur])
 
         # Слушаем клавиши
         while True:
@@ -166,9 +166,12 @@ async def print_paged(
 
             if key == ord('q'):
                 break
-            if key == ord('p'):
+            if key == ord('a'):
+                prev = cur
                 cur = max(0, cur - 1)
-            if key == ord('n'):
+                if prev != cur:
+                    offset = 0
+            if key == ord('d'):
                 if cur + 1 >= len(pages) - 1:
                     window.clear()
                     window.refresh()
@@ -180,7 +183,18 @@ async def print_paged(
                     task_spinner.cancel()
 
                     pages = extend_pages(new_elements, pages)
+                prev = cur
                 cur = min(cur + 1, len(pages) - 1)
+                if prev != cur:
+                    offset = 0
+
+            if key == ord('s'):
+                offset = min(
+                    offset + 1,
+                    FREE_ROWS - 1
+                )
+            if key == ord('w'):  # стрелка вверх
+                offset = max(offset - 1, 0)
 
             # Отображаем новую страницу
             print_all(pages[cur])
@@ -190,84 +204,6 @@ async def print_paged(
         raise
     finally:
         curses.endwin()
-
-
-def print_scrolled(
-    window: curses.window,
-    rows: List[str],
-    header: List[str] = [],
-    footer: List[str] = [],
-    sep: List[str] = []
-) -> None:
-    """Выводит список строк, который пролистывается
-    вверх и вниз с помощью стрелок (по одной строчке за раз)
-
-    Параметры
-    ---------
-    window: curses.window
-        Объект класса window модуля curses - окно,
-        в котором будут отрисовываться страницы
-    rows: List[str]
-        Строки, которые нужно вывести в виде пролистывающегося списка
-    header: List[str]
-        Фиксированные строки, которые выводятся в верху экрана
-    footer: List[str]
-        Фиксированные строки, которые выводятся снизу экрана
-    sep: List[str]
-        Строки, которые используются как разделитель между элементами
-    """
-
-    MAX_ROWS = window.getmaxyx()[0]
-    FREE_ROWS = MAX_ROWS - len(header) - len(footer) - 1
-
-    # На сколько строк уже пролистано
-    offset = 0
-    try:
-        # Вывод строк
-        def print_all():
-            window.clear()
-            i = 0
-            for s in header:
-                window.addstr(i, 0, s)
-                i += 1
-            for s1 in rows[offset:offset + FREE_ROWS]:
-                window.addstr(i, 0, s1)
-                i += 1
-                for s2 in sep:
-                    window.addstr(i, 0, s2)
-                    i += 1
-            for s in footer:
-                window.addstr(i, 0, s)
-                i += 1
-            window.addstr(MAX_ROWS - 1, 0, SCROLLED_HELP)
-            window.refresh()
-
-        print_all()
-
-        # Обработка нажатий
-        while True:
-            key = window.getch()
-
-            if key == 27:
-                if window.getch() == 91:
-                    k = window.getch()
-                    if k == 66:  # стрелка вниз
-                        offset = min(
-                            offset + 1,
-                            max(len(rows) - 1, len(rows) - FREE_ROWS - 1)
-                        )
-                    elif k == 65:  # стрелка вверх
-                        offset = max(offset - 1, 0)
-            elif key == 10:  # Enter
-                window.clear()
-                window.refresh()
-                return
-
-            print_all()
-
-    except Exception:
-        curses.endwin()
-        raise
 
 
 def print_choices(
@@ -334,20 +270,17 @@ def print_choices(
         while True:
             key = window.getch()
 
-            if key == 27:
-                if window.getch() == 91:
-                    k = window.getch()
-                    if k == 66:  # стрелка вниз
-                        selected_choice = min(
-                            selected_choice + 1,
-                            len(choices) - 1
-                        )
-                        if selected_choice >= offset + FREE_ROWS:
-                            offset += 1
-                    elif k == 65:  # стрелка вверх
-                        selected_choice = max(selected_choice - 1, 0)
-                        if selected_choice < offset:
-                            offset -= 1
+            if key == ord('s'):
+                selected_choice = min(
+                    selected_choice + 1,
+                    len(choices) - 1
+                )
+                if selected_choice >= offset + FREE_ROWS:
+                    offset += 1
+            if key == ord('w'):  # стрелка вверх
+                selected_choice = max(selected_choice - 1, 0)
+                if selected_choice < offset:
+                    offset -= 1
             if key == 10:
                 window.clear()
                 window.refresh()

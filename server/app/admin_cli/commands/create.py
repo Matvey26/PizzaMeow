@@ -3,8 +3,10 @@ from .base import Base
 
 class Create(Base):
     """Создаёт новую запись в таблице.
-    Имена таблиц следующие: user, pizza, payment, order, order_item, cart, cart_item.
-    Чтобы узнать аргументы для создания, запустите команду без именованных аргументов.
+    Имена таблиц следующие: user, pizza, payment,
+    order, order_item, cart, cart_item.
+    Чтобы узнать аргументы для создания,
+    запустите команду без именованных аргументов.
     """
 
     def run(self):
@@ -18,8 +20,10 @@ class Create(Base):
 
         try:
             record = repository.create(**kwargs)
+            repository.save(record)
         except Exception as e:
-            print('При создании произошла ошибка. Возможно, вы указали неверные аргументы.')
+            print('При создании произошла ошибка. '
+                  'Возможно, вы указали неверные аргументы.')
             print(e)
             return
 

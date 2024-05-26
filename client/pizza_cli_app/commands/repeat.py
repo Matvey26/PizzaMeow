@@ -2,7 +2,8 @@ import asyncio
 import curses
 
 from ..utils.print_format import load_spinner
-from ..utils.print_format import print_scrolled
+from ..utils.print_format import print_paged
+from ..utils.async_utils import aiter
 from .base import Base
 from .checkout import Checkout
 
@@ -10,7 +11,11 @@ from .checkout import Checkout
 class Repeat(Base):
     """Создаёт заказ из собранной корзины."""
 
-    async def order_information_screen(self, stdscr: curses.window, order_id: int) -> None:
+    async def order_information_screen(
+        self,
+        stdscr: curses.window,
+        order_id: int
+    ) -> None:
         # Подготовливаем окно.
         window = curses.newwin(curses.LINES, curses.COLS, 0, 0)
 
@@ -33,7 +38,7 @@ class Repeat(Base):
             rows.append(line)
 
         # Выводим корзину
-        print_scrolled(window, rows)
+        print_paged(window, aiter([rows]))
         stdscr.clear()
 
     async def run(self):
@@ -46,7 +51,8 @@ class Repeat(Base):
 
         try:
             await self.order_information_screen(stdscr, order_id)
-            chosen_pickup_method = checkout_cmd.choose_pickup_method_screen(stdscr)
+            chosen_pickup_method = checkout_cmd.choose_pickup_method_screen(
+                stdscr)
 
             search_addresses_function = None
             get_time_intervals_function = None
@@ -67,7 +73,8 @@ class Repeat(Base):
             time_interval = await checkout_cmd.choose_time_interval(
                 stdscr, address, get_time_intervals_function
             )
-            payment_method = await checkout_cmd.choose_payment_method_screen(stdscr)
+            payment_method = \
+                await checkout_cmd.choose_payment_method_screen(stdscr)
             payref = await self.session.repeat_order(
                 order_id,
                 {

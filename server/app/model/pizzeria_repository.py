@@ -12,10 +12,7 @@ class PizzeriaRepository(Repository):
         return self.session.query(Pizzeria).all()
 
     def is_pizzeria_address(self, address: str) -> bool:
-        pizzeria = self.session.query(Pizzeria).filter_by(address=address).all()
+        pizzeria = self.session.query(Pizzeria).filter_by(
+            address=address
+        ).all()
         return pizzeria is not None
-
-    def is_invalid(self, pizzeria: Pizzeria):
-        pizzeria
-        invalid_fields = []
-        return invalid_fields

@@ -7,7 +7,7 @@ import curses
 class Orders(Base):
     async def run(self):
         show_id = self.options.show_id
-        limit = self.options.limit
+        limit = 15
         active = self.options.active
         all = self.options.all
         completed = self.options.completed
@@ -30,11 +30,19 @@ class Orders(Base):
                     first_row += f"Статус: {order['status']}"
                     rows.append(first_row)
                     for order_item in order['order_items']:
+                        ingredients_text = []
+                        for ingredient, count in order_item['ingredients']:
+                            ingredients_text.append(
+                                f'        {ingredient}: {count}'
+                            )
                         rows.append(f"итого: {order_item['total_price']}₽")
                         rows.append(f"{order_item['pizza_name']}, "
                                     f"{order_item['quantity']} шт.")
                         rows.append(f"    размер: {order_item['size']}")
                         rows.append(f"    тесто: {order_item['dough']}")
+                        if ingredients_text:
+                            rows.append('    ингредиенты:')
+                            rows.extend(ingredients_text)
                     data.append(rows)
                 yield data
                 offset += limit
@@ -46,7 +54,6 @@ class Orders(Base):
             await print_paged(
                 window,
                 get_all_orders(),
-                limit=limit,
                 header=['Заказы:', '++++++++++++++++++'],
                 sep=['------------------']
             )
@@ -55,6 +62,7 @@ class Orders(Base):
             print('При постраничном выводе произошла ошибка. '
                   'Возможно вы изменили размер терминала.')
             print(e)
+            raise
         except Exception as e:
             curses.endwin()
             print('Произошла ошибка.')

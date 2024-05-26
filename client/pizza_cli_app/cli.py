@@ -5,7 +5,7 @@ import asyncio
 from .commands import Base
 from .commands import Config, ChangeEmail, ChangePasssword, ResetPasssword
 from .commands import Logout, SignIn, SignUp, GetConfirmEmail
-from .commands import Menu, Cart, Add, Change, Remove, Orders
+from .commands import Menu, Cart, Add, Change, Remove, Orders, Ingredients
 from .commands import Checkout, Repeat, Cancel
 from .api import Session
 
@@ -28,7 +28,8 @@ async def run_commands(args):
         'orders': Orders,
         'repeat': Repeat,
         'cancel': Cancel,
-        'get_confirm_email': GetConfirmEmail
+        'get_confirm_email': GetConfirmEmail,
+        'ingredients': Ingredients
     }
 
     session = Session()
@@ -74,7 +75,9 @@ def main():
 
     # Смена пароля
     change_password = sub_parsers.add_parser(
-        'change_password', help=ChangePasssword.__doc__)
+        'change_password',
+        help=ChangePasssword.__doc__
+    )
     change_password.add_argument(
         'email',
         type=str,
@@ -110,7 +113,9 @@ def main():
 
     # Привязка новой почты к аккаунту
     change_email = sub_parsers.add_parser(
-        'change_email', help=ChangeEmail.__doc__)
+        'change_email',
+        help=ChangeEmail.__doc__
+    )
     change_email.add_argument(
         'old_email',
         type=str,
@@ -149,6 +154,33 @@ def main():
         help='Максимум пицц в странице.'
     )
 
+    # Парсер для вывода ингредиентов
+    ingredients = sub_parsers.add_parser(
+        'ingredients',
+        help=Ingredients.__doc__
+    )
+    ingredients_arg_group = ingredients.add_mutually_exclusive_group()
+    ingredients_arg_group.add_argument(
+        '--show-id',
+        action='store_true',
+        dest='show_id',
+        help='Показывать айди ингредиентов.'
+    )
+    ingredients_arg_group.add_argument(
+        '--no-show-id',
+        action='store_false',
+        dest='show_id',
+        help='Не показывать айди ингредиентов.'
+    )
+    # значение по умолчанию, если ни один из флагов не указан
+    ingredients.set_defaults(show_id=True)
+    ingredients.add_argument(
+        '--limit',
+        default=20,
+        type=int,
+        help='Максимум ингредиентов в странице.'
+    )
+
     # Парсер для показа содержимого корзины
     cart = sub_parsers.add_parser('cart', help=Cart.__doc__)
     cart_arg_group = cart.add_mutually_exclusive_group()
@@ -174,11 +206,35 @@ def main():
 
     # Парсер для добавления элемента в корзину
     add = sub_parsers.add_parser('add', help=Add.__doc__)
-    add.add_argument('pizza_id', type=int,
-                     help='ID пиццы, которая будет добавлена в корзину.')
-    add.add_argument('--size', default=1, help='Размер пиццы.', type=int)
-    add.add_argument('--dough', default=1, help='Размер пиццы.', type=int)
-    add.add_argument('--quantity', default=1, help='Размер пиццы.', type=int)
+    add.add_argument(
+        'pizza_id',
+        type=int,
+        help='ID пиццы, которая будет добавлена в корзину.'
+    )
+    add.add_argument(
+        '--size',
+        default=1,
+        help='Размер пиццы.',
+        type=int
+    )
+    add.add_argument(
+        '--dough',
+        default=1,
+        help='Тесто для пиццы.',
+        type=int
+    )
+    add.add_argument(
+        '--quantity',
+        default=1,
+        help='Количество пицц.',
+        type=int
+    )
+    add.add_argument(
+        '--ingredients',
+        default='',
+        help='Ингредиенты пиццы.',
+        type=str
+    )
 
     # Парсер для изменения элемента корзины
     change = sub_parsers.add_parser('change', help=Change.__doc__)
@@ -210,6 +266,13 @@ def main():
         default=-1,
         type=int,
         help='Размер пиццы.'
+    )
+
+    change.add_argument(
+        '--ingredients',
+        default=0,
+        type=str,
+        help='Ингредиенты.'
     )
 
     # Парсер для удаления элемента корзины
@@ -273,11 +336,22 @@ def main():
 
     # Отменить заказ
     cancel = sub_parsers.add_parser('cancel', help=Cancel.__doc__)
-    cancel.add_argument('order_id', type=int, help='ID заказа, который нужно отменить.')
+    cancel.add_argument(
+        'order_id',
+        type=int,
+        help='ID заказа, который нужно отменить.'
+    )
 
     # Получить письмо для подтверждения почты
-    get_confirm_email = sub_parsers.add_parser('get_confirm_email', help=GetConfirmEmail.__doc__)
-    get_confirm_email.add_argument('email', type=str, help='Почта, на которую нужно отправить письмо.')
+    get_confirm_email = sub_parsers.add_parser(
+        'get_confirm_email',
+        help=GetConfirmEmail.__doc__
+    )
+    get_confirm_email.add_argument(
+        'email',
+        type=str,
+        help='Почта, на которую нужно отправить письмо.'
+    )
 
     args = parser.parse_args()
     asyncio.run(run_commands(args))

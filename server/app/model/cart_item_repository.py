@@ -1,5 +1,6 @@
 from .repository import Repository
 from .models import CartItem, Pizza, PizzaSizeEnum, PizzaDoughEnum
+from .models import CartItemIngredient
 
 conv_size_enum = {
     0: 'small',
@@ -28,23 +29,35 @@ class CartItemRepository(Repository):
         total_price: float,
         quantity: int = 1,
         size: int = 1,
-        dough: int = 1
+        dough: int = 1,
+        ingredients: list = None
     ) -> CartItem:
+
+        if ingredients is None:
+            ingredients = []
 
         size = conv_size_enum[size]
         dough = conv_dough_enum[dough]
 
-        return CartItem(
+        new_cart_item = CartItem(
             pizza=pizza,
             total_price=total_price,
             size=PizzaSizeEnum(size),
             quantity=quantity,
             dough=PizzaDoughEnum(dough)
         )
+        self.session.add(new_cart_item)
+        self.session.commit()
 
-    def is_invalid(self, model: CartItem) -> list:
-        invalid_fields = []
-        return invalid_fields
+        for ingredient in ingredients:
+            cart_item_ingredient = CartItemIngredient(
+                ingredient_id=ingredient['id'],
+                quantity=ingredient['quantity']
+            )
+            new_cart_item.ingredients.append(cart_item_ingredient)
+            self.session.add(cart_item_ingredient)
+
+        return new_cart_item
 
     def delete(self, cart_item: CartItem):
         cart_item.cart.total_price -= cart_item.total_price

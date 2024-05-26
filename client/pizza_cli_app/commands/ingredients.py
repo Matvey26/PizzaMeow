@@ -4,27 +4,30 @@ from .base import Base
 from ..utils.print_format import print_paged
 
 
-class Menu(Base):
+class Ingredients(Base):
     """Команда для вывода меню пиццы"""
 
     async def run(self):
         show_id = self.options.show_id
-        limit = 15
+        limit = 20
 
-        async def get_all_pizzas():
+        async def get_all_ingredients():
             offset = 0
             while (
-                pizzas := await self.session.get_pizzas_page(offset, limit)
+                ingredients := await self.session.get_ingredients_page(
+                    offset,
+                    limit
+                )
             ):
-                if isinstance(pizzas, tuple):
-                    raise Exception(pizzas[1])
+                if isinstance(ingredients, tuple):
+                    raise Exception(ingredients[1])
                 data = []
-                for pizza in pizzas:
+                for ingredient in ingredients:
                     rows = [
-                        f"{pizza['id']}. {pizza['name']}." if show_id
-                        else f"{pizza['name']}",
-                        f"description: {pizza.get('description', '')}",
-                        f"price: {pizza['price']}"
+                        f"{ingredient['id']}. {ingredient['name']}." if show_id
+                        else f"{ingredient['name']}",
+                        f"description: {ingredient.get('description', '')}",
+                        f"price: {ingredient['price']}"
                     ]
                     data.append(rows)
                 yield data
@@ -37,8 +40,8 @@ class Menu(Base):
 
             await print_paged(
                 window,
-                get_all_pizzas(),
-                header=['Меню:', '++++++++++++++++++'],
+                get_all_ingredients(),
+                header=['Ингредиенты:', '++++++++++++++++++'],
                 sep=['------------------']
             )
         except curses.error as e:
