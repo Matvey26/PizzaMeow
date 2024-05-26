@@ -245,21 +245,21 @@ def main():
     change.add_argument(
         '--size',
         '-s',
-        default=-1,
+        default=1,
         type=int,
         help='Размер пиццы.'
     )
     change.add_argument(
         '--dough',
         '-d',
-        default=-1,
+        default=1,
         type=int,
         help='Размер пиццы.'
     )
     change.add_argument(
         '--quantity',
         '-q',
-        default=-1,
+        default=1,
         type=int,
         help='Размер пиццы.'
     )
@@ -267,7 +267,7 @@ def main():
     change.add_argument(
         '--ingredients',
         '-i',
-        default=0,
+        default='',
         type=str,
         help='Ингредиенты.'
     )
