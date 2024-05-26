@@ -50,7 +50,8 @@ class Repository(ABC):
         ).all()
 
     def get_page(self, offset: int, limit: int) -> tuple:
-        return self.session.query(self.__model_class).offset(offset).limit(limit).all()
+        return self.session.query(self.__model_class).offset(
+            offset).limit(limit).all()
 
     def save(self, model: Model) -> None:
         """Сохраняет модель в базе данных.

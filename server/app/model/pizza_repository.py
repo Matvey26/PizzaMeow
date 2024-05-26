@@ -8,4 +8,3 @@ class PizzaRepository(Repository):
 
     def create(self, name: str, price: float, description: str = ''):
         return Pizza(name=name, description=description, price=price)
-
