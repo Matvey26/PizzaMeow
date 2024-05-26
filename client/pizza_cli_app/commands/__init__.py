@@ -4,6 +4,7 @@ from .sign_up import SignUp
 from .sign_in import SignIn
 from .logout import Logout
 from .menu import Menu
+from .ingredients import Ingredients
 from .reset_password import ResetPasssword
 from .change_email import ChangeEmail
 from .change_password import ChangePasssword

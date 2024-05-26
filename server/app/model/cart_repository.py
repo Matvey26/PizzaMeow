@@ -1,5 +1,8 @@
 from .repository import Repository
 from .models import User, Cart, CartItem
+from .cart_item_ingredients_repository import CartItemIngredientRepository
+
+cart_item_ingredients_repository = CartItemIngredientRepository()
 
 
 class CartRepository(Repository):
@@ -12,7 +15,8 @@ class CartRepository(Repository):
     def get_by_user(self, user: User):
         result = self.session.query(Cart).filter_by(user_id=user.id).first()
         if result is None:
-            result = self.create(user)  # корзина автоматически привязывается к пользователю
+            # корзина автоматически привязывается к пользователю
+            result = self.create(user)
             self.save(result)
         return result
 
@@ -33,12 +37,9 @@ class CartRepository(Repository):
     def get_items(self, cart: Cart):
         return cart.cart_items
 
-    def is_invalid(self, cart: Cart) -> list:
-        invalid_fields = []
-        return invalid_fields
-
     def serialize(self, cart: Cart) -> dict:
-        """Сериализует корзину. Иначе говоря представляет корзину в виде списка её элементов.
+        """Сериализует корзину.
+        Иначе говоря представляет корзину в виде списка её элементов.
         Все поля, содержащие enum переводятся в текст.
         """
 
@@ -50,6 +51,10 @@ class CartRepository(Repository):
         for cart_item in cart.cart_items:
             data = cart_item.serialize()
             data['pizza_name'] = cart_item.pizza.name
+            data['ingredients'] = cart_item_ingredients_repository.serialize(
+                *cart_item.ingredients
+            )
+            print(data)
             serialized['cart_items'].append(data)
 
         return serialized

@@ -1,10 +1,8 @@
-from ...model import CartRepository
-from ...model import CartItemRepository
-from ...model import OrderRepository
-from ...model import OrderItemRepository
-from ...model import UserRepository
-from ...model import PaymentRepository
-from ...model import PizzaRepository
+from ...model import UserRepository, PizzaRepository
+from ...model import CartRepository, CartItemRepository
+from ...model import OrderRepository, OrderItemRepository
+from ...model import PizzeriaRepository, PaymentRepository
+from ...model import IngredientRepository
 
 
 class Base:
@@ -21,8 +19,11 @@ class Base:
             'payment': PaymentRepository(),
             'order': OrderRepository(),
             'order_item': OrderItemRepository(),
+            'order_item_ingredient'
             'cart': CartRepository(),
             'cart_item': CartItemRepository(),
+            'ingredient': IngredientRepository(),
+            'pizzeria': PizzeriaRepository()
         }
 
     def run(self):
