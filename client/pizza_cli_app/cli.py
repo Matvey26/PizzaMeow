@@ -150,7 +150,7 @@ def main():
     menu.add_argument(
         '--with-preferences',
         '-p',
-        action='store_true',
+        action='store_false',
         default=True,
         dest='with_preferences',
         help='Отсортировать пиццы по предпочтительности'
