@@ -4,6 +4,7 @@ from . import cart_repository
 from . import cart_item_repository
 from . import ingredient_repository
 from . import cart_item_ingredient_repository
+from ..model.models import PizzaDoughEnum, PizzaSizeEnum
 from flask import abort
 
 
@@ -109,9 +110,9 @@ def update_item_in_cart(user, token_info, item_id, body):
 
     try:
         if 'size' in body:
-            cart_item.size = conv_size_enum[body['size']]
+            cart_item.size = PizzaSizeEnum(conv_size_enum[body['size']])
         if 'dough' in body:
-            cart_item.dough = conv_dough_enum[body['dough']]
+            cart_item.dough = PizzaDoughEnum(conv_dough_enum[body['dough']])
     except ValueError:
         abort(400, 'Неверный формат полей size или dough.')
 
