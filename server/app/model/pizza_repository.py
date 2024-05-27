@@ -34,6 +34,4 @@ class PizzaRepository(Repository):
         ]
         pizzas_pref_list.sort(key=lambda x: (x[1], x[0]))
 
-        print(pizzas_pref_list)
-
         return [pizza[2] for pizza in pizzas_pref_list][offset:offset + limit]

@@ -54,7 +54,6 @@ class CartRepository(Repository):
             data['ingredients'] = cart_item_ingredients_repository.serialize(
                 *cart_item.ingredients
             )
-            print(data)
             serialized['cart_items'].append(data)
 
         return serialized

@@ -2,6 +2,7 @@ import asyncio
 
 from .base import Base
 from ..utils.print_format import load_spinner
+from ..utils.similarity_search import search_by_similarity
 
 
 class Add(Base):
@@ -9,6 +10,44 @@ class Add(Base):
 
     async def run(self):
         pizza_id = self.options.pizza_id
+        if pizza_id.isdigit():
+            pizza_id = int(pizza_id)
+        else:
+            task_load = asyncio.create_task(load_spinner())
+
+            async def get_all_pizzas():
+                offset = 0
+                limit = 40
+                while (
+                    pizzas := await self.session.get_pizzas_page(
+                        offset,
+                        limit,
+                        with_preferences=False
+                    )
+                ):
+                    if isinstance(pizzas, tuple):
+                        raise Exception(pizzas[1])
+                    yield pizzas
+                    offset += limit
+
+            all_pizzas = []
+            async for i in get_all_pizzas():
+                all_pizzas.extend(i)
+
+            similar_pizzas = search_by_similarity(
+                all_pizzas,
+                threshold=80,
+                name=pizza_id
+            )
+
+            if len(similar_pizzas) == 1:
+                pizza_id = similar_pizzas[0]['id']
+            else:
+                print('Введите более точное название')
+                for pizza in similar_pizzas:
+                    print(f'{pizza["id"]}. {pizza["name"]}')
+                return
+
         size = self.options.size
         dough = self.options.dough
         quantity = self.options.quantity
