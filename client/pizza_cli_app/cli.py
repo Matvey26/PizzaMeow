@@ -198,8 +198,8 @@ def main():
     add = sub_parsers.add_parser('add', help=Add.__doc__)
     add.add_argument(
         'pizza_id',
-        type=int,
-        help='ID пиццы, которая будет добавлена в корзину.'
+        type=str,
+        help='ID (или название) пиццы, которая будет добавлена в корзину.'
     )
     add.add_argument(
         '--size',
@@ -238,8 +238,9 @@ def main():
         help='ID элемента корзины, который будет изменён.'
     )
     change.add_argument(
-        'pizza_id',
-        type=int,
+        '--pizza_id',
+        type=str,
+        default='',
         help='ID пиццы.'
     )
     change.add_argument(
